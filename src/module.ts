@@ -3,6 +3,7 @@ import { SimpleOptions } from './types';
 import { SimplePanel } from './components/SimplePanel';
 
 import './css/bootstrap-grid.css';
+import './css/grid.css';
 
 export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions((builder) => {
   return builder

@@ -1,6 +1,11 @@
 import React from 'react';
 import { PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
+import { SelectModel } from './Step1_SelectModel';
+import { ImportData } from './Step2_ImportData';
+import { ModifyData } from './Step3_ModifyData';
+import { PredictModel } from './Step4_PredictModel';
+import { SaveData } from './Step5_SaveData';
 //import { css, cx } from '@emotion/css';
 //import { useStyles2, useTheme2 } from '@grafana/ui';
 
@@ -30,7 +35,25 @@ const getStyles = () => {
 export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) => {
   //const theme = useTheme2();
   //const styles = useStyles2(getStyles);
-  return <div></div>
+  return <div className="container">
+    <div className="main-grid">
+      <div className="item-0">
+        <SelectModel/>
+      </div>
+      <div className="item-1">
+        <ImportData width={width} height={height} />
+      </div>
+      <div className="item-2">
+        <ModifyData width={width} height={height} />
+      </div>
+      <div className="item-3">
+        <PredictModel width={width} height={height} />
+      </div>
+      <div className="item-4">
+        <SaveData width={width} height={height} />
+      </div>
+    </div>
+  </div>
 };
 
 
