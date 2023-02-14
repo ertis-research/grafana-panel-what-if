@@ -1,0 +1,40 @@
+.noSpaceTop {
+    margin-top: 0px !important; 
+    padding-top: 0px !important;
+}
+
+.noSpaceBottom {
+    margin-bottom: 0px !important; 
+    padding-bottom: 0px !important;
+}
+
+.noSpaceRight {
+    margin-right: 0px !important; 
+    padding-right: 0px !important;
+}
+
+.noSpaceLeft {
+    margin-left: 0px !important; 
+    padding-left: 0px !important;
+}
+
+.noSpace {
+    margin: 0px !important; 
+    padding: 0px !important;
+}
+
+.textCenter {
+    text-align: center !important;
+}
+
+.horizontalDiv {
+    display: flex;
+    justify-content: flex-end;
+    align-items: end;
+    margin-top: 15px;
+}
+
+.verticalDiv {
+    display: block;
+    align-items: center;
+}

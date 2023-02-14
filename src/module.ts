@@ -4,6 +4,7 @@ import { SimplePanel } from './components/SimplePanel';
 
 import './css/bootstrap-grid.css';
 import './css/grid.css';
+import './css/others.css';
 
 export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions((builder) => {
   return builder
