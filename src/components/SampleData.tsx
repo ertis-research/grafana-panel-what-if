@@ -4,8 +4,9 @@ import { ITag } from "./Utils";
 export const sampleData : ITag[] = [
     {
         name: "TAG1",
+        description: "ADSADSDSADSA",
         default_value: 212.2,
-        category: "cat1"
+        category: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     {
         name: "TAG2",
@@ -14,6 +15,7 @@ export const sampleData : ITag[] = [
     },
     {
         name: "TAG3",
+        description: "ADSADSDSADSAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         default_value: 12.2,
         category: "cat1"
     },

@@ -1,8 +1,8 @@
 import { SelectableValue } from '@grafana/data';
-import { Field, Icon, Input, Select, useTheme2 } from '@grafana/ui';
+import { Field, HorizontalGroup, Icon, Input, Select, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect } from 'react';
 import { sampleData } from './SampleData';
-import { Context, ITag, Steps } from './Utils';
+import { Context, groupBy, ICategory, ITag, Steps } from './Utils';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 
 interface Props {
@@ -24,6 +24,9 @@ export const ModifyData: React.FC<Props> = () => {
     const theme = useTheme2();
     const context = useContext(Context);
 
+    const [value, setValue] = useState<SelectableValue<number>>()
+    const [tags, setTags] = useState<ITag[]>([])
+
     const disabled = (context.actualStep) ? context.actualStep  < Steps.step_3 : false
 
     const intervalColors:intervalColors = {
@@ -42,10 +45,27 @@ export const ModifyData: React.FC<Props> = () => {
     }
 
     const tagField = (tag:ITag) => {
+        return <div className='col-6 col-sm-6 col-lg-4 col-xl-3'>
+            <Field label={tag.name} description={tag.description}>
+                <HorizontalGroup>
+                    <Input width={8} value={tag.default_value} disabled/>
+                    <Input value={tag.new_value}/>
+                </HorizontalGroup>
+            </Field>
+        </div>
+    }
+
+    const getListTags = () => {
+        const categories:ICategory = groupBy(tags, "category")
         return <div>
-            <span>{tag.name}</span>
-            <Input value={tag.default_value}/>
-            <Input />
+            {Object.entries(categories).map(([category, tagsCategory]) => {
+                return <div style={{ marginRight: '10px'}}>
+                    <p>{category}</p>
+                    <div className="row">
+                        {tagsCategory.map((item:ITag) => tagField(item))}
+                    </div>
+                </div>
+            })}
         </div>
     }
 
@@ -59,9 +79,6 @@ export const ModifyData: React.FC<Props> = () => {
         { label: 'Modelo 2', value: 1 },
         { label: 'Modelo 3', value: 2 }
     ];
-
-    const [value, setValue] = useState<SelectableValue<number>>()
-    const [tags, setTags] = useState<ITag[]>()
 
     useEffect(() => {
         setTags(sampleData)
@@ -95,9 +112,9 @@ export const ModifyData: React.FC<Props> = () => {
                 <Input name="steps" width={5} className='noSpace'/>
             </Field>
         </div>
-        <div>
-            <Scrollbars className='scroll' style={{ width: '100%', height: context.height-170}}>
-            {tags?.map((item:ITag) => tagField(item))}
+        <div className='container' style={{ marginTop: '20px' }}>
+            <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190}}>
+                {getListTags()}
             </Scrollbars>
         </div>
     </div>

@@ -47,7 +47,7 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
     }
 
   return <Context.Provider value={contextData}>
-    <div className="container">
+    <div className="containerType container">
       <div className="main-grid">
         <div className="item-0">
           <SelectModel/>

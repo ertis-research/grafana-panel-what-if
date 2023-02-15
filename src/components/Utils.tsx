@@ -17,9 +17,25 @@ export interface IContext {
 
 export interface ITag {
   name: string,
+  description ?: string,
   default_value: number,
   category: string,
   new_value ?: number
 }
 
+export interface ICategory {
+  [key : string] : ITag[]
+}
+
 export const Context = createContext<IContext>({height: 0, width: 0})
+
+export const groupBy = (input : any[], key:string) => {
+  return input.reduce((acc, currentValue) => {
+    let groupKey = currentValue[key];
+    if (!acc[groupKey]) {
+      acc[groupKey] = [];
+    }
+    acc[groupKey].push(currentValue);
+    return acc;
+  }, {});
+};
