@@ -38,3 +38,11 @@
     display: block;
     align-items: center;
 }
+
+.tagsList {
+    height: inherit !important;
+    width: inherit !important;
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-y: auto !important;
+}

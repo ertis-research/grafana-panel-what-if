@@ -41,7 +41,9 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) =
 
   const contextData = {
       actualStep: actualStep, 
-      setActualStep : setActualStep
+      setActualStep : setActualStep,
+      height : height,
+      width : width
     }
 
   return <Context.Provider value={contextData}>

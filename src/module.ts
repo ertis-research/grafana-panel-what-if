@@ -8,37 +8,22 @@ import './css/others.css';
 
 export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions((builder) => {
   return builder
-    .addTextInput({
-      path: 'text',
-      name: 'Simple text option',
-      description: 'Description of panel option',
-      defaultValue: 'Default value of text input option',
-    })
-    .addBooleanSwitch({
-      path: 'showSeriesCount',
-      name: 'Show series counter',
-      defaultValue: false,
-    })
     .addRadio({
-      path: 'seriesCountSize',
-      defaultValue: 'sm',
-      name: 'Series counter size',
+      path: 'language',
+      defaultValue: 'gb',
+      name: 'Plugin language',
+      category: ['General'],
       settings: {
         options: [
           {
-            value: 'sm',
-            label: 'Small',
+            value: 'gb',
+            label: 'English',
           },
           {
-            value: 'md',
-            label: 'Medium',
-          },
-          {
-            value: 'lg',
-            label: 'Large',
+            value: 'esp',
+            label: 'Spanish',
           },
         ],
-      },
-      showIf: (config) => config.showSeriesCount,
+      }
     });
 });

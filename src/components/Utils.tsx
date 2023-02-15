@@ -10,7 +10,16 @@ export enum Steps {
 
 export interface IContext {
     actualStep ?: Steps,
-    setActualStep ?: any
+    setActualStep ?: any,
+    height : number,
+    width : number
 }
 
-export const Context = createContext<IContext>({})
+export interface ITag {
+  name: string,
+  default_value: number,
+  category: string,
+  new_value ?: number
+}
+
+export const Context = createContext<IContext>({height: 0, width: 0})

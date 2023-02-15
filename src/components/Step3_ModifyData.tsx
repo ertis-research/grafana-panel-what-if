@@ -1,7 +1,9 @@
 import { SelectableValue } from '@grafana/data';
 import { Field, Icon, Input, Select, useTheme2 } from '@grafana/ui';
-import React, { useContext, useState } from 'react';
-import { Context, Steps } from './Utils';
+import React, { useContext, useState, useEffect } from 'react';
+import { sampleData } from './SampleData';
+import { Context, ITag, Steps } from './Utils';
+import { Scrollbars } from 'react-custom-scrollbars-2';
 
 interface Props {
 }
@@ -39,6 +41,14 @@ export const ModifyData: React.FC<Props> = () => {
         }
     }
 
+    const tagField = (tag:ITag) => {
+        return <div>
+            <span>{tag.name}</span>
+            <Input value={tag.default_value}/>
+            <Input />
+        </div>
+    }
+
     const getColor = (attr:String) => {
         const key = attr as keyof colors
         return (disabled) ? intervalColors.DISABLED[key] : (false) ? intervalColors.READY[key] : intervalColors.UNREADY[key]
@@ -51,9 +61,15 @@ export const ModifyData: React.FC<Props> = () => {
     ];
 
     const [value, setValue] = useState<SelectableValue<number>>()
+    const [tags, setTags] = useState<ITag[]>()
+
+    useEffect(() => {
+        setTags(sampleData)
+    }, [])
+    
     //const [hasInterval, setHasInterval] = useState<boolean>(false)
 
-    return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+    return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', maxHeight:context.height}}>
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 3</p>
         <h4>Modify data</h4>
         <Select
@@ -78,6 +94,11 @@ export const ModifyData: React.FC<Props> = () => {
             <Field label="Steps" className='textCenter noSpace'>
                 <Input name="steps" width={5} className='noSpace'/>
             </Field>
+        </div>
+        <div>
+            <Scrollbars className='scroll' style={{ width: '100%', height: context.height-170}}>
+            {tags?.map((item:ITag) => tagField(item))}
+            </Scrollbars>
         </div>
     </div>
 }

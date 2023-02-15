@@ -5,6 +5,10 @@
     container-type: inline-size;
 }
 
+.scroll {
+    max-height: 300px !important;
+}
+
 .main-grid {
     display: grid; 
     grid-template-columns: auto; 
@@ -36,5 +40,14 @@
             "item-1 item-2"
             "item-3 item-2"
             "item-4 item-2"; 
+    }
+
+    .item-2 { 
+        grid-area: item-2; 
+        margin-bottom: 6px !important; 
+    }
+
+    .scroll {
+        max-height: 100% !important;
     }
 }
