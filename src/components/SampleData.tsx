@@ -3,65 +3,74 @@ import { ITag } from "./Utils";
 
 export const sampleData : ITag[] = [
     {
-        name: "TAG1",
+        id: "TAG1",
         description: "ADSADSDSADSA",
         default_value: 212.2,
-        category: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        category: "Categoria 0"
     },
     {
-        name: "TAG2",
+        id: "TAG2",
+        description: "descripcion1",
         default_value: 21.2,
-        category: "cat1"
+        category: "Categoria 1"
     },
     {
-        name: "TAG3",
-        description: "ADSADSDSADSAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        id: "TAG3",
+        description: "ADS",
         default_value: 12.2,
-        category: "cat1"
+        category: "Categoria 1"
     },
     {
-        name: "TAG4",
+        id: "TAG4",
+        description: "descripcion1",
         default_value: 2.2,
-        category: "cat2"
+        category: "Categoria 2"
     },
     {
-        name: "TAG5",
+        id: "TAG5",
+        description: "descripcion1",
         default_value: 25.2,
-        category: "cat3"
+        category: "Categoria 3"
     },
     {
-        name: "TAG6",
+        id: "TAG6",
+        description: "descripcion1",
         default_value: 24.2,
-        category: "cat3"
+        category: "Categoria 3"
     },
     {
-        name: "TAG1",
+        id: "TAG7",
+        description: "descripcion1",
         default_value: 212.2,
-        category: "cat1"
+        category: "Categoria 1"
     },
     {
-        name: "TAG2",
+        id: "TAG8",
+        description: "descripcion1",
         default_value: 21.2,
-        category: "cat1"
+        category: "Categoria 1"
     },
     {
-        name: "TAG3",
+        id: "TAG9",
+        description: "descripcion1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         default_value: 12.2,
-        category: "cat1"
+        category: "Categoria 1"
     },
     {
-        name: "TAG4",
+        id: "TAG10",
         default_value: 2.2,
-        category: "cat2"
+        category: "Categoria 2"
     },
     {
-        name: "TAG5",
+        id: "TAG11",
+        description: "descripcion1",
         default_value: 25.2,
-        category: "cat3"
+        category: "Categoria 3"
     },
     {
-        name: "TAG6",
+        id: "TAG12",
+        description: "descripcion1",
         default_value: 24.2,
-        category: "cat3"
+        category: "Categoria 3"
     }
 ]

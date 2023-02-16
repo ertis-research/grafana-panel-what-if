@@ -31,7 +31,6 @@
     display: flex;
     justify-content: flex-end;
     align-items: end;
-    margin-top: 15px;
 }
 
 .verticalDiv {
@@ -45,4 +44,31 @@
     display: flex !important;
     flex-direction: row !important;
     overflow-y: auto !important;
+}
+
+.wrap {
+    inline-size: min-content;
+    overflow-wrap: break-word;
+    flex-wrap: wrap;
+    max-width: 100%;
+    width: 100%;
+}
+
+.wrap-hidden {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 100%;
+    width: 100%;
+}
+
+.category {
+    font-size: large
+}
+
+.description {
+    font-size: medium;
+}
+
+.id {
+    font-size: small;
 }
