@@ -1,8 +1,8 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { sampleData } from './SampleData';
-import { Context, groupBy, ICategory, ISelect, ITag, Steps, tagsToSelect } from './Utils';
+import { sampleData } from './sampleData';
+import { Context, groupBy, ICategory, ISelect, ITag, Steps, tagsToSelect } from './utils';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 
 interface Props {
@@ -36,6 +36,7 @@ export const ModifyData: React.FC<Props> = () => {
 
     const [currentFile, setCurrentFile] = useState<SelectableValue<number>>()
     const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
+    const [searchInputValue, setSearchInputValue] = useState<string>("")
     const [tags, setTags] = useState<ITag[]>([])
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
     const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
@@ -76,10 +77,10 @@ export const ModifyData: React.FC<Props> = () => {
     }
 
     const updateFilteredTags = () => {
-        if (searchValue && searchValue.value) {
-            setFilteredTags(tags.filter(t => !searchValue.value 
-                || t.id.toLowerCase().includes(searchValue.value.toLowerCase()) 
-                || t.description && t.description.toLowerCase().includes(searchValue.value.toLowerCase())))
+        if (searchInputValue) {
+            setFilteredTags(tags.filter(t => !searchInputValue 
+                || t.id.toLowerCase().includes(searchInputValue.toLowerCase()) 
+                || t.description && t.description.toLowerCase().includes(searchInputValue.toLowerCase())))
         } else {
             setFilteredTags(tags)
         }
@@ -129,9 +130,9 @@ export const ModifyData: React.FC<Props> = () => {
     }, [tags])
 
     useEffect(() => {
-        console.log(searchValue)
+        console.log(searchInputValue)
         updateFilteredTags()
-    }, [searchValue])
+    }, [searchInputValue])
 
 
     // HTML
@@ -166,7 +167,7 @@ export const ModifyData: React.FC<Props> = () => {
         </div>
     }
 
-    return <div>
+    return <div style={{ maxHeight:context.height }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
             <Select
                     options={options}
@@ -179,13 +180,13 @@ export const ModifyData: React.FC<Props> = () => {
             />
             <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled}/>
         </div>
-        <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', maxHeight:context.height}}>
+        <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
             <div className='row'>
-                <div className='col-12 col-md-6'>
+                <div className='col-12 col-sm-4'>
                     <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 3</p>
                     <h4>Modify data</h4>
                 </div>
-                <div className='col-12 col-md-6'>
+                <div className='col-12 col-sm-8'>
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>Intervalo</span>
                         <Field label="Min" className='textCenter noSpace'>
@@ -205,22 +206,21 @@ export const ModifyData: React.FC<Props> = () => {
             <Select
                 options={tagsSearch}
                 value={searchValue}
+                inputValue={searchInputValue}
                 onChange={(v) => setSearchValue(v)}
                 prefix={<Icon name="search"/>} 
                 placeholder="Search"
                 disabled={disabled}
+                isOpen={false}
+                backspaceRemovesValue={false}
                 onInputChange={(v, action) => {
-                    if(action.action == 'input-change')
-                    console.log(v)
-                    setSearchValue({
-                        label: v,
-                        value: v
-                    })
+                    if(action.action == 'set-value' || action.action == 'input-change'){
+                        setSearchInputValue(v)
                     }
-                }
+                }}
             />
-            <div className='container' style={{ marginTop: '20px' }}>
-                <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190}}>
+            <div className='container' style={{ marginTop: '20px'}}>
+                <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190 }}>
                     {getListTags()}
                 </Scrollbars>
             </div>

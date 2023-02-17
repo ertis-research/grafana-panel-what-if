@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
-import { SelectModel } from './Step1_SelectModel';
-import { ImportData } from './Step2_ImportData';
-import { ModifyData } from './Step3_ModifyData';
-import { PredictModel } from './Step4_PredictModel';
-import { ExportData } from './Step5_ExportData';
-import { Context, Steps } from './Utils';
+import { SelectModel } from './step1_SelectModel';
+import { ImportData } from './step2_ImportData';
+import { ModifyData } from './step3_ModifyData';
+import { PredictModel } from './step4_PredictModel';
+import { ExportData } from './step5_ExportData';
+import { Context, Steps } from './utils';
 //import { css, cx } from '@emotion/css';
 //import { useStyles2, useTheme2 } from '@grafana/ui';
 
@@ -33,7 +33,7 @@ const getStyles = () => {
   };
 };*/
 
-export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) => {
+export const Main: React.FC<Props> = ({ options, data, width, height }) => {
   //const theme = useTheme2();
   //const styles = useStyles2(getStyles);
 
