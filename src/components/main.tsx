@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { PanelProps } from '@grafana/data';
 import { SimpleOptions } from 'types';
-import { SelectModel } from './s.tep1_SelectModel';
-import { ImportData } from './s.tep2_ImportData';
-import { ModifyData } from './s.tep3_ModifyData';
-import { PredictModel } from './s.tep4_PredictModel';
-import { ExportData } from './s.tep5_ExportData';
-import { Context, Steps } from './u.tils';
+import { SelectModel } from './step1_SelectModel';
+import { ImportData } from './step2_ImportData';
+import { ModifyData } from './step3_ModifyData';
+import { PredictModel } from './step4_PredictModel';
+import { ExportData } from './step5_ExportData';
+import { Context, Steps } from './utils';
 //import { css, cx } from '@emotion/css';
 //import { useStyles2, useTheme2 } from '@grafana/ui';
 

@@ -1,4 +1,4 @@
-import { ITag } from "./u.tils";
+import { ITag } from "./utils";
 
 
 export const sampleData : ITag[] = [

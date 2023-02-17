@@ -1,8 +1,8 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { sampleData } from './s.ampleData';
-import { Context, groupBy, ICategory, ISelect, ITag, Steps, tagsToSelect } from './u.tils';
+import { sampleData } from './sampleData';
+import { Context, groupBy, ICategory, ISelect, ITag, Steps, tagsToSelect } from './utils';
 import { Scrollbars } from 'react-custom-scrollbars-2';
 
 interface Props {
