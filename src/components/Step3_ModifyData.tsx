@@ -97,12 +97,22 @@ export const ModifyData: React.FC<Props> = () => {
         })
     }
 
-    const handleOnChangeTagValue = (event:ChangeEvent<HTMLInputElement>, key:string) => {
+    const handleOnChangeTagValue = (event:ChangeEvent<HTMLInputElement>) => {
         const tagIndex = tags.findIndex((t:ITag) => t.id == event.currentTarget.name)
         if(tagIndex >= 0){
-            const key_itag:any = key as keyof any
-            const updatedTags:any[] = [...tags]
-            updatedTags[tagIndex][key_itag] = +event.target.value
+            const updatedTags = [...tags]
+            updatedTags[tagIndex].new_value = +event.target.value
+            setTags(updatedTags)
+            console.log(tags)
+        }
+    }
+
+    const handleOnChangePercentage = (event:ChangeEvent<HTMLInputElement>) => {
+        const tagIndex = tags.findIndex((t:ITag) => t.id == event.currentTarget.name)
+        if(tagIndex >= 0){
+            const updatedTags = [...tags]
+            const old_value = updatedTags[tagIndex].set_percentage
+            updatedTags[tagIndex].set_percentage = (!old_value) ? true : false
             setTags(updatedTags)
             console.log(tags)
         }
@@ -145,8 +155,8 @@ export const ModifyData: React.FC<Props> = () => {
             <Field>
                 <HorizontalGroup>
                     <Input width={8} value={tag.default_value} disabled type='text'/>
-                    <Input name={tag.id} value={tag.new_value} type='number' onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTagValue(e, "new_value")} />
-                    <Checkbox value={tag.set_percentage} disabled={!hasInterval} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTagValue(e, "set_percentage")}/>
+                    <Input name={tag.id} value={tag.new_value} disabled={disabled || (hasInterval && tag.set_percentage)} type='number' onChange={handleOnChangeTagValue} />
+                    <Checkbox name={tag.id} value={tag.set_percentage} disabled={!hasInterval} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
         </div>
