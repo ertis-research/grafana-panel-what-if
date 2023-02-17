@@ -1,6 +1,6 @@
 import { Button, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { useContext } from 'react';
-import { Context, Steps } from './utils';
+import { Context, Steps } from './u.tils';
 
 interface Props {
 }
