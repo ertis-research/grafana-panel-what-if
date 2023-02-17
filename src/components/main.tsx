@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { PanelProps } from '@grafana/data';
-import { SimpleOptions } from 'types';
 import { SelectModel } from './step1_SelectModel';
 import { ImportData } from './step2_ImportData';
 import { ModifyData } from './step3_ModifyData';
 import { PredictModel } from './step4_PredictModel';
 import { ExportData } from './step5_ExportData';
 import { Context } from 'utils/utils';
-import { Steps } from 'utils/types';
+import { IContext, IModel, Options, Steps } from 'utils/types';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
 //import { css, cx } from '@emotion/css';
 //import { useStyles2, useTheme2 } from '@grafana/ui';
 
-interface Props extends PanelProps<SimpleOptions> {}
+interface Props extends PanelProps<Options> {}
 
 /*
 const getStyles = () => {
@@ -40,22 +39,24 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
   //const styles = useStyles2(getStyles);
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1);
+  const [selectedModel, setSelectedModel] = useState<IModel>()
 
-  const contextData = {
+  const contextData:IContext = {
       actualStep: actualStep, 
       setActualStep : setActualStep,
       height : height,
-      width : width
-    }
+      width : width,
+      options : options
+  }
 
   return <Context.Provider value={contextData}>
     <div className="containerType container scrollMain" style={{ width: width, height: height }} >
       <div className="main-grid">
         <div className="item-0">
-          <SelectModel/>
+          <SelectModel models={options.models} setModel={setSelectedModel}/>
         </div>
         <div className="item-1">
-          <ImportData/>
+          <ImportData model={selectedModel}/>
         </div>
         <div className="item-2">
           <ModifyData/>

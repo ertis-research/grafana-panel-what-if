@@ -1,11 +1,15 @@
 import { Button, Input, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { ChangeEvent, useContext, useState } from 'react';
 import { Context } from 'utils/utils';
-import { Steps } from 'utils/types';
+import { IModel, Steps } from 'utils/types';
 
-interface Props {}
+interface Props {
+    model ?: IModel
+}
 
-export const ImportData: React.FC<Props> = () => {
+export const ImportData: React.FC<Props> = ({ model }) => {
+
+    console.log("SOY IMPORTDATA", model)
 
     const theme = useTheme2()
     const context = useContext(Context)

@@ -1,7 +1,8 @@
 import { createContext } from 'react'
-import { IContext, ISelect, ITag } from './types'
+import { ContextDefault } from './default'
+import { IContext, IModel, ISelect, ITag } from './types'
 
-export const Context = createContext<IContext>({height: 0, width: 0})
+export const Context = createContext<IContext>(ContextDefault)
 
 export const tagsToSelect = (tags : ITag[]) : ISelect[] => {
   return tags.map((tag:ITag) => {
@@ -9,6 +10,16 @@ export const tagsToSelect = (tags : ITag[]) : ISelect[] => {
       label : tag.id,
       value : tag.id,
       description : tag.description
+    }
+  })
+}
+
+export const modelsToSelect = (models : IModel[]) : ISelect[] => {
+  return models.map((model:IModel) => {
+    return {
+      label : model.id,
+      value : model,
+      description : model.description
     }
   })
 }
@@ -22,4 +33,4 @@ export const groupBy = (input : any[], key:string) => {
     acc[groupKey].push(currentValue);
     return acc;
   }, {});
-};
+}

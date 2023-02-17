@@ -1,13 +1,12 @@
 import { ModelEditor } from './components/editors/modelEditor';
 import { PanelPlugin } from '@grafana/data';
-import { SimpleOptions } from './types';
 import { Main } from './components/main';
-
 import './css/bootstrap-grid.css';
 import './css/grid.css';
 import './css/others.css';
+import { Options } from 'utils/types';
 
-export const plugin = new PanelPlugin<SimpleOptions>(Main).setPanelOptions((builder) => {
+export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
     .addRadio({
       path: 'language',

@@ -1,3 +1,5 @@
+type Language = 'gb' | 'es';
+
 export enum Steps {
   step_1 = 1,
   step_2 = 2,
@@ -24,6 +26,7 @@ export interface IContext {
   setActualStep ?: any,
   height : number,
   width : number
+  options : Options
 }
   
 export interface ITag {
@@ -41,6 +44,18 @@ export interface ICategory {
 
 export interface IModel {
   id : string,
+  description : string,
   url : string,
   method : Method,
+}
+
+export interface Options {
+  language: Language;
+  models: IModel[]
+}
+
+export type Interval = {
+    min ?: number,
+    max ?: number,
+    steps ?: number
 }

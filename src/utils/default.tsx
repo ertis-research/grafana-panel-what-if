@@ -1,9 +1,19 @@
-import { IModel, ITag, Method } from "./types";
+import { IContext, IModel, ITag, Method } from "./types";
 
 export const ModelDefault:IModel= {
     id : "",
     url : "",
+    description: "",
     method : Method.POST
+}
+
+export const ContextDefault:IContext = {
+    height : 0, 
+    width : 0,
+    options : {
+        language : 'gb',
+        models : []
+    }
 }
 
 export const sampleData : ITag[] = [

@@ -3,30 +3,25 @@ import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useT
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { sampleData } from '../utils/default'
 import { Context, groupBy, tagsToSelect } from '../utils/utils'
-import { ICategory, ISelect, ITag, Steps } from '../utils/types'
+import { ICategory, IModel, ISelect, ITag, Steps, Interval } from '../utils/types'
 import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
+    model ?: IModel
 }
 
-type intervalColors = {
-    DISABLED : colors,
-    UNREADY : colors,
-    READY : colors   
+type IntervalColors = {
+    DISABLED : Colors,
+    UNREADY : Colors,
+    READY : Colors   
 }
 
-type interval = {
-    min ?: number,
-    max ?: number,
-    steps ?: number
-}
-
-type colors = {
+type Colors = {
     bg: string,
     text: string
 }
 
-export const ModifyData: React.FC<Props> = () => {
+export const ModifyData: React.FC<Props> = ({ model }) => {
 
     const theme = useTheme2();
     const context = useContext(Context);
@@ -41,7 +36,7 @@ export const ModifyData: React.FC<Props> = () => {
     const [tags, setTags] = useState<ITag[]>([])
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
     const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
-    const [interval, setInterval] = useState<interval>({min: undefined, max: undefined, steps: undefined})
+    const [interval, setInterval] = useState<Interval>({min: undefined, max: undefined, steps: undefined})
     const [hasInterval, setHasInterval] = useState<boolean>(false)
 
 
@@ -57,7 +52,7 @@ export const ModifyData: React.FC<Props> = () => {
         { label: 'Archivo 3', value: 2 }
     ];
 
-    const intervalColors:intervalColors = {
+    const intervalColors:IntervalColors = {
         DISABLED : {
             bg: theme.colors.secondary.main,
             text: theme.colors.secondary.contrastText
@@ -73,7 +68,7 @@ export const ModifyData: React.FC<Props> = () => {
     }
 
     const getColor = (attr:String) => {
-        const key = attr as keyof colors
+        const key = attr as keyof Colors
         return (disabled) ? intervalColors.DISABLED[key] : (hasInterval) ? intervalColors.READY[key] : intervalColors.UNREADY[key]
     }
 
@@ -231,7 +226,7 @@ export const ModifyData: React.FC<Props> = () => {
                 }}
             />
             <div className='container' style={{ marginTop: '20px'}}>
-                <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190 }}>
+                <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190, minHeight:'380px' }}>
                     {getListTags()}
                 </Scrollbars>
             </div>

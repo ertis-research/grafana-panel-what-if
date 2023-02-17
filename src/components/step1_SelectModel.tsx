@@ -1,27 +1,33 @@
 import { SelectableValue } from '@grafana/data';
 import { Select, useTheme2 } from '@grafana/ui';
 import React, { useState, useEffect, useContext } from 'react';
-import { Steps } from 'utils/types';
-import { Context } from 'utils/utils';
+import { IModel, ISelect, Steps } from 'utils/types';
+import { Context, modelsToSelect } from 'utils/utils';
 
-interface Props {}
+interface Props {
+    models : IModel[],
+    setModel : any
+}
 
-export const SelectModel: React.FC<Props> = ({}) => {
+export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
 
     const theme = useTheme2();
     const context = useContext(Context);
 
-    const options = [
-        { label: 'Modelo 1', value: 0 },
-        { label: 'Modelo 2', value: 1 },
-        { label: 'Modelo 3', value: 2 }
-    ];
-
-    const [value, setValue] = useState<SelectableValue<number>>();
+    const [value, setValue] = useState<SelectableValue<number>>()
+    const [modelsOptions, setModelsOptions] = useState<ISelect[]>([])
 
     useEffect(() => {
+        setModelsOptions(modelsToSelect(models))
+    }, [models])
+    
+
+    useEffect(() => {
+        setModel(value?.value)
         if(value != null && context.setActualStep){
             context.setActualStep(Steps.step_2)
+        } else {
+            context.setActualStep(Steps.step_1)
         }
     }, [value])
 
@@ -29,7 +35,7 @@ export const SelectModel: React.FC<Props> = ({}) => {
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 1</p>
         <h4>Select model</h4>
         <Select
-            options={options}
+            options={modelsOptions}
             value={value}
             onChange={(v) => setValue(v)}
         />
