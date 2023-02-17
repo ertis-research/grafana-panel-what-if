@@ -24,6 +24,10 @@ export const modelsToSelect = (models : IModel[]) : ISelect[] => {
   })
 }
 
+export const enumToSelect = (e:any) => {
+  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
+}
+
 export const groupBy = (input : any[], key:string) => {
   return input.reduce((acc, currentValue) => {
     let groupKey = currentValue[key];

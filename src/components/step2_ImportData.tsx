@@ -9,8 +9,6 @@ interface Props {
 
 export const ImportData: React.FC<Props> = ({ model }) => {
 
-    console.log("SOY IMPORTDATA", model)
-
     const theme = useTheme2()
     const context = useContext(Context)
 
