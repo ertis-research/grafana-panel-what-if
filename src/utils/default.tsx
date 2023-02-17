@@ -1,5 +1,10 @@
-import { ITag } from "./utils";
+import { IModel, ITag, Method } from "./types";
 
+export const ModelDefault:IModel= {
+    id : "",
+    url : "",
+    method : Method.POST
+}
 
 export const sampleData : ITag[] = [
     {

@@ -1,9 +1,10 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { sampleData } from './sampleData';
-import { Context, groupBy, ICategory, ISelect, ITag, Steps, tagsToSelect } from './utils';
-import { Scrollbars } from 'react-custom-scrollbars-2';
+import { sampleData } from '../utils/default'
+import { Context, groupBy, tagsToSelect } from '../utils/utils'
+import { ICategory, ISelect, ITag, Steps } from '../utils/types'
+import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
 }
@@ -199,16 +200,16 @@ export const ModifyData: React.FC<Props> = () => {
                 <div className='col-12 col-sm-8'>
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>Intervalo</span>
-                        <Field label="Min" className='textCenter noSpace'>
-                            <Input name="min" width={6} className='noSpace' value={interval?.min} onChange={handleOnChangeInterval} type='number' />
+                        <Field label="Min" className='textCenter noSpace' disabled={disabled}>
+                            <Input name="min" width={6} className='noSpace' value={interval?.min} onChange={handleOnChangeInterval} type='number'   />
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
-                        <Field label="Max" className='textCenter noSpace'>
-                            <Input name="max" width={6} className='noSpace' value={interval?.max} onChange={handleOnChangeInterval} type='number' />
+                        <Field label="Max" className='textCenter noSpace' disabled={disabled}>
+                            <Input name="max" width={6} className='noSpace' value={interval?.max} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
-                        <Field label="Steps" className='textCenter noSpace'>
-                            <Input name="steps" width={6} className='noSpace' value={interval?.steps} onChange={handleOnChangeInterval} type='number'/>
+                        <Field label="Steps" className='textCenter noSpace' disabled={disabled}>
+                            <Input name="steps" width={6} className='noSpace' value={interval?.steps} onChange={handleOnChangeInterval} type='number' disabled={disabled}/>
                         </Field>
                     </div>
                 </div>

@@ -6,7 +6,9 @@ import { ImportData } from './step2_ImportData';
 import { ModifyData } from './step3_ModifyData';
 import { PredictModel } from './step4_PredictModel';
 import { ExportData } from './step5_ExportData';
-import { Context, Steps } from './utils';
+import { Context } from 'utils/utils';
+import { Steps } from 'utils/types';
+//import { Scrollbars } from 'react-custom-scrollbars-2'
 //import { css, cx } from '@emotion/css';
 //import { useStyles2, useTheme2 } from '@grafana/ui';
 
@@ -47,7 +49,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
     }
 
   return <Context.Provider value={contextData}>
-    <div className="containerType container">
+    <div className="containerType container scrollMain" style={{ width: width, height: height }} >
       <div className="main-grid">
         <div className="item-0">
           <SelectModel/>

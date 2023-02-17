@@ -1,7 +1,8 @@
 import { SelectableValue } from '@grafana/data';
 import { Select, useTheme2 } from '@grafana/ui';
 import React, { useState, useEffect, useContext } from 'react';
-import { Context, Steps } from './utils';
+import { Steps } from 'utils/types';
+import { Context } from 'utils/utils';
 
 interface Props {}
 

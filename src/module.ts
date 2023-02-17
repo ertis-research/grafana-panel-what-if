@@ -1,3 +1,4 @@
+import { ModelEditor } from './components/editors/modelEditor';
 import { PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
 import { Main } from './components/main';
@@ -25,5 +26,11 @@ export const plugin = new PanelPlugin<SimpleOptions>(Main).setPanelOptions((buil
           },
         ],
       }
+    }).addCustomEditor({
+      path : 'models',
+      id: 'models',
+      name : 'Models',
+      category : ['Models'],
+      editor : ModelEditor
     });
 });
