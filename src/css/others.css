@@ -33,6 +33,12 @@
     align-items: end;
 }
 
+.alignCenter {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
 .verticalDiv {
     display: block;
     align-items: center;

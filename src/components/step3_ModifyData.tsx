@@ -1,10 +1,10 @@
 import { SelectableValue } from '@grafana/data';
-import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2 } from '@grafana/ui';
+import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2, CustomScrollbar } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { sampleData } from '../utils/default'
 import { Context, groupBy, tagsToSelect } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, Steps, Interval } from '../utils/types'
-import { Scrollbars } from 'react-custom-scrollbars-2'
+//import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
     model ?: IModel
@@ -23,8 +23,8 @@ type Colors = {
 
 export const ModifyData: React.FC<Props> = ({ model }) => {
 
-    const theme = useTheme2();
-    const context = useContext(Context);
+    const theme = useTheme2()
+    const context = useContext(Context)
 
 
     // UseState hook
@@ -225,11 +225,13 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
                     }
                 }}
             />
-            <div className='container' style={{ marginTop: '20px'}}>
-                <Scrollbars className='scroll' style={{ width: '100%', height: context.height-190, minHeight:'380px' }}>
+            <div className='container' style={{ marginTop: '20px', width: '100%', height: context.height-190, minHeight:'380px'}}>
+                <CustomScrollbar className='scroll'> 
                     {getListTags()}
-                </Scrollbars>
+                </CustomScrollbar>
             </div>
         </div>
     </div>
 }
+
+//style={{ width: '100%', height: context.height-190, minHeight:'380px' }}

@@ -28,11 +28,11 @@ export interface IContext {
   width : number
   options : Options
 }
-  
+
 export interface ITag {
   id : string,
   description ?: string,
-  default_value : number,
+  default_value ?: number,
   category : string,
   new_value ?: number,
   set_percentage ?: boolean

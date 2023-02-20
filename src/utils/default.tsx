@@ -1,10 +1,15 @@
 import { IContext, IModel, ITag, Method } from "./types";
 
-export const ModelDefault:IModel= {
+export const ModelDefault:IModel = {
     id : "",
     url : "",
     description: "",
     method : Method.POST
+}
+
+export const TagDefault:ITag = {
+    id : "",
+    category : "default"
 }
 
 export const ContextDefault:IContext = {
