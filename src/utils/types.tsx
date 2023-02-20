@@ -47,6 +47,16 @@ export interface IModel {
   description : string,
   url : string,
   method : Method,
+  tags : ITag[],
+  preprocess ?: string
+}
+
+export interface IModel_Form {
+  id : string,
+  description : string,
+  url : string,
+  method : Method,
+  preprocess ?: string
 }
 
 export interface Options {

@@ -4,7 +4,8 @@ export const ModelDefault:IModel = {
     id : "",
     url : "",
     description: "",
-    method : Method.POST
+    method : Method.POST,
+    tags : []
 }
 
 export const TagDefault:ITag = {
