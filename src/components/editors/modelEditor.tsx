@@ -39,10 +39,10 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
                     handleOnConfirmDeleteModel(idx)
                 }}
             />
-            
             <ControlledCollapse label={element.id} collapsible>
-            <ModelForm model={element} updateFunction={(m:IModel) => updateElement(idx, m)}/>
-        </ControlledCollapse></div>
+                <ModelForm model={element} updateFunction={(m:IModel) => updateElement(idx, m)}/>
+            </ControlledCollapse>
+        </div>
     })
 
     return (<div style={{ marginRight: '15px'}}>
