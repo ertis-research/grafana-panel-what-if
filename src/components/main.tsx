@@ -59,13 +59,13 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
           <ImportData model={selectedModel}/>
         </div>
         <div className="item-2">
-          <ModifyData/>
+          <ModifyData model={selectedModel}/>
         </div>
         <div className="item-3">
-          <PredictModel/>
+          <PredictModel model={selectedModel}/>
         </div>
         <div className="item-4">
-          <ExportData/>
+          <ExportData model={selectedModel}/>
         </div>
       </div>
     </div>

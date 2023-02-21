@@ -1,9 +1,10 @@
 import { Button, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { useContext } from 'react';
 import { Context } from 'utils/utils';
-import { Steps } from 'utils/types';
+import { IModel, Steps } from 'utils/types';
 
 interface Props {
+    model ?: IModel
 }
 
 export const PredictModel: React.FC<Props> = () => {

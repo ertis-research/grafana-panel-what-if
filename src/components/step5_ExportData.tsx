@@ -4,6 +4,7 @@ import { Steps } from 'utils/types';
 import { Context } from 'utils/utils';
 
 interface Props {
+    model ?: IModel
 }
 
 export const ExportData: React.FC<Props> = () => {

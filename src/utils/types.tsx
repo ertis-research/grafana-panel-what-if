@@ -8,6 +8,11 @@ export enum Steps {
   step_5 = 5
 }
 
+export enum Mode {
+  EDIT = 'Save',
+  CREATE = 'Add'
+}
+
 export enum Method {
   POST = "POST",
   GET = "GET",
@@ -48,7 +53,8 @@ export interface IModel {
   url : string,
   method : Method,
   tags : ITag[],
-  preprocess ?: string
+  preprocess ?: string,
+  scaler ?: File
 }
 
 export interface IModel_Form {

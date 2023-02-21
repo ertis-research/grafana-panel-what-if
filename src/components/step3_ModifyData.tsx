@@ -1,7 +1,6 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2, CustomScrollbar } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { sampleData } from '../utils/default'
 import { Context, groupBy, tagsToSelect } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, Steps, Interval } from '../utils/types'
 //import { Scrollbars } from 'react-custom-scrollbars-2'
@@ -119,8 +118,9 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     // -------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        setTags(sampleData)
-    }, [])
+        console.log(model)
+        if (model && model.tags) setTags(model.tags)
+    }, [model])
 
     useEffect(() => {
         if(interval.max && interval.min && interval.steps) {

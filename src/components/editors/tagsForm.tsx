@@ -1,4 +1,4 @@
-import { Button, CodeEditor, Collapse, Form, HorizontalGroup,  InlineSwitch, FormAPI, InlineFieldRow, InlineField, Input, DeleteButton } from '@grafana/ui'
+import { Button, CodeEditor, Form, HorizontalGroup,  InlineSwitch, FormAPI, InlineFieldRow, InlineField, Input, DeleteButton } from '@grafana/ui'
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { TagDefault } from 'utils/default'
 import { ITag } from 'utils/types'
@@ -6,9 +6,10 @@ import { ITag } from 'utils/types'
 interface Props {
     currentTags : ITag[]
     setCurrentTags : any
+    disabled : boolean
 }
 
-export const TagsForm = ({ currentTags, setCurrentTags }:Props) => {
+export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) => {
 
     const [isTagsForm, setIsTagsForm] = useState<boolean>(true) // true = Form, false = JSON
 
@@ -41,17 +42,18 @@ export const TagsForm = ({ currentTags, setCurrentTags }:Props) => {
                 {currentTags.map((tag:ITag, idx: number) => {
                 return <InlineFieldRow>
                     <b style={{ width: '20px', height: '32px', display: 'flex', alignItems: 'center' }}>{idx+1}</b>
-                    <InlineField label="ID" labelWidth={6.5} required>
-                        <Input name='id' value={tag.id} width={15} required onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
+                    <InlineField label="ID" labelWidth={6.5} required disabled={disabled}>
+                        <Input name='id' value={tag.id} width={15} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
-                    <InlineField label="Descripción" labelWidth={10} grow>
-                        <Input name='description' value={tag.description} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
+                    <InlineField label="Descripción" labelWidth={10} grow disabled={disabled}>
+                        <Input name='description' value={tag.description} disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
-                    <InlineField label="Categoría" labelWidth={10} required>
-                        <Input name='category' value={tag.category} width={17} required onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
+                    <InlineField label="Categoría" labelWidth={10} required disabled={disabled}>
+                        <Input name='category' value={tag.category} width={17} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
                     <div style={{ height: '32px', display:'flex', alignItems: 'center' }}>
                         <DeleteButton
+                            disabled={disabled}
                             onConfirm={() => {
                                 handleOnConfirmDeleteTag(idx)
                             }}
@@ -62,7 +64,7 @@ export const TagsForm = ({ currentTags, setCurrentTags }:Props) => {
             </div>)
         }}
         </Form>
-        <Button type="submit" form="tagsForm" variant='secondary'>Add tag</Button> 
+        <Button type="submit" form="tagsForm" variant='secondary' disabled={disabled}>Add tag</Button> 
     </div>
     
     const tagsJson = <CodeEditor 
@@ -79,7 +81,7 @@ export const TagsForm = ({ currentTags, setCurrentTags }:Props) => {
     />
 
     return (
-    <Collapse label="Tags de entrada del modelo" collapsible={false} isOpen={true}>
+    <div>
         <HorizontalGroup justify='flex-end'>
             <InlineSwitch 
                 label={'Modo ' + (isTagsForm) ? "formulario" : "JSON"}
@@ -90,6 +92,6 @@ export const TagsForm = ({ currentTags, setCurrentTags }:Props) => {
             />
         </HorizontalGroup>
         {(isTagsForm) ? tagsForm : tagsJson}
-    </Collapse>
+    </div>
     )
 } 
