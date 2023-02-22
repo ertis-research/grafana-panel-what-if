@@ -24,7 +24,7 @@ type Colors = {
     text: string
 }
 
-export const ModifyData: React.FC<Props> = ({ model, files }) => {
+export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFile }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -116,6 +116,12 @@ export const ModifyData: React.FC<Props> = ({ model, files }) => {
         }
     }
 
+    const handleOnClickDeleteFile = () => {
+        if(files && files.length == 1) context.setActualStep(Steps.step_2)
+        if(currentFile && currentFile.value) deleteFile(currentFile.value.id)
+        setCurrentFile(undefined)
+    }
+
 
     // UseEffect hook
     // -------------------------------------------------------------------------------------------------------------
@@ -143,8 +149,19 @@ export const ModifyData: React.FC<Props> = ({ model, files }) => {
     }, [searchInputValue])
 
     useEffect(() => {
-        setfilesSelect(filesToSelect( (files != undefined) ? files : []))
+        const options:ISelect[] = filesToSelect( (files != undefined) ? files : [])
+        setfilesSelect(options)
+        if(!currentFile && options.length > 0) setCurrentFile(options[0])
     }, [files])
+
+    useEffect(() => {
+        if(currentFile && currentFile.value){
+            setfileData(currentFile.value.data)
+        } else {
+            setfileData([])
+        }
+    }, [currentFile])
+    
     
 
 
@@ -193,7 +210,7 @@ export const ModifyData: React.FC<Props> = ({ model, files }) => {
                     width={20}
                     defaultValue={filesSelect[0]}
             />
-            <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled}/>
+            <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteFile}/>
         </div>
         <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
             <div className='row'>

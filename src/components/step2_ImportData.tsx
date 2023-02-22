@@ -37,7 +37,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile })
     }
 
     const handleOnClickAddData = () => {
-        if (context.setActualStep && context.setActualStep < Steps.step_3) context.setActualStep(Steps.step_3)
+        if (context.actualStep != undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
 
         console.log("addDATA")
         switch(value.value) {
@@ -57,12 +57,11 @@ export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile })
                             })
                             console.log(fileData)
                             addFile({
-                                id: "aaa",
+                                id: "CSV: " + fileCSV.name,
                                 data: fileData
                             })
                         }
-                    });
-                    console.log("DATOS DE CSV")
+                    })
                 }
         }
     }

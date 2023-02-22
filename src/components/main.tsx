@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { PanelProps } from '@grafana/data'
 import { SelectModel } from './step1_SelectModel'
 import { ImportData } from './step2_ImportData'
@@ -31,12 +31,22 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
   }
 
   const deleteFile = (id:string) => {
-
+    const idx = files.findIndex((file) => file.id == id)
+    if(idx >= 0) {
+      const updatedFiles = [...files]
+      updatedFiles.splice(idx, 1)
+      setFiles(updatedFiles)
+    }
   }
 
   const updateFile = (updatedFile:IFile) => {
 
   }
+
+  useEffect(() => {
+    console.log("files", files)
+  }, [files])
+  
 
   return <Context.Provider value={contextData}>
     <div className="containerType container scrollMain" style={{ width: width, height: height }} >
