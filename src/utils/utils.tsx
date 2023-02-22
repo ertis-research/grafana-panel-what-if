@@ -1,6 +1,6 @@
 import { createContext } from 'react'
 import { ContextDefault } from './default'
-import { IContext, IModel, ISelect, ITag } from './types'
+import { IContext, IFile, IModel, ISelect, ITag } from './types'
 
 export const Context = createContext<IContext>(ContextDefault)
 
@@ -20,6 +20,15 @@ export const modelsToSelect = (models : IModel[]) : ISelect[] => {
       label : model.id,
       value : model,
       description : model.description
+    }
+  })
+}
+
+export const filesToSelect = (files : IFile[]) : ISelect[] => {
+  return files.map((file:IFile) => {
+    return {
+      label : file.id,
+      value : file
     }
   })
 }

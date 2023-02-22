@@ -1,12 +1,16 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, useTheme2, CustomScrollbar } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, groupBy, tagsToSelect } from '../utils/utils'
-import { ICategory, IModel, ISelect, ITag, Steps, Interval } from '../utils/types'
+import { Context, filesToSelect, groupBy, tagsToSelect } from '../utils/utils'
+import { ICategory, IModel, ISelect, ITag, Interval, IFile, IData } from '../utils/types'
+import { Steps } from 'utils/constants';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
-    model ?: IModel
+    model ?: IModel,
+    files ?: IFile[],
+    deleteFile : any,
+    updateFile : any
 }
 
 type IntervalColors = {
@@ -20,7 +24,7 @@ type Colors = {
     text: string
 }
 
-export const ModifyData: React.FC<Props> = ({ model }) => {
+export const ModifyData: React.FC<Props> = ({ model, files }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -29,12 +33,17 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     // UseState hook
     // -------------------------------------------------------------------------------------------------------------
 
-    const [currentFile, setCurrentFile] = useState<SelectableValue<number>>()
+    const [currentFile, setCurrentFile] = useState<SelectableValue<IFile>>()
+    const [fileData, setfileData] = useState<IData[]>([])
+    const [filesSelect, setfilesSelect] = useState<ISelect[]>([])
+
     const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
     const [searchInputValue, setSearchInputValue] = useState<string>("")
+    
     const [tags, setTags] = useState<ITag[]>([])
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
     const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
+    
     const [interval, setInterval] = useState<Interval>({min: undefined, max: undefined, steps: undefined})
     const [hasInterval, setHasInterval] = useState<boolean>(false)
 
@@ -45,11 +54,7 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     const disabled = (context.actualStep) ? context.actualStep  < Steps.step_3 : false
     const disabled_files = disabled || false
 
-    const options = [
-        { label: 'Archivo 1', value: 0 },
-        { label: 'Archivo 2', value: 1 },
-        { label: 'Archivo 3', value: 2 }
-    ];
+    
 
     const intervalColors:IntervalColors = {
         DISABLED : {
@@ -93,23 +98,21 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     }
 
     const handleOnChangeTagValue = (event:ChangeEvent<HTMLInputElement>) => {
-        const tagIndex = tags.findIndex((t:ITag) => t.id == event.currentTarget.name)
-        if(tagIndex >= 0){
-            const updatedTags = [...tags]
-            updatedTags[tagIndex].new_value = +event.target.value
-            setTags(updatedTags)
-            console.log(tags)
+        const dataIndex = fileData.findIndex((d:IData) => d.id == event.currentTarget.name)
+        if(dataIndex >= 0){
+            const updatedFileData = [...fileData]
+            updatedFileData[dataIndex].new_value = event.target.value
+            setfileData(updatedFileData)
         }
     }
 
     const handleOnChangePercentage = (event:ChangeEvent<HTMLInputElement>) => {
-        const tagIndex = tags.findIndex((t:ITag) => t.id == event.currentTarget.name)
-        if(tagIndex >= 0){
-            const updatedTags = [...tags]
-            const old_value = updatedTags[tagIndex].set_percentage
-            updatedTags[tagIndex].set_percentage = (!old_value) ? true : false
-            setTags(updatedTags)
-            console.log(tags)
+        const dataIndex = fileData.findIndex((d:IData) => d.id == event.currentTarget.name)
+        if(dataIndex >= 0){
+            const updatedFileData = [...fileData]
+            const old_value = updatedFileData[dataIndex].set_percentage
+            updatedFileData[dataIndex].set_percentage = (!old_value) ? true : false
+            setfileData(updatedFileData)
         }
     }
 
@@ -136,23 +139,29 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     }, [tags])
 
     useEffect(() => {
-        console.log(searchInputValue)
         updateFilteredTags()
     }, [searchInputValue])
+
+    useEffect(() => {
+        setfilesSelect(filesToSelect( (files != undefined) ? files : []))
+    }, [files])
+    
 
 
     // HTML
     // -------------------------------------------------------------------------------------------------------------
 
     const tagField = (tag:ITag) => {
+        const findRes = fileData.find((d) => d.id == tag.id)
+        const data:IData = (findRes) ? findRes : { id: tag.id }
         return <div className='col-6 col-sm-6 col-lg-4 col-xl-3'>
             <p className='noSpaceBottom id wrap-hidden' style={{ color:theme.colors.text.secondary }}>{tag.id}</p>
             <p className="noSpaceBottom description wrap-hidden">{(tag.description) ? tag.description : <br/>}</p>
             <Field>
                 <HorizontalGroup>
-                    <Input width={8} value={tag.default_value} disabled type='text'/>
-                    <Input name={tag.id} value={tag.new_value} disabled={disabled || (hasInterval && tag.set_percentage)} type='number' onChange={handleOnChangeTagValue} />
-                    <Checkbox name={tag.id} value={tag.set_percentage} disabled={!hasInterval} onChange={handleOnChangePercentage} />
+                    <Input width={8} value={data.default_value} disabled type='text'/>
+                    <Input name={tag.id} value={data.new_value} disabled={disabled || (hasInterval && data.set_percentage)} type='number' onChange={handleOnChangeTagValue} />
+                    <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
         </div>
@@ -176,13 +185,13 @@ export const ModifyData: React.FC<Props> = ({ model }) => {
     return <div style={{ maxHeight:context.height }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
             <Select
-                    options={options}
+                    options={filesSelect}
                     value={currentFile}
                     onChange={(v) => setCurrentFile(v)}
                     prefix={<Icon name="file-alt"/>} 
                     disabled={disabled_files}
                     width={20}
-                    defaultValue={options[0]}
+                    defaultValue={filesSelect[0]}
             />
             <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled}/>
         </div>

@@ -1,10 +1,11 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue } from "@grafana/data";
-import { IModel, IModel_Form, ISelect, ITag, Method, Mode } from 'utils/types';
+import { IModel, ISelect, ITag, Method } from 'utils/types';
 import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, FileUpload, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { enumToSelect } from 'utils/utils'
 import { TagsForm } from './tagsForm';
+import { Mode } from 'utils/constants';
 
 interface Props {
     model : IModel,
@@ -102,7 +103,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
     return <div>
         {buttonEdit()}
         
-        <Form id="modelForm" onSubmit={handleOnSubmitAddModel} maxWidth="none">{({register, errors, control}:FormAPI<IModel_Form>) => {
+        <Form id="modelForm" onSubmit={handleOnSubmitAddModel} maxWidth="none">{({register, errors, control}:FormAPI<any>) => {
             return (
             <div>
                 <InlineField label="ID" labelWidth={10} required disabled={disabled}>

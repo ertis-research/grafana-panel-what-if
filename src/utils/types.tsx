@@ -1,17 +1,6 @@
-type Language = 'gb' | 'es';
+import { Steps } from "./constants"
 
-export enum Steps {
-  step_1 = 1,
-  step_2 = 2,
-  step_3 = 3,
-  step_4 = 4,
-  step_5 = 5
-}
-
-export enum Mode {
-  EDIT = 'Save',
-  CREATE = 'Add'
-}
+type Language = 'gb' | 'es'
 
 export enum Method {
   POST = "POST",
@@ -37,9 +26,18 @@ export interface IContext {
 export interface ITag {
   id : string,
   description ?: string,
+  category : string
+}
+
+export interface IFile {
+  id : string,
+  data : IData[]
+}
+
+export interface IData {
+  id : string,
   default_value ?: number,
-  category : string,
-  new_value ?: number,
+  new_value ?: string,
   set_percentage ?: boolean
 }
   
@@ -55,14 +53,6 @@ export interface IModel {
   tags : ITag[],
   preprocess ?: string,
   scaler ?: File
-}
-
-export interface IModel_Form {
-  id : string,
-  description : string,
-  url : string,
-  method : Method,
-  preprocess ?: string
 }
 
 export interface Options {

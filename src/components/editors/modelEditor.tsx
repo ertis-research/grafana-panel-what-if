@@ -1,9 +1,10 @@
 import React from 'react'
 import { StandardEditorProps } from "@grafana/data";
-import { IModel, Mode } from 'utils/types';
+import { IModel } from 'utils/types';
 import { ControlledCollapse } from '@grafana/ui';
 import { ModelForm } from './modelForm';
 import { ModelDefault } from 'utils/default';
+import { Mode } from 'utils/constants';
 
 
 interface Props extends StandardEditorProps<IModel[]> {}
