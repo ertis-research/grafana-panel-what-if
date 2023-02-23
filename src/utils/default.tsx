@@ -1,4 +1,4 @@
-import { IContext, IModel, ITag, Method } from "./types";
+import { IContext, IFile, IModel, Interval, ITag, Method } from "./types";
 
 export const ModelDefault:IModel = {
     id : "",
@@ -17,9 +17,22 @@ export const ContextDefault:IContext = {
     height : 0, 
     width : 0,
     options : {
-        language : 'gb',
+        language : 'en',
         models : []
     }
+}
+
+export const IntervalDefault:Interval = {
+    min: undefined, 
+    max: undefined, 
+    steps: undefined
+}
+
+export const FileDefault:IFile = {
+    id : "",
+    name : "",
+    data : [],
+    interval : IntervalDefault
 }
 
 export const sampleData : ITag[] = [

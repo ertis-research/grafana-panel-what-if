@@ -1,6 +1,6 @@
 import { Steps } from "./constants"
 
-type Language = 'gb' | 'es'
+type Language = 'en' | 'es'
 
 export enum Method {
   POST = "POST",
@@ -31,7 +31,9 @@ export interface ITag {
 
 export interface IFile {
   id : string,
+  name : string,
   data : IData[]
+  interval : Interval
 }
 
 export interface IData {
@@ -64,4 +66,15 @@ export type Interval = {
     min ?: number,
     max ?: number,
     steps ?: number
+}
+
+export type IntervalColors = {
+  DISABLED : Colors,
+  UNREADY : Colors,
+  READY : Colors   
+}
+
+export type Colors = {
+  bg: string,
+  text: string
 }

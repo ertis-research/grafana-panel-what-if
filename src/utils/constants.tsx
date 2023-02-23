@@ -1,17 +1,14 @@
-
-
-
 export enum Steps {
-  step_1 = 1,
-  step_2 = 2,
-  step_3 = 3,
-  step_4 = 4,
-  step_5 = 5
+    step_1 = 1,
+    step_2 = 2,
+    step_3 = 3,
+    step_4 = 4,
+    step_5 = 5
 }
 
 export enum Mode {
-  EDIT = 'Save',
-  CREATE = 'Add'
+    EDIT = 'Save',
+    CREATE = 'Add'
 }
 
 export enum ImportDataEnum {
@@ -45,3 +42,8 @@ export const ImportDataOptions = [
         ]
     }
 ]
+
+export const DefaultImportData = {
+    label: 'Set datetime',
+    value: ImportDataEnum.DATETIME_SET,
+}

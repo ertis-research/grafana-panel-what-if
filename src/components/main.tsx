@@ -40,7 +40,12 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
   }
 
   const updateFile = (updatedFile:IFile) => {
-
+    const idx = files.findIndex((file) => file.id == updatedFile.id)
+    if(idx >= 0) {
+      const updatedFiles = [...files]
+      updatedFiles[idx] = updatedFile
+      setFiles(updatedFiles)
+    }
   }
 
   useEffect(() => {

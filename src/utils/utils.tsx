@@ -27,7 +27,8 @@ export const modelsToSelect = (models : IModel[]) : ISelect[] => {
 export const filesToSelect = (files : IFile[]) : ISelect[] => {
   return files.map((file:IFile) => {
     return {
-      label : file.id,
+      label : file.name,
+      description : file.id,
       value : file
     }
   })
@@ -35,6 +36,15 @@ export const filesToSelect = (files : IFile[]) : ISelect[] => {
 
 export const enumToSelect = (e:any) => {
   return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
+}
+
+export const defaultIfUndefined = (obj:any, def:any) => {
+  return (obj == undefined) ? def : obj
+}
+
+export const disabledByJS = (document:any, id:string, disabled:boolean) => {
+  const element = document.getElementById(id)
+  if(element != undefined) element.disabled = disabled
 }
 
 export const groupBy = (input : any[], key:string) => {

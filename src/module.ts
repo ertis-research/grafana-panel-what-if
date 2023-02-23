@@ -10,13 +10,13 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
   return builder
     .addRadio({
       path: 'language',
-      defaultValue: 'gb',
+      defaultValue: 'en',
       name: 'Plugin language',
       category: ['General'],
       settings: {
         options: [
           {
-            value: 'gb',
+            value: 'en',
             label: 'English',
           },
           {
