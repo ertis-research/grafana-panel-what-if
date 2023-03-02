@@ -1,6 +1,15 @@
 import { Steps } from "./constants"
 
-type Language = 'en' | 'es'
+export enum Language { 
+  English = 'en',
+  Spanish = 'es' 
+}
+
+export enum FormatTags {
+  DoubleQuotes = 'dq',
+  SingleQuotes = 'sq',
+  None = 'none'
+}
 
 export enum Method {
   POST = "POST",
@@ -29,7 +38,7 @@ export interface ITag {
   category : string
 }
 
-export interface IFile {
+export interface IDataCollection {
   id : string,
   name : string,
   data : IData[]
@@ -58,8 +67,11 @@ export interface IModel {
 }
 
 export interface Options {
-  language: Language;
-  models: IModel[]
+  language: Language,
+  models: IModel[],
+  varTags : string,
+  formatTags : FormatTags,
+  varTime : string
 }
 
 export type Interval = {

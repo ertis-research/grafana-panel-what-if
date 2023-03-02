@@ -1,4 +1,4 @@
-import { IContext, IFile, IModel, Interval, ITag, Method } from "./types";
+import { FormatTags, IContext, IDataCollection, IModel, Interval, ITag, Language, Method } from "./types";
 
 export const ModelDefault:IModel = {
     id : "",
@@ -17,8 +17,11 @@ export const ContextDefault:IContext = {
     height : 0, 
     width : 0,
     options : {
-        language : 'en',
-        models : []
+        language : Language.English,
+        models : [],
+        varTags : '',
+        varTime : '',
+        formatTags : FormatTags.DoubleQuotes
     }
 }
 
@@ -28,7 +31,7 @@ export const IntervalDefault:Interval = {
     steps: undefined
 }
 
-export const FileDefault:IFile = {
+export const CollectionDefault:IDataCollection = {
     id : "",
     name : "",
     data : [],

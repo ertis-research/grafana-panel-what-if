@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { PanelProps } from '@grafana/data'
+import { PanelProps, TypedVariableModel } from '@grafana/data'
 import { SelectModel } from './step1_SelectModel'
 import { ImportData } from './step2_ImportData'
 import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
-import { Context } from 'utils/utils'
-import { IContext, IFile, IModel, Options } from 'utils/types'
+import { Context, tagsToString, saveVariableValue } from 'utils/utils'
+import { IContext, IDataCollection as ICollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
+import { getTemplateSrv, locationService } from '@grafana/runtime'
 
 
 interface Props extends PanelProps<Options> {}
@@ -16,7 +17,14 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1);
   const [selectedModel, setSelectedModel] = useState<IModel>()
-  const [files, setFiles] = useState<IFile[]>([])
+  const [collections, setCollections] = useState<ICollection[]>([])
+
+  const checkIfVariableExists = (id?:string) => {
+    const dashboard_variables:TypedVariableModel[] = getTemplateSrv().getVariables().filter(item => item.type == 'constant')
+    if(id == undefined || !dashboard_variables.find((v:TypedVariableModel) => v.name == id)) {
+      throw new Error('It is necessary to assign a constant variable')
+    }
+  }
 
   const contextData:IContext = {
       actualStep: actualStep, 
@@ -26,31 +34,49 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
       options : options
   }
 
-  const addFile = (newFile:IFile) => {
-    setFiles([...files, newFile])
+  const addCollection = (newCollection:ICollection) => {
+    setCollections([...collections, newCollection])
   }
 
-  const deleteFile = (id:string) => {
-    const idx = files.findIndex((file) => file.id == id)
+  const deleteCollection = (id:string) => {
+    const idx = collections.findIndex((col) => col.id == id)
     if(idx >= 0) {
-      const updatedFiles = [...files]
-      updatedFiles.splice(idx, 1)
-      setFiles(updatedFiles)
+      const updatedCollections = [...collections]
+      updatedCollections.splice(idx, 1)
+      setCollections(updatedCollections)
     }
   }
 
-  const updateFile = (updatedFile:IFile) => {
-    const idx = files.findIndex((file) => file.id == updatedFile.id)
+  const updateCollection = (updatedCollection:ICollection) => {
+    const idx = collections.findIndex((col) => col.id == updatedCollection.id)
     if(idx >= 0) {
-      const updatedFiles = [...files]
-      updatedFiles[idx] = updatedFile
-      setFiles(updatedFiles)
+      const updatedCollections = [...collections]
+      updatedCollections[idx] = updatedCollection
+      setCollections(updatedCollections)
     }
   }
 
   useEffect(() => {
-    console.log("files", files)
-  }, [files])
+    console.log("collections", collections)
+  }, [collections])
+
+  useEffect(() => {
+    console.log(data)
+  }, [data])
+
+  useEffect(() => {
+    if(options.varTags == options.varTime) throw new Error('Variable has to be different')
+    checkIfVariableExists(options.varTags)
+    checkIfVariableExists(options.varTime)
+  }, [options])
+
+  useEffect(() => {
+    if(selectedModel != undefined){
+      saveVariableValue(locationService, options.varTags, tagsToString(selectedModel.tags, options.formatTags))
+    } else {
+      saveVariableValue(locationService, options.varTags, "")
+    }
+  }, [selectedModel])
   
 
   return <Context.Provider value={contextData}>
@@ -60,10 +86,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
           <SelectModel models={options.models} setModel={setSelectedModel}/>
         </div>
         <div className="item-1">
-          <ImportData model={selectedModel} files={files} addFile={addFile}/>
+          <ImportData model={selectedModel} collections={collections} addCollection={addCollection}/>
         </div>
         <div className="item-2">
-          <ModifyData model={selectedModel} files={files} deleteFile={deleteFile} updateFile={updateFile}/>
+          <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection}/>
         </div>
         <div className="item-3">
           <PredictModel model={selectedModel}/>

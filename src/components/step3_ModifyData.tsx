@@ -1,20 +1,20 @@
 import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, CustomScrollbar, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, defaultIfUndefined, filesToSelect, groupBy, tagsToSelect } from '../utils/utils'
-import { ICategory, IModel, ISelect, ITag, Interval, IFile, IData, Colors, IntervalColors } from '../utils/types'
+import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect } from '../utils/utils'
+import { ICategory, IModel, ISelect, ITag, Interval, IDataCollection, IData, Colors, IntervalColors } from '../utils/types'
 import { Steps } from 'utils/constants';
-import { FileDefault, IntervalDefault } from 'utils/default';
+import { CollectionDefault, IntervalDefault } from 'utils/default';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
     model ?: IModel,
-    files ?: IFile[],
-    deleteFile : any,
-    updateFile : any
+    collections ?: IDataCollection[],
+    deleteCollection : any,
+    updateCollection : any
 }
 
-export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFile }) => {
+export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollection, updateCollection }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -23,10 +23,10 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     // UseState hook
     // -------------------------------------------------------------------------------------------------------------
 
-    const [selectFile, setSelectFile] = useState<SelectableValue<IFile>>()
-    const [currentFile, setCurrentFile] = useState<IFile|undefined>()
+    const [selectCollection, setSelectCollection] = useState<SelectableValue<IDataCollection>>()
+    const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
     //const [fileData, setfileData] = useState<IData[]>([])
-    const [filesOptions, setfilesOptions] = useState<ISelect[]>([])
+    const [collectionsOptions, setcollectionsOptions] = useState<ISelect[]>([])
 
     const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
     const [searchInputValue, setSearchInputValue] = useState<string>("")
@@ -43,7 +43,7 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     // -------------------------------------------------------------------------------------------------------------
 
     const disabled = (context.actualStep) ? context.actualStep  < Steps.step_3 : false
-    const disabled_files = disabled || false
+    const disabled_collections = disabled || false
 
     const intervalColors:IntervalColors = {
         DISABLED : {
@@ -87,52 +87,52 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
 
     const handleOnChangeTagValue = (event:ChangeEvent<HTMLInputElement>) => {
         console.log(event.target.value)
-        if(currentFile){
-            const dataIndex = currentFile.data.findIndex((d:IData) => d.id == event.currentTarget.name)
-            const updatedFileData = [...currentFile.data]
+        if(currentCollection){
+            const dataIndex = currentCollection.data.findIndex((d:IData) => d.id == event.currentTarget.name)
+            const updatedCollectionData = [...currentCollection.data]
             if(dataIndex >= 0){
                 if (event.target.value == '') {
-                    delete updatedFileData[dataIndex].new_value
+                    delete updatedCollectionData[dataIndex].new_value
                 } else {
-                    updatedFileData[dataIndex].new_value = event.target.value
+                    updatedCollectionData[dataIndex].new_value = event.target.value
                 }
             } else {
-                updatedFileData.push({
+                updatedCollectionData.push({
                     id : event.currentTarget.name,
                     new_value : event.target.value
                 })
             }
-            setCurrentFile({
-                ...currentFile,
-                data : updatedFileData
+            setCurrentCollection({
+                ...currentCollection,
+                data : updatedCollectionData
             })
         }
     }
 
     const handleOnChangePercentage = (event:ChangeEvent<HTMLInputElement>) => {
-        if(currentFile){
-            const dataIndex = currentFile.data.findIndex((d:IData) => d.id == event.currentTarget.name)
-            const updatedFileData = [...currentFile.data]
+        if(currentCollection){
+            const dataIndex = currentCollection.data.findIndex((d:IData) => d.id == event.currentTarget.name)
+            const updatedCollectionData = [...currentCollection.data]
             if(dataIndex >= 0){
-                const old_value = updatedFileData[dataIndex].set_percentage
-                updatedFileData[dataIndex].set_percentage = (!old_value) ? true : false
+                const old_value = updatedCollectionData[dataIndex].set_percentage
+                updatedCollectionData[dataIndex].set_percentage = (!old_value) ? true : false
             } else {
-                updatedFileData.push({
+                updatedCollectionData.push({
                     id : event.currentTarget.name,
                     set_percentage : true
                 })
             }
-            setCurrentFile({
-                ...currentFile,
-                data : updatedFileData
+            setCurrentCollection({
+                ...currentCollection,
+                data : updatedCollectionData
             })
         }
     }
 
-    const handleOnClickDeleteFile = () => {
-        if(files && files.length == 1) context.setActualStep(Steps.step_2)
-        if(currentFile) deleteFile(currentFile.id)
-        setCurrentFile(undefined)
+    const handleOnClickDeleteCollection = () => {
+        if(collections && collections.length == 1) context.setActualStep(Steps.step_2)
+        if(currentCollection) deleteCollection(currentCollection.id)
+        setCurrentCollection(undefined)
     }
 
 
@@ -145,9 +145,9 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     }, [model])
 
     useEffect(() => {
-        if(currentFile){
-            setCurrentFile({
-                ...currentFile,
+        if(currentCollection){
+            setCurrentCollection({
+                ...currentCollection,
                 interval: interval
             })
             if(interval.max && interval.min && interval.steps) {
@@ -168,26 +168,26 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     }, [searchInputValue])
 
     useEffect(() => {
-        console.log("files", files)
-        const options:ISelect[] = filesToSelect( (files != undefined) ? files : [])
-        setfilesOptions(options)
-        if(!selectFile && options.length > 0) setSelectFile(options[0])
-    }, [files])
+        console.log("collections", collections)
+        const options:ISelect[] = collectionsToSelect( (collections != undefined) ? collections : [])
+        setcollectionsOptions(options)
+        if(!selectCollection && options.length > 0) setSelectCollection(options[0])
+    }, [collections])
 
     useEffect(() => {
-        if(selectFile && selectFile.value){
-            setCurrentFile(selectFile.value)
-            setInterval(selectFile.value.interval)
+        if(selectCollection && selectCollection.value){
+            setCurrentCollection(selectCollection.value)
+            setInterval(selectCollection.value.interval)
         } else {
-            setCurrentFile(FileDefault)
+            setCurrentCollection(CollectionDefault)
             setInterval(IntervalDefault)
         }
-    }, [selectFile])
+    }, [selectCollection])
 
     useEffect(() => {
-        console.log(currentFile)
-        updateFile(currentFile)
-    }, [currentFile])
+        console.log(currentCollection)
+        updateCollection(currentCollection)
+    }, [currentCollection])
     
 
 
@@ -195,7 +195,7 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     // -------------------------------------------------------------------------------------------------------------
 
     const tagField = (tag:ITag) => {
-        const findRes = currentFile?.data.find((d) => d.id == tag.id)
+        const findRes = currentCollection?.data.find((d) => d.id == tag.id)
         const data:IData = (findRes) ? findRes : { id: tag.id }
         return <div className='col-6 col-sm-6 col-lg-4 col-xl-3'>
             <p className='noSpaceBottom id wrap-hidden' style={{ color:theme.colors.text.secondary }}>{tag.id}</p>
@@ -228,15 +228,15 @@ export const ModifyData: React.FC<Props> = ({ model, files, deleteFile, updateFi
     return <div style={{ maxHeight:context.height }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
             <Select
-                    options={filesOptions}
-                    value={selectFile}
-                    onChange={(v) => setSelectFile(v)}
+                    options={collectionsOptions}
+                    value={selectCollection}
+                    onChange={(v) => setSelectCollection(v)}
                     prefix={<Icon name="file-alt"/>} 
-                    disabled={disabled_files}
-                    width={20}
-                    defaultValue={filesOptions[0]}
+                    disabled={disabled_collections}
+                    width={30}
+                    defaultValue={collectionsOptions[0]}
             />
-            <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteFile}/>
+            <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteCollection}/>
         </div>
         <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
             <div className='row'>

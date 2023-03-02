@@ -1,33 +1,69 @@
 import { Button, FileUpload, Input, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, disabledByJS } from 'utils/utils'
-import { IData, IFile, IModel } from 'utils/types'
-import { SelectableValue } from '@grafana/data'
+import { Context, dateTimeToString, disabledByJS, saveVariableValue } from 'utils/utils'
+import { IData, IDataCollection, IModel } from 'utils/types'
+import { DateTime, dateTime, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
+import { locationService } from '@grafana/runtime'
 
 interface Props {
     model ?: IModel,
     setModel ?: any,
-    files ?: IFile[],
-    addFile ?: any
+    collections ?: IDataCollection[],
+    addCollection ?: any
 }
 
-export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile }) => {
+export const ImportData: React.FC<Props> = ({ model, setModel, collections, addCollection }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
 
-    const [dateTime, setDateTime] = useState<string>()
+    const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
     const [value, setValue] = useState<SelectableValue<number>>(DefaultImportData)
     const [fileCSV, setFileCSV] = useState<File>()
     const [disabled, setDisabled] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
 
+    const importDataFromDateTime = () => {
+        if(dateTimeInput != undefined) { 
+            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTimeInput)) 
+        }
+    }
+
+    const importDataFromCSV = () => {
+        console.log("EXCEL")
+        if(fileCSV && model != undefined){
+            Papa.parse(fileCSV, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    console.log(results.data)
+                    const fileData:IData[] = []
+                    results.data.forEach((d:any) => {
+                        if(model.tags.some((t) => t.id == d[0])){
+                            fileData.push({
+                                id: d[0],
+                                default_value: d[1]
+                            })
+                        }
+                    })
+                    console.log(fileData)
+                    addCollection({
+                        id: "csv_" + fileCSV.name + "_" + Math.random(),
+                        name : "CSV: " + fileCSV.name,
+                        data: fileData,
+                        interval: IntervalDefault
+                    })
+                }
+            })
+        }
+    }
+
     const handleOnChangeDateTime = (event:ChangeEvent<HTMLInputElement>) => {
-        setDateTime(event.target.value)
-        console.log(event.target.value)
+        setDateTimeInput(dateTime(event.target.value))
+        console.log(dateTimeInput?.toISOString())
     }
 
     const handleOnFileUploadCSV = (event:FormEvent<HTMLInputElement>) => {
@@ -43,32 +79,11 @@ export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile })
         console.log("addDATA")
         switch(value.value) {
             case ImportDataEnum.EXCEL:
-                console.log("EXCEL")
-                if(fileCSV && model != undefined){
-                    Papa.parse(fileCSV, {
-                        header: false,
-                        skipEmptyLines: true,
-                        complete: function (results) {
-                            console.log(results.data)
-                            const fileData:IData[] = []
-                            results.data.forEach((d:any) => {
-                                if(model.tags.some((t) => t.id == d[0])){
-                                    fileData.push({
-                                        id: d[0],
-                                        default_value: d[1]
-                                    })
-                                }
-                            })
-                            console.log(fileData)
-                            addFile({
-                                id: "csv_" + fileCSV.name + "_" + Math.random(),
-                                name : "CSV: " + fileCSV.name,
-                                data: fileData,
-                                interval: IntervalDefault
-                            })
-                        }
-                    })
-                }
+                importDataFromCSV()
+                break
+            default: // Datetime
+                importDataFromDateTime()
+                break
         }
     }
 
@@ -78,15 +93,19 @@ export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile })
 
         if(context.actualStep) {
             newDisabled = context.actualStep < Steps.step_2
-            if(!newDisabled) newDisabledButton = !((value.value == ImportDataEnum.EXCEL && fileCSV != undefined) || (dateTime != undefined && dateTime != ''))
+            if(!newDisabled) newDisabledButton = !((value.value == ImportDataEnum.EXCEL && fileCSV != undefined) || (dateTimeInput != undefined))
         }
         setDisabled(newDisabled)
         setDisabledButton(newDisabledButton)
-    }, [context.actualStep, fileCSV, dateTime, value])
+    }, [context.actualStep, fileCSV, dateTimeInput, value])
     
     useEffect(() => {
         disabledByJS(document, 'fileUpload', disabled)
     }, [disabled])
+
+    useEffect(() => {
+      console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
+    }, [dateTimeInput])
     
     
     const ImportExcel = <div>
@@ -98,7 +117,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, files, addFile })
     </div>
 
     const ImportDatetimeSet = <div>
-        <Input value={dateTime} type='datetime-local' disabled={disabled} onChange={handleOnChangeDateTime}/>
+        <Input value={dateTimeInput?.format('YYYY-MM-DDTHH:mm:ss')} type='datetime-local' disabled={disabled} onChange={handleOnChangeDateTime}/>
     </div>
 
     const ImportDatetimeVarGrafana = <div>

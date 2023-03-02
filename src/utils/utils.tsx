@@ -1,6 +1,8 @@
+import { DateTime } from '@grafana/data'
+import { LocationService } from '@grafana/runtime'
 import { createContext } from 'react'
 import { ContextDefault } from './default'
-import { IContext, IFile, IModel, ISelect, ITag } from './types'
+import { FormatTags, IContext, IDataCollection, IModel, ISelect, ITag } from './types'
 
 export const Context = createContext<IContext>(ContextDefault)
 
@@ -24,18 +26,30 @@ export const modelsToSelect = (models : IModel[]) : ISelect[] => {
   })
 }
 
-export const filesToSelect = (files : IFile[]) : ISelect[] => {
-  return files.map((file:IFile) => {
+export const collectionsToSelect = (collections : IDataCollection[]) : ISelect[] => {
+  return collections.map((col:IDataCollection) => {
     return {
-      label : file.name,
-      description : file.id,
-      value : file
+      label : col.name,
+      description : col.id,
+      value : col
     }
   })
 }
 
 export const enumToSelect = (e:any) => {
   return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
+}
+
+export const tagsToString = (tags:ITag[], format:FormatTags) => {
+  const onlyIds:string[] = tags.map((item:ITag) => item.id)
+  switch(format) {
+    case FormatTags.DoubleQuotes: 
+      return '"' + onlyIds.join('", "') + '"'
+    case FormatTags.SingleQuotes: 
+      return "'" + onlyIds.join("', '") + "'"
+    default: 
+      return onlyIds.join(', ')
+  }
 }
 
 export const defaultIfUndefined = (obj:any, def:any) => {
@@ -45,6 +59,17 @@ export const defaultIfUndefined = (obj:any, def:any) => {
 export const disabledByJS = (document:any, id:string, disabled:boolean) => {
   const element = document.getElementById(id)
   if(element != undefined) element.disabled = disabled
+}
+
+export const dateTimeToString = (dateTime:DateTime) => {
+  return dateTime.toISOString()
+}
+
+export const saveVariableValue = (locationService:LocationService, id:string, value:string) => {
+  var queryObj:any = {}
+  queryObj[("var-" + id)] = value
+
+  locationService.partial(queryObj, true)
 }
 
 export const groupBy = (input : any[], key:string) => {

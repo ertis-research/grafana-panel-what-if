@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { SelectableValue } from "@grafana/data";
 import { IModel, ISelect, ITag, Method } from 'utils/types';
 import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, FileUpload, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
@@ -28,6 +28,16 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         setCurrentModel(model)
         setCurrentTags(model.tags)
         setCode((model.preprocess) ? model.preprocess : "")
+    }
+
+    const handleOnFileUploadScaler = (event:FormEvent<HTMLInputElement>) => {
+        const currentTarget = event.currentTarget
+        if(currentTarget?.files && currentTarget.files.length > 0){
+            setCurrentModel({
+                ...currentModel,
+                scaler : currentTarget.files[0]
+            })
+        }
     }
 
     const handleOnChangeModel = (event: ChangeEvent<HTMLInputElement>) => {
@@ -145,7 +155,8 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         <ControlledCollapse label="Preproceso de datos de entrada (opcional)" collapsible isOpen={false}>
             <InlineField label='Scaler' labelWidth={10} disabled={disabled}>
                 <FileUpload
-                    onFileUpload={({ currentTarget }) => console.log('file', currentTarget?.files && currentTarget.files[0])}
+                    onFileUpload = {handleOnFileUploadScaler}
+                    showFileName = {false}
                 />
             </InlineField>
             <InlineField label={"Preproceso"} labelWidth={10} grow  >
