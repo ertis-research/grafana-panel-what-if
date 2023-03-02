@@ -1,3 +1,6 @@
+import { getVariableValue } from "./handleGrafanaVariable"
+import { ISelect } from "./types"
+
 export enum Steps {
     step_1 = 1,
     step_2 = 2,
@@ -40,6 +43,19 @@ export const ImportDataOptions = [
                 value: ImportDataEnum.DATETIME_QUERY
             }
         ]
+    }
+]
+
+export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => [
+    {
+        label: 'From',
+        value: '${__from:date}',
+        description: getVariableValue(replaceVariables, '{__from:date:iso}')
+    },
+    {
+        label: 'To',
+        value: '${__to:date}',
+        description: getVariableValue(replaceVariables, '{__to:date:iso}')
     }
 ]
 

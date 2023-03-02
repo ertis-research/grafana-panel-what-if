@@ -1,5 +1,4 @@
 import { DateTime } from '@grafana/data'
-import { LocationService } from '@grafana/runtime'
 import { createContext } from 'react'
 import { ContextDefault } from './default'
 import { FormatTags, IContext, IDataCollection, IModel, ISelect, ITag } from './types'
@@ -63,13 +62,6 @@ export const disabledByJS = (document:any, id:string, disabled:boolean) => {
 
 export const dateTimeToString = (dateTime:DateTime) => {
   return dateTime.toISOString()
-}
-
-export const saveVariableValue = (locationService:LocationService, id:string, value:string) => {
-  var queryObj:any = {}
-  queryObj[("var-" + id)] = value
-
-  locationService.partial(queryObj, true)
 }
 
 export const groupBy = (input : any[], key:string) => {

@@ -27,6 +27,7 @@ export interface ISelect {
 export interface IContext {
   actualStep ?: Steps,
   setActualStep ?: any,
+  replaceVariables : any,
   height : number,
   width : number
   options : Options
@@ -61,6 +62,7 @@ export interface IModel {
   description : string,
   url : string,
   method : Method,
+  queryId : string,
   tags : ITag[],
   preprocess ?: string,
   scaler ?: File

@@ -4,6 +4,7 @@ export const ModelDefault:IModel = {
     id : "",
     url : "",
     description: "",
+    queryId : "",
     method : Method.POST,
     tags : []
 }
@@ -16,6 +17,7 @@ export const TagDefault:ITag = {
 export const ContextDefault:IContext = {
     height : 0, 
     width : 0,
+    replaceVariables : undefined,
     options : {
         language : Language.English,
         models : [],

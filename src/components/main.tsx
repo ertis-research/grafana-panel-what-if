@@ -1,34 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { PanelProps, TypedVariableModel } from '@grafana/data'
+import { PanelProps } from '@grafana/data'
 import { SelectModel } from './step1_SelectModel'
 import { ImportData } from './step2_ImportData'
 import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
-import { Context, tagsToString, saveVariableValue } from 'utils/utils'
+import { Context, tagsToString } from 'utils/utils'
 import { IContext, IDataCollection as ICollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { getTemplateSrv, locationService } from '@grafana/runtime'
+import { checkIfVariableExists, saveVariableValue } from 'utils/handleGrafanaVariable'
 
 
 interface Props extends PanelProps<Options> {}
 
-export const Main: React.FC<Props> = ({ options, data, width, height }) => {
+export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables }) => {
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1);
   const [selectedModel, setSelectedModel] = useState<IModel>()
   const [collections, setCollections] = useState<ICollection[]>([])
 
-  const checkIfVariableExists = (id?:string) => {
-    const dashboard_variables:TypedVariableModel[] = getTemplateSrv().getVariables().filter(item => item.type == 'constant')
-    if(id == undefined || !dashboard_variables.find((v:TypedVariableModel) => v.name == id)) {
-      throw new Error('It is necessary to assign a constant variable')
-    }
-  }
 
   const contextData:IContext = {
       actualStep: actualStep, 
       setActualStep : setActualStep,
+      replaceVariables : replaceVariables,
       height : height,
       width : width,
       options : options
@@ -66,8 +62,8 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
 
   useEffect(() => {
     if(options.varTags == options.varTime) throw new Error('Variable has to be different')
-    checkIfVariableExists(options.varTags)
-    checkIfVariableExists(options.varTime)
+    checkIfVariableExists(getTemplateSrv(), options.varTags)
+    checkIfVariableExists(getTemplateSrv(), options.varTime)
   }, [options])
 
   useEffect(() => {
@@ -86,7 +82,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height }) => {
           <SelectModel models={options.models} setModel={setSelectedModel}/>
         </div>
         <div className="item-1">
-          <ImportData model={selectedModel} collections={collections} addCollection={addCollection}/>
+          <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
         </div>
         <div className="item-2">
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection}/>

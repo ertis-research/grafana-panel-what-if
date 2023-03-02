@@ -1,12 +1,13 @@
 import { Language } from './utils/types';
 import { ModelEditor } from './components/editors/modelEditor';
-import { PanelPlugin, TypedVariableModel } from '@grafana/data';
+import { PanelPlugin } from '@grafana/data';
 import { Main } from './components/main';
 import './css/bootstrap-grid.css';
 import './css/grid.css';
 import './css/others.css';
-import { ISelect, Options, FormatTags } from 'utils/types';
+import { Options, FormatTags } from 'utils/types';
 import { getTemplateSrv } from '@grafana/runtime';
+import { getOptionsVariable } from 'utils/handleGrafanaVariable';
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
@@ -75,16 +76,4 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
     })
 })
 
-const getOptionsVariable = () : ISelect[] => {
-  return getTemplateSrv().getVariables()
-    .filter((item:TypedVariableModel) => item.type == 'constant')
-    .map((item:TypedVariableModel) => {
-      return {
-        label : item.name,
-        value : item.name,
-        description : (item.description == null) ? undefined : item.description
-      }
-    })
-}
-
-const OptionsVariable = getOptionsVariable()
+const OptionsVariable = getOptionsVariable(getTemplateSrv())

@@ -1,10 +1,11 @@
 import { Button, FileUpload, Input, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeToString, disabledByJS, saveVariableValue } from 'utils/utils'
+import { Context, dateTimeToString, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IModel } from 'utils/types'
-import { DateTime, dateTime, SelectableValue } from '@grafana/data'
+import { saveVariableValue } from 'utils/handleGrafanaVariable'
+import { DateTime, dateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
-import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps } from 'utils/constants'
+import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
 import { locationService } from '@grafana/runtime'
 
@@ -12,23 +13,52 @@ interface Props {
     model ?: IModel,
     setModel ?: any,
     collections ?: IDataCollection[],
-    addCollection ?: any
+    addCollection ?: any,
+    data : PanelData
 }
 
-export const ImportData: React.FC<Props> = ({ model, setModel, collections, addCollection }) => {
+export const ImportData: React.FC<Props> = ({ model, setModel, collections, addCollection, data }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
 
+    const fieldTag = "tag" // provisional
+    const fieldValue = "value" // provisional
+
     const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
     const [value, setValue] = useState<SelectableValue<number>>(DefaultImportData)
+    const [selectedGrafanaVariable, setSelectedGrafanaVariable] = useState<SelectableValue<number>>()
     const [fileCSV, setFileCSV] = useState<File>()
     const [disabled, setDisabled] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
+    const [hasToSaveNewData, setHasToSaveNewData] = useState(false)
+
+    const getArrayOfData = (data:PanelData, idQuery:string) => {
+        var res:IData[] = []
+        console.log("0")
+        const serieData = data.series.find((serie) => serie.refId == 'A')
+        if(serieData){
+            console.log("1")
+            const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
+            const fieldValueData = serieData.fields.find((field) => field.name == fieldValue)
+            if(fieldTagData && fieldValueData) {
+                console.log("2")
+                fieldTagData.values.toArray().forEach((d:string, idx:number) => {
+                    console.log('tag', d)
+                    res.push({
+                        id : d,
+                        default_value : fieldValueData.values.get(idx)
+                    })
+                })
+            }
+        }
+        return res
+    }
 
     const importDataFromDateTime = () => {
-        if(dateTimeInput != undefined) { 
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTimeInput)) 
+        if(dateTimeInput != undefined && model != undefined) { 
+            setHasToSaveNewData(true)
+            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTimeInput))
         }
     }
 
@@ -107,6 +137,18 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
       console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
     }, [dateTimeInput])
     
+    useEffect(() => {
+        if(hasToSaveNewData && model != undefined && (data.state == LoadingState.Done || data.state == LoadingState.Error)){
+            console.log("HOLAAA DATA", data)
+            addCollection({
+                id: "DateTime: " + dateTimeInput?.toLocaleString() + "_" + Math.random(),
+                name : "DateTime: " + dateTimeInput?.toLocaleString(),
+                interval: IntervalDefault,
+                data : getArrayOfData(data, model.queryId)
+            })
+            setHasToSaveNewData(false)
+        }
+    }, [data])
     
     const ImportExcel = <div>
         <FileUpload
@@ -121,11 +163,15 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     </div>
 
     const ImportDatetimeVarGrafana = <div>
-        <p>AAA</p>
+        <Select
+            options={VariablesGrafanaOptions(context.replaceVariables)}
+            value={selectedGrafanaVariable}
+            onChange={(v) => setSelectedGrafanaVariable(v)}
+            disabled={disabled}
+        />
     </div>
 
     const importConfiguration = () => {
-        console.log(value)
         if(value && value.value) {
             switch(value.value) {
                 case ImportDataEnum.EXCEL:
