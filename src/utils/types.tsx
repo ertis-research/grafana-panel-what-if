@@ -65,7 +65,14 @@ export interface IModel {
   queryId : string,
   tags : ITag[],
   preprocess ?: string,
-  scaler ?: File
+  scaler ?: File,
+  format ?: IFormat
+}
+
+export interface IFormat {
+  id : string,
+  input : any,
+  output : any
 }
 
 export interface Options {
@@ -73,7 +80,8 @@ export interface Options {
   models: IModel[],
   varTags : string,
   formatTags : FormatTags,
-  varTime : string
+  varTime : string,
+  formats : IFormat[]
 }
 
 export type Interval = {

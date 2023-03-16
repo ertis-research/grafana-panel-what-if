@@ -26,8 +26,9 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     const fieldValue = "value" // provisional
 
     const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
+    //const [dateTimeImport, setDateTimeImport] = useState<DateTime>()
     const [value, setValue] = useState<SelectableValue<number>>(DefaultImportData)
-    const [selectedGrafanaVariable, setSelectedGrafanaVariable] = useState<SelectableValue<number>>()
+    const [selectedGrafanaVariable, setSelectedGrafanaVariable] = useState<SelectableValue<DateTime>>()
     const [fileCSV, setFileCSV] = useState<File>()
     const [disabled, setDisabled] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
@@ -55,10 +56,10 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         return res
     }
 
-    const importDataFromDateTime = () => {
-        if(dateTimeInput != undefined && model != undefined) { 
+    const importDataFromDateTime = (dt ?: DateTime) => {
+        if(dt != undefined && model != undefined) { 
             setHasToSaveNewData(true)
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTimeInput))
+            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
         }
     }
 
@@ -111,11 +112,21 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
             case ImportDataEnum.EXCEL:
                 importDataFromCSV()
                 break
+            case ImportDataEnum.DATETIME_VARIABLE_GRAFANA:
+                if(selectedGrafanaVariable){
+                    importDataFromDateTime(selectedGrafanaVariable.value)
+                    break
+                }
             default: // Datetime
-                importDataFromDateTime()
+                importDataFromDateTime(dateTimeInput)
                 break
         }
     }
+
+    useEffect(() => {
+
+    }, [value])
+    
 
     useEffect(() => {
         var newDisabled:boolean = true
@@ -134,7 +145,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }, [disabled])
 
     useEffect(() => {
-      console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
+        console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
     }, [dateTimeInput])
     
     useEffect(() => {

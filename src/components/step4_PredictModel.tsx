@@ -1,14 +1,15 @@
 import { Button, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { useContext } from 'react';
 import { Context } from 'utils/utils';
-import { IModel } from 'utils/types';
+import { IDataCollection, IModel } from 'utils/types';
 import { Steps } from 'utils/constants';
 
 interface Props {
-    model ?: IModel
+    model ?: IModel,
+    collections ?: IDataCollection[]
 }
 
-export const PredictModel: React.FC<Props> = () => {
+export const PredictModel: React.FC<Props> = ({model, collections}) => {
 
     const theme = useTheme2();
     const context = useContext(Context);
@@ -16,6 +17,7 @@ export const PredictModel: React.FC<Props> = () => {
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
 
     const onClickPredictHandle = () => {
+        console.log("COLLECTIONS PREDICT", collections) 
         if (context.setActualStep) {
             context.setActualStep(Steps.step_5)
         }

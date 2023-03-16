@@ -1,4 +1,10 @@
-import { FormatTags, IContext, IDataCollection, IModel, Interval, ITag, Language, Method } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, Interval, ITag, Language, Method } from "./types";
+
+export const FormatDefault:IFormat = {
+    id : "",
+    input : "",
+    output : ""
+}
 
 export const ModelDefault:IModel = {
     id : "",
@@ -6,7 +12,8 @@ export const ModelDefault:IModel = {
     description: "",
     queryId : "",
     method : Method.POST,
-    tags : []
+    tags : [],
+    format : FormatDefault
 }
 
 export const TagDefault:ITag = {
@@ -23,7 +30,8 @@ export const ContextDefault:IContext = {
         models : [],
         varTags : '',
         varTime : '',
-        formatTags : FormatTags.DoubleQuotes
+        formatTags : FormatTags.DoubleQuotes,
+        formats : []
     }
 }
 

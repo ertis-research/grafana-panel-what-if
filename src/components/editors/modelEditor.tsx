@@ -12,6 +12,8 @@ interface Props extends StandardEditorProps<IModel[]> {}
 export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, context }) => {
 
 
+    console.log("context", context)
+
     if (!elements || !elements.length) {
         elements = [];
     }
@@ -39,7 +41,8 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
                 <ModelForm model={element} 
                     mode={Mode.EDIT} 
                     updateFunction={(m:IModel) => updateElement(idx, m)} 
-                    deleteFunction={() => deleteElement(idx)}/>
+                    deleteFunction={() => deleteElement(idx)}
+                    context={context}/>
             </ControlledCollapse>
         </div>
     })
@@ -47,7 +50,7 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
     return (<div style={{ marginRight: '15px'}}>
         {listModels}
         <ControlledCollapse label="Añadir nuevo modelo" collapsible isOpen={false}>
-            <ModelForm model={ModelDefault} updateFunction={addElement} mode={Mode.CREATE}/>
+            <ModelForm model={ModelDefault} updateFunction={addElement} mode={Mode.CREATE} context={context}/>
         </ControlledCollapse>
     </div>)
 }

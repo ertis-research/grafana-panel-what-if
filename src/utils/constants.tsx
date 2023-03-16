@@ -1,3 +1,4 @@
+import { dateTime } from "@grafana/data"
 import { getVariableValue } from "./handleGrafanaVariable"
 import { ISelect } from "./types"
 
@@ -49,12 +50,12 @@ export const ImportDataOptions = [
 export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => [
     {
         label: 'From',
-        value: '${__from:date}',
+        value: dateTime(getVariableValue(replaceVariables, '{__from:date:iso}')),
         description: getVariableValue(replaceVariables, '{__from:date:iso}')
     },
     {
         label: 'To',
-        value: '${__to:date}',
+        value: dateTime(getVariableValue(replaceVariables, '{__to:date:iso}')),
         description: getVariableValue(replaceVariables, '{__to:date:iso}')
     }
 ]

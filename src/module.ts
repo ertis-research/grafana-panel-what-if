@@ -1,3 +1,4 @@
+import { FormatEditor } from './components/editors/formatEditor';
 import { Language } from './utils/types';
 import { ModelEditor } from './components/editors/modelEditor';
 import { PanelPlugin } from '@grafana/data';
@@ -28,6 +29,12 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
           },
         ],
       }
+    }).addCustomEditor({
+      path : 'formats',
+      id: 'formats',
+      name : 'Formats',
+      category : ['Formats'],
+      editor : FormatEditor
     }).addCustomEditor({
       path : 'models',
       id: 'models',

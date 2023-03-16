@@ -1,7 +1,7 @@
-import { DateTime } from '@grafana/data'
+import { DataFrame, DateTime } from '@grafana/data'
 import { createContext } from 'react'
 import { ContextDefault } from './default'
-import { FormatTags, IContext, IDataCollection, IModel, ISelect, ITag } from './types'
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, ISelect, ITag } from './types'
 
 export const Context = createContext<IContext>(ContextDefault)
 
@@ -62,6 +62,25 @@ export const disabledByJS = (document:any, id:string, disabled:boolean) => {
 
 export const dateTimeToString = (dateTime:DateTime) => {
   return dateTime.toISOString()
+}
+
+export const dataFrameToOptions = (dataFrame:DataFrame[]) : ISelect[] => {
+  return dataFrame.map((f:DataFrame) => {
+    const id = (f.refId) ? f.refId : ""
+    return {
+      value : id,
+      label : id
+    }
+  })
+}
+
+export const formatsToOptions = (formats:IFormat[]) : ISelect[] => {
+  return formats.map((f:IFormat) => {
+    return {
+      value : f,
+      label : f.id
+    }
+  })
 }
 
 export const groupBy = (input : any[], key:string) => {

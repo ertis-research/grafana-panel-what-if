@@ -16,7 +16,7 @@ interface Props extends PanelProps<Options> {}
 
 export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables }) => {
 
-  const [actualStep, setActualStep] = useState<Steps>(Steps.step_1);
+  const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
   const [collections, setCollections] = useState<ICollection[]>([])
 
@@ -88,7 +88,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection}/>
         </div>
         <div className="item-3">
-          <PredictModel model={selectedModel}/>
+          <PredictModel model={selectedModel} collections={collections}/>
         </div>
         <div className="item-4">
           <ExportData model={selectedModel}/>
