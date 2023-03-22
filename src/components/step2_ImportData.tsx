@@ -3,7 +3,7 @@ import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from '
 import { Context, dateTimeToString, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
-import { DateTime, dateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
+import { DataFrame, DateTime, dateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
@@ -12,7 +12,7 @@ import { locationService } from '@grafana/runtime'
 interface Props {
     model ?: IModel,
     setModel ?: any,
-    collections ?: IDataCollection[],
+    collections : IDataCollection[],
     addCollection ?: any,
     data : PanelData
 }
@@ -37,7 +37,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     const getArrayOfData = (data:PanelData, idQuery:string) => {
         let res:IData[] = []
         console.log("0")
-        const serieData = data.series.find((serie) => serie.refId == 'A')
+        const serieData:DataFrame|undefined = data.series.find((serie) => serie.refId == 'A')
         if(serieData){
             console.log("1")
             const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
@@ -58,8 +58,20 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
 
     const importDataFromDateTime = (dt ?: DateTime) => {
         if(dt != undefined && model != undefined) { 
-            setHasToSaveNewData(true)
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
+            const indx = collections.findIndex((col:IDataCollection) => col.id.includes(dt.toLocaleString()))
+            if(indx < 0){
+                setHasToSaveNewData(true)
+                saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
+            } else {
+                var copyColData:IData[] = JSON.parse(JSON.stringify(collections[indx].data)) 
+                copyColData = copyColData.map((d:IData) => {delete d.new_value; delete d.set_percentage; return d})
+                addCollection({
+                    id: "DateTime: " + dt.toLocaleString() + "_" + (collections.length+1),
+                    name : "Data " + (collections.length+1) + " (DateTime)",
+                    interval: IntervalDefault,
+                    data : copyColData
+                })
+            }
         }
     }
 
@@ -82,8 +94,8 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                     })
                     console.log(fileData)
                     addCollection({
-                        id: "csv_" + fileCSV.name + "_" + Math.random(),
-                        name : "CSV: " + fileCSV.name,
+                        id: "csv_" + fileCSV.name + "_" + (collections.length+1),
+                        name : "Data " + (collections.length+1) + " (CSV)",
                         data: fileData,
                         interval: IntervalDefault
                     })
@@ -152,14 +164,17 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         if(hasToSaveNewData && model != undefined && (data.state == LoadingState.Done || data.state == LoadingState.Error)){
             console.log("HOLAAA DATA", data)
             addCollection({
-                id: "DateTime: " + dateTimeInput?.toLocaleString() + "_" + Math.random(),
-                name : "DateTime: " + dateTimeInput?.toLocaleString(),
+                id: "DateTime: " + dateTimeInput?.toLocaleString() + "_" + (collections.length+1),
+                name : "Data " + (collections.length+1) + " (DateTime)",
                 interval: IntervalDefault,
                 data : getArrayOfData(data, model.queryId)
             })
             setHasToSaveNewData(false)
         }
     }, [data])
+
+    useEffect(() => {
+    }, [collections])
     
     const ImportExcel = <div>
         <FileUpload

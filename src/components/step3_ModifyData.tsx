@@ -168,7 +168,6 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [searchInputValue])
 
     useEffect(() => {
-        console.log("collections", collections)
         const options:ISelect[] = collectionsToSelect( (collections != undefined) ? collections : [])
         setcollectionsOptions(options)
         if(!selectCollection && options.length > 0) setSelectCollection(options[0])

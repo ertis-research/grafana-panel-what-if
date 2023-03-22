@@ -20,7 +20,6 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   const [selectedModel, setSelectedModel] = useState<IModel>()
   const [collections, setCollections] = useState<IDataCollection[]>([])
 
-
   const contextData:IContext = {
       actualStep: actualStep, 
       setActualStep : setActualStep,
