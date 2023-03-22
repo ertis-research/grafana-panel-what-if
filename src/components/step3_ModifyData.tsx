@@ -2,7 +2,7 @@ import { SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, CustomScrollbar, useTheme2 } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect } from '../utils/utils'
-import { ICategory, IModel, ISelect, ITag, Interval, IDataCollection, IData, Colors, IntervalColors } from '../utils/types'
+import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
@@ -35,7 +35,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
     const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
     
-    const [interval, setInterval] = useState<Interval>(IntervalDefault)
+    const [interval, setInterval] = useState<IInterval>(IntervalDefault)
     const [hasInterval, setHasInterval] = useState<boolean>(false)
 
 

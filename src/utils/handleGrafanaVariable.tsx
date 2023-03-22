@@ -10,7 +10,7 @@ export const checkIfVariableExists = (templateSrv:TemplateSrv, id?:string) => {
 }
 
 export const saveVariableValue = (locationService:LocationService, id:string, value:string) => {
-    var queryObj:any = {}
+    let queryObj:any = {}
     queryObj[("var-" + id)] = value
 
     locationService.partial(queryObj, true)

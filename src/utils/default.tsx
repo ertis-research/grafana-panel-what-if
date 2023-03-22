@@ -1,4 +1,6 @@
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, Interval, ITag, Language, Method } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method } from "./types";
+
+export const PreprocessCodeDefault:string = "export default function (data) { }"
 
 export const FormatDefault:IFormat = {
     id : "",
@@ -13,7 +15,8 @@ export const ModelDefault:IModel = {
     queryId : "",
     method : Method.POST,
     tags : [],
-    format : FormatDefault
+    format : FormatDefault,
+    preprocess : PreprocessCodeDefault
 }
 
 export const TagDefault:ITag = {
@@ -35,7 +38,7 @@ export const ContextDefault:IContext = {
     }
 }
 
-export const IntervalDefault:Interval = {
+export const IntervalDefault:IInterval = {
     min: undefined, 
     max: undefined, 
     steps: undefined

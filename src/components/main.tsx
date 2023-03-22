@@ -6,7 +6,7 @@ import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
 import { Context, tagsToString } from 'utils/utils'
-import { IContext, IDataCollection as ICollection, IModel, Options } from 'utils/types'
+import { IContext, IDataCollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { getTemplateSrv, locationService } from '@grafana/runtime'
 import { checkIfVariableExists, saveVariableValue } from 'utils/handleGrafanaVariable'
@@ -18,7 +18,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
-  const [collections, setCollections] = useState<ICollection[]>([])
+  const [collections, setCollections] = useState<IDataCollection[]>([])
 
 
   const contextData:IContext = {
@@ -30,7 +30,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       options : options
   }
 
-  const addCollection = (newCollection:ICollection) => {
+  const addCollection = (newCollection:IDataCollection) => {
     setCollections([...collections, newCollection])
   }
 
@@ -43,13 +43,17 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
     }
   }
 
-  const updateCollection = (updatedCollection:ICollection) => {
+  const updateCollection = (updatedCollection:IDataCollection) => {
     const idx = collections.findIndex((col) => col.id == updatedCollection.id)
     if(idx >= 0) {
       const updatedCollections = [...collections]
       updatedCollections[idx] = updatedCollection
       setCollections(updatedCollections)
     }
+  }
+
+  const updateAllCollection = (allCollections:IDataCollection[]) => {
+    setCollections([...allCollections])
   }
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection}/>
         </div>
         <div className="item-3">
-          <PredictModel model={selectedModel} collections={collections}/>
+          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection}/>
         </div>
         <div className="item-4">
           <ExportData model={selectedModel}/>

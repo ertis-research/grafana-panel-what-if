@@ -43,7 +43,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
                 return <InlineFieldRow>
                     <b style={{ width: '20px', height: '32px', display: 'flex', alignItems: 'center' }}>{idx+1}</b>
                     <InlineField label="ID" labelWidth={6.5} required disabled={disabled}>
-                        <Input name='id' value={tag.id} width={15} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
+                        <Input name='id' value={tag.id} width={20} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
                     <InlineField label="Descripción" labelWidth={10} grow disabled={disabled}>
                         <Input name='description' value={tag.description} disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>

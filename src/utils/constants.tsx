@@ -2,6 +2,9 @@ import { dateTime } from "@grafana/data"
 import { getVariableValue } from "./handleGrafanaVariable"
 import { ISelect } from "./types"
 
+export const variableInput = '$input'
+export const variableOutput = '$output'
+
 export enum Steps {
     step_1 = 1,
     step_2 = 2,

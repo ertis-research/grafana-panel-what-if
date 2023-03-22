@@ -35,7 +35,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     const [hasToSaveNewData, setHasToSaveNewData] = useState(false)
 
     const getArrayOfData = (data:PanelData, idQuery:string) => {
-        var res:IData[] = []
+        let res:IData[] = []
         console.log("0")
         const serieData = data.series.find((serie) => serie.refId == 'A')
         if(serieData){
@@ -129,8 +129,8 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     
 
     useEffect(() => {
-        var newDisabled:boolean = true
-        var newDisabledButton:boolean = true
+        let newDisabled:boolean = true
+        let newDisabledButton:boolean = true
 
         if(context.actualStep) {
             newDisabled = context.actualStep < Steps.step_2

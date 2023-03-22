@@ -42,8 +42,9 @@ export interface ITag {
 export interface IDataCollection {
   id : string,
   name : string,
-  data : IData[]
-  interval : Interval
+  data : IData[],
+  interval : IInterval,
+  results ?: IResult[]
 }
 
 export interface IData {
@@ -51,6 +52,13 @@ export interface IData {
   default_value ?: number,
   new_value ?: string,
   set_percentage ?: boolean
+}
+
+export interface IResult {
+  id : string,
+  data : number[],
+  processedData ?: number[],
+  result ?: number
 }
   
 export interface ICategory {
@@ -71,8 +79,8 @@ export interface IModel {
 
 export interface IFormat {
   id : string,
-  input : any,
-  output : any
+  input : string,
+  output : string
 }
 
 export interface Options {
@@ -84,7 +92,7 @@ export interface Options {
   formats : IFormat[]
 }
 
-export type Interval = {
+export type IInterval = {
     min ?: number,
     max ?: number,
     steps ?: number

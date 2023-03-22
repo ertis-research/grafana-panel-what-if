@@ -1,25 +1,71 @@
-import { Button, useTheme2, VerticalGroup } from '@grafana/ui';
-import React, { useContext } from 'react';
+import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui';
+import React, { useContext, useEffect, useState } from 'react';
 import { Context } from 'utils/utils';
-import { IDataCollection, IModel } from 'utils/types';
+import { IDataCollection, IModel, IResult } from 'utils/types';
 import { Steps } from 'utils/constants';
+import { predictAllCollections } from 'utils/predictions';
 
 interface Props {
     model ?: IModel,
-    collections ?: IDataCollection[]
+    collections : IDataCollection[],
+    updateCollections : any
 }
 
-export const PredictModel: React.FC<Props> = ({model, collections}) => {
+enum StatePredict {
+    EMPTY,
+    LOADING,
+    DONE
+}
+
+export const PredictModel: React.FC<Props> = ({model, collections, updateCollections}) => {
 
     const theme = useTheme2();
     const context = useContext(Context);
+
+    const [state, setState] = useState<StatePredict>(StatePredict.EMPTY)
 
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
 
     const onClickPredictHandle = () => {
         console.log("COLLECTIONS PREDICT", collections) 
+        if(model) {
+            setState(StatePredict.LOADING)
+            predictAllCollections(model, collections).then((res:IDataCollection[]) => {
+                updateCollections(res)
+            })
+        }
         if (context.setActualStep) {
             context.setActualStep(Steps.step_5)
+        }
+    }
+
+    useEffect(() => {
+        if(state == StatePredict.LOADING){
+            setState(StatePredict.DONE)
+        }
+    }, [collections])
+    
+
+    const showResults = collections.map((col:IDataCollection) => {
+        if(col.results){
+            if(col.results.length == 1){
+                return <div>{col.results[0].result}</div>
+            } else {
+                return <div>{col.results.map((r:IResult) => r.result).join(',')}</div>
+            }
+        } else {
+            return <div></div>
+        }
+    })
+
+    const viewResults = () => {
+        switch(state){
+            case StatePredict.LOADING:
+                return <VerticalGroup align='center'><Spinner size={30}/></VerticalGroup>
+            case StatePredict.DONE:
+                return showResults
+            case StatePredict.EMPTY:
+                return <div></div>
         }
     }
 
@@ -28,6 +74,7 @@ export const PredictModel: React.FC<Props> = ({model, collections}) => {
         <h4>Predict result</h4>
         <VerticalGroup justify='center'>
             <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>Predict</Button>
+            {viewResults()}
         </VerticalGroup>
     </div>
 }
