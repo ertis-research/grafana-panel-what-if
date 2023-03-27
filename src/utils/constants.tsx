@@ -4,6 +4,8 @@ import { ISelect } from "./types"
 
 export const variableInput = '$input'
 export const variableOutput = '$output'
+export const idDefault = 'basic_defaultData'
+export const idNew = 'basic_newValue'
 
 export enum Steps {
     step_1 = 1,

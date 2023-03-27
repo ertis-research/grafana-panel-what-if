@@ -61,7 +61,8 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             tags : currentTags,
             method : selectedMethod?.value,
             queryId : selectedQuery?.value,
-            format : selectedFormat?.value
+            format : selectedFormat?.value,
+            preprocess : code
         }
         updateFunction(newModel)
         if(mode == Mode.EDIT) {

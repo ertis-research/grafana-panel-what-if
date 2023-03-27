@@ -10,11 +10,13 @@ import { CollectionDefault, IntervalDefault } from 'utils/default';
 interface Props {
     model ?: IModel,
     collections ?: IDataCollection[],
+    currentCollection ?: IDataCollection,
+    setCurrentCollection : any,
     deleteCollection : any,
     updateCollection : any
 }
 
-export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollection, updateCollection }) => {
+export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollection, updateCollection, currentCollection, setCurrentCollection }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -24,7 +26,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     const [selectCollection, setSelectCollection] = useState<SelectableValue<IDataCollection>>()
-    const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
+    //const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
     //const [fileData, setfileData] = useState<IData[]>([])
     const [collectionsOptions, setcollectionsOptions] = useState<ISelect[]>([])
 

@@ -1,6 +1,6 @@
 import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method } from "./types";
 
-export const PreprocessCodeDefault:string = "export default function (data) { }"
+export const PreprocessCodeDefault:string = "console.log('Preprocess')"
 
 export const FormatDefault:IFormat = {
     id : "",

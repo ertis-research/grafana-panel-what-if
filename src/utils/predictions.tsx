@@ -1,7 +1,10 @@
 import { PreprocessCodeDefault } from "./default";
-import { IData, IDataCollection, IFormat, IInterval, IModel, IResult } from "./types"
+import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult } from "./types"
 import * as dfd from "danfojs"
-import { variableInput, variableOutput } from "./constants";
+import { idDefault, idNew, variableInput, variableOutput } from "./constants"
+import vm from 'vm';
+import { deepCopy } from "./utils";
+
 
 export const predictAllCollections = async (model:IModel, allData:IDataCollection[]) => {
     for(const [i, d] of allData.entries()){
@@ -12,7 +15,7 @@ export const predictAllCollections = async (model:IModel, allData:IDataCollectio
 
 const predictData = async (model:IModel, dataCollection:IDataCollection) => {
     let results:IResult[] = prepareData(dataCollection)
-    let dataToPredict:number[][] = []
+    let dataToPredict:IDataPred[] = []
     console.log('results', results)
     for(const [i, r] of results.entries()){
         let finalData = r.data
@@ -20,8 +23,8 @@ const predictData = async (model:IModel, dataCollection:IDataCollection) => {
             //finalData = await applyScaler(model.scaler, finalData)
         }
         if(model.preprocess){
-            //finalData = await applyPreprocess(model.preprocess, finalData)
-            //console.log("preprocess", finalData)
+            finalData = await applyPreprocess(model.preprocess, finalData)
+            console.log("preprocess", finalData)
         }
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData : finalData }
@@ -45,13 +48,13 @@ const calculatePercentage = (percent:number, total:number) => {
     return (percent / 100) * total
  } 
 
-const addResultsFromPorcentage = (res:IResult[], defaultData:number[], porcentages:number[], indx:number, id:string) => {
-    const defData:number = defaultData[indx]
+const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcentages:number[], id:string) => {
+    const defData:number = defaultData[id]
 
     porcentages.forEach((p:number) => {
         const v = calculatePercentage(Math.abs(p), defData)
-        let newData = [...defaultData]
-        newData[indx] = (p < 0) ? defData - v : defData + v
+        let newData = deepCopy(defaultData)
+        newData[id] = (p < 0) ? defData - v : defData + v
         res.push({
             id : id + "_" + ((p < 0) ? 'less' : 'plus') + Math.abs(p),
             data : newData
@@ -61,15 +64,38 @@ const addResultsFromPorcentage = (res:IResult[], defaultData:number[], porcentag
     return res
 }
 
+const dataToObject = (data:IData[], isNew:boolean) : IDataPred => {
+    var res:IDataPred = {}
+    data.forEach((d:IData) => {
+        res[d.id] = (isNew && !d.set_percentage && d.new_value != undefined) ? Number(d.new_value) : ((d.default_value) ? d.default_value : 0)
+    })
+    return res
+}
+
 const prepareData = (dataCollection:IDataCollection) : IResult[] => {
     let res:IResult[] = []
+    var baseData:IDataPred = {}
     
     // Prediccion basica con los valores nuevos
-    const defaultData:number[] = dataCollection.data.map((d:IData) => (d.set_percentage == true || d.new_value == undefined) ? ((d.default_value) ? d.default_value : 0) : Number(d.new_value))
-    res.push({
-        id : 'basic_newValue',
-        data : defaultData
-    })
+    if(!(dataCollection.data.some((d:IData) => d.default_value == undefined))){
+        const defaultData:IDataPred = dataToObject(dataCollection.data, false)  //dataCollection.data.map((d:IData) => (d.default_value) ? d.default_value : 0)
+        res.push({
+            id : idDefault, // ESTOY METIENDO LOS DATOS DEFAULT 
+            data : defaultData
+        })
+        baseData = defaultData
+    }
+
+    if(dataCollection.data.some((d:IData) => d.new_value != undefined && d.new_value.trim() != '')){
+        //const onlyNewData:number[] = dataCollection.data.map((d:IData) => (d.set_percentage == true || d.new_value == undefined) ? ((d.default_value) ? d.default_value : 0) : Number(d.new_value))
+        const onlyNewData:IDataPred = dataToObject(dataCollection.data, true)
+        res.push({
+            id : idNew,
+            data : onlyNewData
+        })
+        baseData = onlyNewData
+    }
+    
 
     // Predicciones cambiando el intervalo
     const interval:IInterval = dataCollection.interval
@@ -77,39 +103,46 @@ const prepareData = (dataCollection:IDataCollection) : IResult[] => {
         const porcentages:number[] = getPercentagesFromInterval(interval)
         console.log('porcentages', porcentages)
         dataCollection.data.filter((sData:IData) => sData.set_percentage).forEach((sData:IData) => {
-            const indx:number = dataCollection.data.findIndex((iData:IData) => iData.id == sData.id)
-            res = addResultsFromPorcentage(res, defaultData, porcentages, indx, sData.id)
+            res = addResultsFromPorcentage(res, baseData, porcentages, sData.id)
         })
     }
 
     return res
 }
 
-export const applyScaler = async (scaler:File, data:number[]) => {
+export const applyScaler = async (scaler:File, data:IDataPred) => {
     let sf = new dfd.Series([100,1000,2000, 3000])
     let standardScaler = new dfd.StandardScaler()
     standardScaler.fit(sf)
     return standardScaler.transform(sf)
 }
 
-export const applyPreprocess = async (code:string, data:number[]) => {
+export const applyPreprocess = async (code:string, data:IDataPred) => {
     if(code != PreprocessCodeDefault){
-        const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(code);
-        const module = await import(dataUri);
-        console.log(module); // property default contains function hello now
-        const preprocess = module.default;
         try {
-            data = preprocess(data)
+            console.log('inidata', data)
+            //var preprocess = new Function(code) // https://stackoverflow.com/a/9702401/16131308
+            const sandbox = { data: data }
+            var context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
+            data = vm.runInContext(code, context)
+            //data = preprocess(data)
+            console.log('data del preprocess', data)
         } catch (error) {
+            console.log(error)
             console.error("Preprocess failed")
         }
     }
     return data
 }
 
-const addFormatInput = (data:number[]|number[][], format?:IFormat) : string => {
-    let body = JSON.stringify(data)
-    if (data.length > 0 && Array.isArray(data[0])) body = body.substring(1,body.length-1)
+const addFormatInput = (data:IDataPred[], format?:IFormat) : string => {
+    let body = ""
+    if(data.length == 1) {
+        body = JSON.stringify(Object.values(data[0]))
+    } else {
+        const aux = data.map((data:IDataPred) => Object.values(data))
+        body = JSON.stringify(aux).substring(1,body.length-1)
+    }
     if (format != undefined) body = format.input.replace(variableInput, body)
     return body
 }
@@ -128,12 +161,13 @@ const removeFormatOutput = (result:string, format?:IFormat) : number[] => {
     return [Number(result)]
 }
 
-const sendRequest = async (url:string, method:string, data:number[]|number[][], format?:IFormat) => {
+const sendRequest = async (url:string, method:string, data:IDataPred[], format?:IFormat) => {
     let myHeaders = new Headers()
     myHeaders.append("Content-Type", "application/json")
 
     let body = addFormatInput(data, format)
-
+    console.log(body)
+    
     let requestOptions:RequestInit = {
         method: method,
         headers: myHeaders,

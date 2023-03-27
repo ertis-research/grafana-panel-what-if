@@ -1,6 +1,6 @@
 import { Button, FileUpload, Input, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeToString, disabledByJS } from 'utils/utils'
+import { Context, dateTimeToString, deepCopy, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
 import { DataFrame, DateTime, dateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
@@ -63,7 +63,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 setHasToSaveNewData(true)
                 saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
             } else {
-                var copyColData:IData[] = JSON.parse(JSON.stringify(collections[indx].data)) 
+                var copyColData:IData[] = deepCopy(collections[indx].data)
                 copyColData = copyColData.map((d:IData) => {delete d.new_value; delete d.set_percentage; return d})
                 addCollection({
                     id: "DateTime: " + dt.toLocaleString() + "_" + (collections.length+1),

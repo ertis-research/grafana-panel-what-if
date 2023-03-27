@@ -18,6 +18,10 @@ export enum Method {
   PATCH = "PATCH"
 }
 
+export interface IDataPred {
+  [key:string] : number
+}
+
 export interface ISelect {
   label : string
   value : any
@@ -56,8 +60,8 @@ export interface IData {
 
 export interface IResult {
   id : string,
-  data : number[],
-  processedData ?: number[],
+  data : IDataPred,
+  processedData ?: IDataPred,
   result ?: number
 }
   

@@ -19,6 +19,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
   const [collections, setCollections] = useState<IDataCollection[]>([])
+  const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
 
   const contextData:IContext = {
       actualStep: actualStep, 
@@ -88,10 +89,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
         </div>
         <div className="item-2">
-          <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection}/>
+          <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollection={currentCollection} setCurrentCollection={setCurrentCollection}/>
         </div>
         <div className="item-3">
-          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection}/>
+          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollection={currentCollection}/>
         </div>
         <div className="item-4">
           <ExportData model={selectedModel}/>

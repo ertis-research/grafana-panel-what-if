@@ -93,3 +93,7 @@ export const groupBy = (input : any[], key:string) => {
     return acc;
   }, {});
 }
+
+export const deepCopy = (obj:any) => {
+  return JSON.parse(JSON.stringify(obj))
+}

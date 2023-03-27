@@ -2,13 +2,14 @@ import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { useContext, useEffect, useState } from 'react';
 import { Context } from 'utils/utils';
 import { IDataCollection, IModel, IResult } from 'utils/types';
-import { Steps } from 'utils/constants';
+import { idDefault, idNew, Steps } from 'utils/constants';
 import { predictAllCollections } from 'utils/predictions';
 
 interface Props {
     model ?: IModel,
     collections : IDataCollection[],
-    updateCollections : any
+    updateCollections : any,
+    currentCollection ?: IDataCollection
 }
 
 enum StatePredict {
@@ -17,7 +18,7 @@ enum StatePredict {
     DONE
 }
 
-export const PredictModel: React.FC<Props> = ({model, collections, updateCollections}) => {
+export const PredictModel: React.FC<Props> = ({model, collections, updateCollections, currentCollection}) => {
 
     const theme = useTheme2();
     const context = useContext(Context);
@@ -46,13 +47,31 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     }, [collections])
     
 
-    const showResults = collections.map((col:IDataCollection) => {
+    const defaultValue = (col:IDataCollection) => {
+        var res = <div></div>
         if(col.results){
-            if(col.results.length == 1){
-                return <div>{col.results[0].result}</div>
-            } else {
-                return <div>{col.results.map((r:IResult) => r.result).join(',')}</div>
-            }
+            const def = col.results.find((r:IResult) => r.id == idDefault)
+            if(def) res = <div>Valor original: {def.result}</div>
+        }
+        return res
+    } 
+
+    const newValue = (col:IDataCollection) => {
+        var res = <div></div>
+        if(col.results){
+            const def = col.results.find((r:IResult) => r.id == idNew)
+            if(def) res = <div>Valor nuevo: {def.result}</div>
+        }
+        return res
+    }
+
+    const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
+        if(col.results){
+            return <VerticalGroup align='center'>
+                {defaultValue(col)}
+                {newValue(col)}
+                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => r.result).join(',')}
+            </VerticalGroup>
         } else {
             return <div></div>
         }
