@@ -62,7 +62,7 @@ export interface IResult {
   id : string,
   data : IDataPred,
   processedData ?: IDataPred,
-  result ?: number
+  result ?: number | 'ERROR'
 }
   
 export interface ICategory {
@@ -77,7 +77,7 @@ export interface IModel {
   queryId : string,
   tags : ITag[],
   preprocess ?: string,
-  scaler ?: File,
+  scaler ?: IScaler,
   format ?: IFormat
 }
 
@@ -85,6 +85,11 @@ export interface IFormat {
   id : string,
   input : string,
   output : string
+}
+
+export interface IScaler {
+  mean : number[]
+  scale : number[]
 }
 
 export interface Options {

@@ -1,7 +1,7 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
 import { IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, FileUpload, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
+import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
@@ -28,6 +28,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
     const [formatOptions, setFormatOptions] = useState<ISelect[]>([])
     const [code, setCode] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
+    const [scaler, setScaler] = useState("")
 
     const updateCurrentState = () => {
         setCurrentModel(model)
@@ -36,7 +37,16 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         setSelectedQuery({ label: model.queryId, value: model.queryId})
         if(model.format != undefined) setSelectedFormat({ label: model.format.id, value: model.format})
         setCode((model.preprocess) ? model.preprocess : "")
+        setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
     }
+
+    /*
+    <InlineField label='Scaler' labelWidth={10} disabled={disabled}>
+                <FileUpload
+                    onFileUpload = {handleOnFileUploadScaler}
+                    showFileName = {false}
+                />
+            </InlineField>
 
     const handleOnFileUploadScaler = (event:FormEvent<HTMLInputElement>) => {
         const currentTarget = event.currentTarget
@@ -46,7 +56,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                 scaler : currentTarget.files[0]
             })
         }
-    }
+    }*/
 
     const handleOnChangeModel = (event: ChangeEvent<HTMLInputElement>) => {
         setCurrentModel({
@@ -56,6 +66,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
     }
 
     const handleOnSubmitAddModel = () => {
+        console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASJSSJJSJS")
         const newModel = {
             ...currentModel,
             tags : currentTags,
@@ -64,12 +75,15 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             format : selectedFormat?.value,
             preprocess : code
         }
+        if (scaler.trim() != "") newModel.scaler = JSON.parse(scaler)
+        console.log(newModel)
         updateFunction(newModel)
         if(mode == Mode.EDIT) {
             setDisabled(true)
         } else {    
             setCurrentModel(ModelDefault)
             setCode("")
+            setScaler("")
         }
         console.log("SUBMIT ADD")
     }
@@ -203,17 +217,27 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             </div>
             )}}
         </Form>
-        <ControlledCollapse label="Tags de entrada del modelo" collapsible isOpen={true}>
+        <ControlledCollapse label="Tags de entrada del modelo" collapsible isOpen={false}>
             <TagsForm currentTags={currentTags} setCurrentTags={setCurrentTags} disabled={disabled} />
         </ControlledCollapse>
         <ControlledCollapse label="Preproceso de datos de entrada (opcional)" collapsible isOpen={false}>
-            <InlineField label='Scaler' labelWidth={10} disabled={disabled}>
-                <FileUpload
-                    onFileUpload = {handleOnFileUploadScaler}
-                    showFileName = {false}
-                />
+            <InlineField label='Scaler' labelWidth={10} disabled={disabled} grow>
+                <div style={{ width: '100%'}}>
+                    <CodeEditor 
+                        language='JSON'
+                        value={scaler}
+                        height={200}
+                        onBlur={(c) => {
+                            console.log(c)
+                            setScaler(c)
+                        }}
+                        showLineNumbers={true}
+                        showMiniMap={false}
+                        monacoOptions={{ formatOnPaste: true, formatOnType: true }}
+                    />
+                </div>
             </InlineField>
-            <InlineField label={"Preproceso"} labelWidth={10} grow  >
+            <InlineField label={"Preproceso"} disabled={disabled} labelWidth={10} grow  >
                 <div style={{ width: '100%'}}>
                     <CodeEditor 
                         language='JavaScript'

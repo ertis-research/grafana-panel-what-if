@@ -1,6 +1,6 @@
 import { PreprocessCodeDefault } from "./default";
-import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult } from "./types"
-import * as dfd from "danfojs"
+import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler } from "./types"
+//import * as dfd from "danfojs"
 import { idDefault, idNew, variableInput, variableOutput } from "./constants"
 import vm from 'vm';
 import { deepCopy } from "./utils";
@@ -18,17 +18,21 @@ const predictData = async (model:IModel, dataCollection:IDataCollection) => {
     let dataToPredict:IDataPred[] = []
     console.log('results', results)
     for(const [i, r] of results.entries()){
-        let finalData = r.data
-        if(model.scaler){
-            //finalData = await applyScaler(model.scaler, finalData)
-        }
+        let finalData = deepCopy(r.data)
+        //console.log("rawData", JSON.stringify(r.data))
         if(model.preprocess){
             finalData = await applyPreprocess(model.preprocess, finalData)
-            console.log("preprocess", finalData)
+            //console.log("preprocess", finalData)
+        }
+        if(model.scaler){
+            //console.log("pre-scaler-apply", finalData)
+            finalData = await applyScaler(model.scaler, finalData)
+            //console.log("scaler-apply", finalData)
         }
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData : finalData }
     }
+    console.log('dataToPredict', dataToPredict)
     const predictions:number[] = await sendRequest(model.url, model.method, dataToPredict, model.format)
     return results.map<IResult>((r:IResult, indx:number) => { return {...r, result: predictions[indx]}})
 }
@@ -46,7 +50,7 @@ const getPercentagesFromInterval = (interval:IInterval) : number[] => {
 
 const calculatePercentage = (percent:number, total:number) => {
     return (percent / 100) * total
- } 
+} 
 
 const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcentages:number[], id:string) => {
     const defData:number = defaultData[id]
@@ -110,22 +114,22 @@ const prepareData = (dataCollection:IDataCollection) : IResult[] => {
     return res
 }
 
-export const applyScaler = async (scaler:File, data:IDataPred) => {
-    let sf = new dfd.Series([100,1000,2000, 3000])
-    let standardScaler = new dfd.StandardScaler()
-    standardScaler.fit(sf)
-    return standardScaler.transform(sf)
+export const applyScaler = function(scaler:IScaler, data_dict:IDataPred) {
+    let scaled_data_dict:IDataPred = {}
+    Object.keys(data_dict).forEach((key:any, idx:number) => {
+        scaled_data_dict[key] = (data_dict[key] - scaler.mean[idx]) / scaler.scale[idx]
+    })
+    return scaled_data_dict;
 }
 
 export const applyPreprocess = async (code:string, data:IDataPred) => {
     if(code != PreprocessCodeDefault){
         try {
-            console.log('inidata', data)
+            //console.log('inidata', data)
             //var preprocess = new Function(code) // https://stackoverflow.com/a/9702401/16131308
             const sandbox = { data: data }
             var context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
             data = vm.runInContext(code, context)
-            //data = preprocess(data)
             console.log('data del preprocess', data)
         } catch (error) {
             console.log(error)
@@ -139,9 +143,10 @@ const addFormatInput = (data:IDataPred[], format?:IFormat) : string => {
     let body = ""
     if(data.length == 1) {
         body = JSON.stringify(Object.values(data[0]))
-    } else {
-        const aux = data.map((data:IDataPred) => Object.values(data))
-        body = JSON.stringify(aux).substring(1,body.length-1)
+    } else if (data.length > 1) {
+        const aux = data.map((d:IDataPred) => Object.values(d))
+        body = JSON.stringify(aux)
+        body = body.substring(1, body.length-1)
     }
     if (format != undefined) body = format.input.replace(variableInput, body)
     return body
