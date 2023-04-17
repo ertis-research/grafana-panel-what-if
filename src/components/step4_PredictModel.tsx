@@ -51,7 +51,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idDefault)
-            if(def) res = <div>Valor original: {def.result}</div>
+            if(def) res = <div>{context.messages._panel._step4.originalValue}: {def.result}</div>
         }
         return res
     } 
@@ -60,18 +60,18 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idNew)
-            if(def) res = <div>Valor nuevo: {def.result}</div>
+            if(def) res = <div>{context.messages._panel._step4.newValue}: {def.result}</div>
         }
         return res
     }
 
     const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
         if(col.results){
-            return <VerticalGroup align='center'>
+            return <div className='wrap'>
                 {defaultValue(col)}
                 {newValue(col)}
                 {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => r.result).join(',')}
-            </VerticalGroup>
+            </div>
         } else {
             return <div></div>
         }
@@ -89,10 +89,10 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     }
 
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
-        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 4</p>
-        <h4>Predict result</h4>
+        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 4</p>
+        <h4>{context.messages._panel._step4.predictResult}</h4>
         <VerticalGroup justify='center'>
-            <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>Predict</Button>
+            <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
             {viewResults()}
         </VerticalGroup>
     </div>

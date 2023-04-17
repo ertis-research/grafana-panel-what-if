@@ -132,9 +132,12 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnClickDeleteCollection = () => {
-        if(collections && collections.length == 1) context.setActualStep(Steps.step_2)
-        if(currentCollection) deleteCollection(currentCollection.id)
-        setCurrentCollection(undefined)
+        if(currentCollection) {
+            deleteCollection(currentCollection.id)
+            setCurrentCollection(undefined)
+        }
+        if(collections && collections.length == 0) context.setActualStep(Steps.step_2)
+        
     }
 
 
@@ -187,7 +190,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     useEffect(() => {
         console.log(currentCollection)
-        updateCollection(currentCollection)
+        if(currentCollection) updateCollection(currentCollection)
     }, [currentCollection])
     
 
@@ -226,7 +229,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         </div>
     }
 
-    return <div style={{ maxHeight:context.height }}>
+    return <div>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
             <Select
                     options={collectionsOptions}
@@ -236,27 +239,28 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     disabled={disabled_collections}
                     width={30}
                     defaultValue={collectionsOptions[0]}
+                    placeholder=''
             />
             <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteCollection}/>
         </div>
-        <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+        <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}> 
             <div className='row'>
                 <div className='col-12 col-sm-4'>
-                    <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 3</p>
-                    <h4>Modify data</h4>
+                    <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 3</p>
+                    <h4>{context.messages._panel._step3.modifyData}</h4>
                 </div>
                 <div className='col-12 col-sm-8'>
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
-                        <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>Intervalo</span>
-                        <Field label="Min" className='textCenter noSpace' disabled={disabled}>
+                        <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>{context.messages._panel._step3.interval}</span>
+                        <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
                             <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number'   />
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
-                        <Field label="Max" className='textCenter noSpace' disabled={disabled}>
+                        <Field label={context.messages._panel._step3.max} className='textCenter noSpace' disabled={disabled}>
                             <Input name="max" width={6} className='noSpace' value={defaultIfUndefined(interval.max,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
-                        <Field label="Steps" className='textCenter noSpace' disabled={disabled}>
+                        <Field label={context.messages._panel._step3.steps} className='textCenter noSpace' disabled={disabled}>
                             <Input name="steps" width={6} className='noSpace' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled}/>
                         </Field>
                     </div>
@@ -268,7 +272,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 inputValue={searchInputValue}
                 onChange={(v) => setSearchValue(v)}
                 prefix={<Icon name="search"/>} 
-                placeholder="Search"
+                placeholder={context.messages._panel._step3.searchPlaceholder}
                 disabled={disabled}
                 isOpen={false}
                 backspaceRemovesValue={false}
@@ -278,7 +282,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     }
                 }}
             />
-            <div className='container' style={{ marginTop: '20px', width: '100%', height: context.height-190, minHeight:'380px'}}>
+            <div className='container scroll' style={{ marginTop: '20px', width: '100%', height: context.height-190, minHeight:'380px'}}>
                 <CustomScrollbar className='scroll'> 
                     {getListTags()}
                 </CustomScrollbar>
@@ -286,5 +290,3 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         </div>
     </div>
 }
-
-//style={{ width: '100%', height: context.height-190, minHeight:'380px' }}

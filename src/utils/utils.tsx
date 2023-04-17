@@ -1,7 +1,10 @@
 import { DataFrame, DateTime } from '@grafana/data'
 import { createContext } from 'react'
 import { ContextDefault } from './default'
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, ISelect, ITag } from './types'
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, ISelect, ITag, Language } from './types'
+import { ILocalization } from './localization/scheme'
+import { messages_es } from './localization/es'
+import { messages_en } from './localization/en'
 
 export const Context = createContext<IContext>(ContextDefault)
 
@@ -60,8 +63,12 @@ export const disabledByJS = (document:any, id:string, disabled:boolean) => {
   if(element != undefined) element.disabled = disabled
 }
 
-export const dateTimeToString = (dateTime:DateTime) => {
-  return dateTime.toISOString()
+export const dateTimeToString = (dt:DateTime) : string => {
+  return dt.toISOString()
+}
+
+export const dateTimeLocalToString = (dt ?: DateTime) : string => {
+  return (dt) ? dt.local().format('YYYY-MM-DD HH:mm') : ""
 }
 
 export const dataFrameToOptions = (dataFrame:DataFrame[]) : ISelect[] => {
@@ -96,4 +103,13 @@ export const groupBy = (input : any[], key:string) => {
 
 export const deepCopy = (obj:any) => {
   return JSON.parse(JSON.stringify(obj))
+}
+
+export const getMessagesByLanguage  = (l:Language) : ILocalization => {
+  switch (l) {
+    case Language.Spanish:
+      return messages_es
+    default:
+      return messages_en
+  }
 }

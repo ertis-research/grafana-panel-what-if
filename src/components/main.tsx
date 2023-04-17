@@ -5,7 +5,7 @@ import { ImportData } from './step2_ImportData'
 import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
-import { Context, tagsToString } from 'utils/utils'
+import { Context, getMessagesByLanguage, tagsToString } from 'utils/utils'
 import { IContext, IDataCollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { getTemplateSrv, locationService } from '@grafana/runtime'
@@ -25,6 +25,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       actualStep: actualStep, 
       setActualStep : setActualStep,
       replaceVariables : replaceVariables,
+      messages : getMessagesByLanguage(options.language),
       height : height,
       width : width,
       options : options
@@ -37,9 +38,11 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   const deleteCollection = (id:string) => {
     const idx = collections.findIndex((col) => col.id == id)
     if(idx >= 0) {
-      const updatedCollections = [...collections]
+      setCurrentCollection(undefined)
+      const updatedCollections:IDataCollection[] = [...collections]
       updatedCollections.splice(idx, 1)
       setCollections(updatedCollections)
+      if(updatedCollections.length > 0) setCurrentCollection(updatedCollections[0])
     }
   }
 

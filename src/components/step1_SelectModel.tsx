@@ -36,12 +36,13 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     }, [models])
     
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
-        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 1</p>
-        <h4>Select model</h4>
+        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 1</p>
+        <h4>{context.messages._panel._step1.selectModel}</h4>
         <Select
             options={modelsOptions}
             value={value}
             onChange={(v) => setValue(v)}
+            placeholder={""}
         />
     </div>
 }

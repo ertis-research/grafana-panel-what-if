@@ -1,6 +1,7 @@
 import { dateTime } from "@grafana/data"
 import { getVariableValue } from "./handleGrafanaVariable"
 import { ISelect } from "./types"
+import { ILocalization } from "./localization/scheme"
 
 export const variableInput = '$input'
 export const variableOutput = '$output'
@@ -27,30 +28,32 @@ export enum ImportDataEnum {
     DATETIME_QUERY = 3
 }
 
-export const ImportDataOptions = [
-    { 
-        label: 'CSV', 
-        value: ImportDataEnum.EXCEL
-    },
-    { 
-        label: 'Datetime', 
-        value: ImportDataEnum.DATETIME_SET, 
-        options: [
-            {
-                label: 'Set datetime',
-                value: ImportDataEnum.DATETIME_SET,
-            },
-            {
-                label: 'Variable of Grafana',
-                value: ImportDataEnum.DATETIME_VARIABLE_GRAFANA
-            },
-            {
-                label: 'Using query',
-                value: ImportDataEnum.DATETIME_QUERY
-            }
-        ]
-    }
-]
+export const ImportDataOptions = (messages:ILocalization) => {
+    return [
+        { 
+            label: 'CSV', 
+            value: ImportDataEnum.EXCEL
+        },
+        { 
+            label: 'Datetime', 
+            value: ImportDataEnum.DATETIME_SET, 
+            options: [
+                {
+                    label: messages._panel._step2.setDatetime,
+                    value: ImportDataEnum.DATETIME_SET,
+                },
+                {
+                    label: messages._panel._step2.variablesGrafana,
+                    value: ImportDataEnum.DATETIME_VARIABLE_GRAFANA
+                },
+                {
+                    label: messages._panel._step2.usingQuery,
+                    value: ImportDataEnum.DATETIME_QUERY
+                }
+            ]
+        }
+    ]
+}
 
 export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => [
     {
@@ -65,7 +68,10 @@ export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => [
     }
 ]
 
-export const DefaultImportData = {
-    label: 'Set datetime',
-    value: ImportDataEnum.DATETIME_SET,
+
+export const DefaultImportData = (messages:ILocalization) => {
+    return {
+        label: messages._panel._step2.setDatetime,
+        value: ImportDataEnum.DATETIME_SET
+    }
 }

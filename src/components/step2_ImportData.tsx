@@ -1,9 +1,9 @@
-import { Button, FileUpload, Input, Select, useTheme2, VerticalGroup } from '@grafana/ui'
-import React, { ChangeEvent, FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeToString, deepCopy, disabledByJS } from 'utils/utils'
+import { Button, DateTimePicker, FileUpload, Select, useTheme2, VerticalGroup } from '@grafana/ui'
+import React, { FormEvent, useContext, useEffect, useState } from 'react'
+import { Context, dateTimeLocalToString, dateTimeToString, deepCopy, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
-import { DataFrame, DateTime, dateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
+import { DataFrame, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
@@ -25,9 +25,11 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     const fieldTag = "tag" // provisional
     const fieldValue = "value" // provisional
 
+    const idFileUpload = "fileUpload"
+    const idDateTimeSet = "dateTimeSet"
+
     const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
-    //const [dateTimeImport, setDateTimeImport] = useState<DateTime>()
-    const [value, setValue] = useState<SelectableValue<number>>(DefaultImportData)
+    const [mode, setMode] = useState<SelectableValue<number>>(DefaultImportData(context.messages))
     const [selectedGrafanaVariable, setSelectedGrafanaVariable] = useState<SelectableValue<DateTime>>()
     const [fileCSV, setFileCSV] = useState<File>()
     const [disabled, setDisabled] = useState(true)
@@ -36,16 +38,12 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
 
     const getArrayOfData = (data:PanelData, idQuery:string) => {
         let res:IData[] = []
-        console.log("0")
         const serieData:DataFrame|undefined = data.series.find((serie) => serie.refId == 'A')
         if(serieData){
-            console.log("1")
             const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
             const fieldValueData = serieData.fields.find((field) => field.name == fieldValue)
             if(fieldTagData && fieldValueData) {
-                console.log("2")
                 fieldTagData.values.toArray().forEach((d:string, idx:number) => {
-                    console.log('tag', d)
                     res.push({
                         id : d,
                         default_value : fieldValueData.values.get(idx)
@@ -56,9 +54,19 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         return res
     }
 
+    const applyJS = () => {
+        var children = document.getElementById(idDateTimeSet)?.children
+        if(children){
+            for(var i = 0; i < children.length; i++){
+                //const child = children[i]
+                //if(child.tagName != 'button') children[i].setAttribute('width', '100%')
+            }
+        }
+    }
+
     const importDataFromDateTime = (dt ?: DateTime) => {
         if(dt != undefined && model != undefined) { 
-            const indx = collections.findIndex((col:IDataCollection) => col.id.includes(dt.toLocaleString()))
+            const indx = collections.findIndex((col:IDataCollection) => col.id.includes(dateTimeLocalToString(dt)))
             if(indx < 0){
                 setHasToSaveNewData(true)
                 saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
@@ -66,7 +74,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 var copyColData:IData[] = deepCopy(collections[indx].data)
                 copyColData = copyColData.map((d:IData) => {delete d.new_value; delete d.set_percentage; return d})
                 addCollection({
-                    id: "DateTime: " + dt.toLocaleString() + "_" + (collections.length+1),
+                    id: "DateTime: " + dateTimeLocalToString(dt) + " (" + (collections.length+1) + ")",
                     name : "Data " + (collections.length+1) + " (DateTime)",
                     interval: IntervalDefault,
                     data : copyColData
@@ -104,8 +112,8 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         }
     }
 
-    const handleOnChangeDateTime = (event:ChangeEvent<HTMLInputElement>) => {
-        setDateTimeInput(dateTime(event.target.value))
+    const handleOnChangeDateTime = (newDatetime:DateTime) => {
+        setDateTimeInput(newDatetime)
         console.log(dateTimeInput?.toISOString())
     }
 
@@ -120,7 +128,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         if (context.actualStep != undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
 
         console.log("addDATA")
-        switch(value.value) {
+        switch(mode.value) {
             case ImportDataEnum.EXCEL:
                 importDataFromCSV()
                 break
@@ -136,8 +144,10 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }
 
     useEffect(() => {
+    }, [mode])
 
-    }, [value])
+    useEffect(() => {
+    }, [context.messages])
     
 
     useEffect(() => {
@@ -146,11 +156,11 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
 
         if(context.actualStep) {
             newDisabled = context.actualStep < Steps.step_2
-            if(!newDisabled) newDisabledButton = !((value.value == ImportDataEnum.EXCEL && fileCSV != undefined) || (dateTimeInput != undefined))
+            if(!newDisabled) newDisabledButton = !((mode.value == ImportDataEnum.EXCEL && fileCSV != undefined) || (dateTimeInput != undefined))
         }
         setDisabled(newDisabled)
         setDisabledButton(newDisabledButton)
-    }, [context.actualStep, fileCSV, dateTimeInput, value])
+    }, [context.actualStep, fileCSV, dateTimeInput, mode])
     
     useEffect(() => {
         disabledByJS(document, 'fileUpload', disabled)
@@ -162,9 +172,8 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     
     useEffect(() => {
         if(hasToSaveNewData && model != undefined && (data.state == LoadingState.Done || data.state == LoadingState.Error)){
-            console.log("HOLAAA DATA", data)
             addCollection({
-                id: "DateTime: " + dateTimeInput?.toLocaleString() + "_" + (collections.length+1),
+                id: "DateTime: " + dateTimeLocalToString(dateTimeInput) + " (" + (collections.length+1) + ")",
                 name : "Data " + (collections.length+1) + " (DateTime)",
                 interval: IntervalDefault,
                 data : getArrayOfData(data, model.queryId)
@@ -175,8 +184,13 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
 
     useEffect(() => {
     }, [collections])
+
+    useEffect(() => {
+        applyJS()
+    }, [mode])
     
-    const ImportExcel = <div>
+    
+    const ImportExcel = <div id={idFileUpload} className='fullWidthChildren' style={{ width: '100%' }}>
         <FileUpload
             showFileName
             onFileUpload={handleOnFileUploadCSV}
@@ -184,22 +198,37 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         />
     </div>
 
-    const ImportDatetimeSet = <div>
-        <Input value={dateTimeInput?.format('YYYY-MM-DDTHH:mm:ss')} type='datetime-local' disabled={disabled} onChange={handleOnChangeDateTime}/>
+    /*
+        <Input 
+            value={dateTimeInput?.local().format('YYYY-MM-DDTHH:mm:ss')} 
+            type='datetime-local' 
+            disabled={disabled} 
+            onChange={handleOnChangeDateTime}
+        />
+    */
+
+
+
+    const ImportDatetimeSet = <div id={idDateTimeSet} className='fullWidthChildren' style={{ width: '100%' }}>
+        <DateTimePicker 
+            onChange={handleOnChangeDateTime}
+            date={dateTimeInput}
+            maxDate={new Date()}
+        />
     </div>
 
-    const ImportDatetimeVarGrafana = <div>
+    const ImportDatetimeVarGrafana =
         <Select
             options={VariablesGrafanaOptions(context.replaceVariables)}
             value={selectedGrafanaVariable}
             onChange={(v) => setSelectedGrafanaVariable(v)}
             disabled={disabled}
+            className='fullWidth'
         />
-    </div>
 
     const importConfiguration = () => {
-        if(value && value.value) {
-            switch(value.value) {
+        if(mode && mode.value) {
+            switch(mode.value) {
                 case ImportDataEnum.EXCEL:
                     return ImportExcel
 
@@ -217,17 +246,17 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }
 
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
-        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 2</p>
-        <h4>Import data</h4>
+        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 2</p>
+        <h4>{context.messages._panel._step2.importData}</h4>
         <VerticalGroup justify='center'>
             <Select
-                options={ImportDataOptions}
-                value={value}
-                onChange={(v) => setValue(v)}
+                options={ImportDataOptions(context.messages)}
+                value={mode}
+                onChange={(v) => setMode(v)}
                 disabled={disabled}
             />
             {importConfiguration()}
-            <Button fullWidth disabled={disabledButton} onClick={handleOnClickAddData}>Añadir datos</Button>
+            <Button fullWidth disabled={disabledButton} onClick={handleOnClickAddData}>{context.messages._panel._step2.addData}</Button>
         </VerticalGroup>
     </div>
 }

@@ -1,4 +1,5 @@
 import { Steps } from "./constants"
+import { ILocalization } from "./localization/scheme"
 
 export enum Language { 
   English = 'en',
@@ -33,7 +34,8 @@ export interface IContext {
   setActualStep ?: any,
   replaceVariables : any,
   height : number,
-  width : number
+  width : number,
+  messages : ILocalization,
   options : Options
 }
 

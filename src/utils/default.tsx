@@ -1,3 +1,4 @@
+import { messages_en } from "./localization/en";
 import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method } from "./types";
 
 export const PreprocessCodeDefault:string = "console.log('Preprocess')"
@@ -28,6 +29,7 @@ export const ContextDefault:IContext = {
     height : 0, 
     width : 0,
     replaceVariables : undefined,
+    messages : messages_en,
     options : {
         language : Language.English,
         models : [],

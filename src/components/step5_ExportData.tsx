@@ -17,11 +17,11 @@ export const ExportData: React.FC<Props> = () => {
     const disabled_results = (context.actualStep) ? context.actualStep < Steps.step_5 : false
 
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
-        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>Step 5</p>
-        <h4>Export data</h4>
+        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 5</p>
+        <h4>{context.messages._panel._step5.exportData}</h4>
         <VerticalGroup justify='center'>
-            <Button fullWidth disabled={disabled_data}>Download data</Button>
-            <Button fullWidth disabled={disabled_results}>Download results</Button>
+            <Button fullWidth disabled={disabled_data}>{context.messages._panel._step5.downloadData}</Button>
+            <Button fullWidth disabled={disabled_results}>{context.messages._panel._step5.downloadResults}</Button>
         </VerticalGroup>
     </div>
 }
