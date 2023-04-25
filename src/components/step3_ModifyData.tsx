@@ -83,7 +83,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const handleOnChangeInterval = (event:ChangeEvent<HTMLInputElement>) => {
         setInterval({
             ...interval,
-            [event.currentTarget.name] : (event.target.value == '') ? undefined : event.target.value
+            [event.currentTarget.name] : (event.target.value == '') ? undefined : Math.abs(Number(event.target.value))
         })
     }
 
@@ -253,7 +253,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>{context.messages._panel._step3.interval}</span>
                         <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number'   />
+                            <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' />
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
                         <Field label={context.messages._panel._step3.max} className='textCenter noSpace' disabled={disabled}>
@@ -261,7 +261,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
                         <Field label={context.messages._panel._step3.steps} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="steps" width={6} className='noSpace' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled}/>
+                            <Input name="steps" width={6} className='noSpace' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                     </div>
                 </div>

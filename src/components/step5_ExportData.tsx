@@ -1,6 +1,6 @@
 import { Button, useTheme2, VerticalGroup } from '@grafana/ui';
 import React, { useContext } from 'react';
-import { Steps } from 'utils/constants';
+//import { Steps } from 'utils/constants';
 import { IModel } from 'utils/types';
 import { Context } from 'utils/utils';
 
@@ -13,8 +13,8 @@ export const ExportData: React.FC<Props> = () => {
     const theme = useTheme2();
     const context = useContext(Context);
 
-    const disabled_data = (context.actualStep) ? context.actualStep < Steps.step_3 : false
-    const disabled_results = (context.actualStep) ? context.actualStep < Steps.step_5 : false
+    const disabled_data = true //(context.actualStep) ? context.actualStep < Steps.step_3 : false
+    const disabled_results = true //(context.actualStep) ? context.actualStep < Steps.step_5 : false
 
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 5</p>
