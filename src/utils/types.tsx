@@ -71,11 +71,17 @@ export interface ICategory {
   [key : string] : ITag[]
 }
 
+export interface ICredentials {
+  username : string,
+  password : string
+}
+
 export interface IModel {
   id : string,
   description : string,
   url : string,
   method : Method,
+  credentials ?: ICredentials
   queryId : string,
   tags : ITag[],
   preprocess ?: string,

@@ -1,9 +1,10 @@
 import { PreprocessCodeDefault } from "./default";
-import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler } from "./types"
+import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler } from "./types"
 //import * as dfd from "danfojs"
 import { idDefault, idNew, variableInput, variableOutput } from "./constants"
-import vm from 'vm';
-import { deepCopy } from "./utils";
+import vm from 'vm'
+import { deepCopy } from "./utils"
+import { Buffer } from 'buffer'
 
 
 export const predictAllCollections = async (model:IModel, allData:IDataCollection[]) => {
@@ -33,7 +34,7 @@ const predictData = async (model:IModel, dataCollection:IDataCollection) => {
         results[i] = { ...r, processedData : finalData }
     }
     console.log('dataToPredict', dataToPredict)
-    const predictions:number[] = await sendRequest(model.url, model.method, dataToPredict, model.format)
+    const predictions:number[] = await sendRequest(model.url, model.method, dataToPredict, model.credentials, model.format)
     return results.map<IResult>((r:IResult, indx:number) => { return {...r, result: predictions[indx]}})
 }
 
@@ -60,7 +61,7 @@ const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcenta
         let newData = deepCopy(defaultData)
         newData[id] = (p < 0) ? defData - v : defData + v
         res.push({
-            id : id + "_" + ((p < 0) ? 'less' : 'plus') + Math.abs(p),
+            id : id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
             data : newData
         })
     })
@@ -166,9 +167,11 @@ const removeFormatOutput = (result:string, format?:IFormat) : number[] => {
     return [Number(result)]
 }
 
-const sendRequest = async (url:string, method:string, data:IDataPred[], format?:IFormat) => {
+const sendRequest = async (url:string, method:string,  data:IDataPred[], credentials?:ICredentials, format?:IFormat) => {
     let myHeaders = new Headers()
     myHeaders.append("Content-Type", "application/json")
+
+    if (credentials) myHeaders.append('Authorization', 'Basic ' + Buffer.from(credentials.username + ":" + credentials.password).toString('base64'))
 
     let body = addFormatInput(data, format)
     console.log(body)

@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
+import { ICredentials, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
 import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, formatsToOptions } from 'utils/utils'
@@ -40,23 +40,6 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
     }
 
-    /*
-    <InlineField label='Scaler' labelWidth={10} disabled={disabled}>
-                <FileUpload
-                    onFileUpload = {handleOnFileUploadScaler}
-                    showFileName = {false}
-                />
-            </InlineField>
-
-    const handleOnFileUploadScaler = (event:FormEvent<HTMLInputElement>) => {
-        const currentTarget = event.currentTarget
-        if(currentTarget?.files && currentTarget.files.length > 0){
-            setCurrentModel({
-                ...currentModel,
-                scaler : currentTarget.files[0]
-            })
-        }
-    }*/
 
     const handleOnChangeModel = (event: ChangeEvent<HTMLInputElement>) => {
         setCurrentModel({
@@ -65,15 +48,28 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         })
     }
 
+    const handleOnChangeCredentials = (event: ChangeEvent<HTMLInputElement>) => {
+        const oldCredentials:ICredentials = (currentModel.credentials) ? {...currentModel.credentials} : {username: "", password: ""}
+        setCurrentModel({
+            ...currentModel,
+            credentials : {
+                ...oldCredentials,
+                [event.currentTarget.name] : event.target.value
+            }
+        })
+    }
+
     const handleOnSubmitAddModel = () => {
-        console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASJSSJJSJS")
+        const cred = currentModel.credentials
+        const credentials = (cred && cred.password.trim() != '' && cred.username.trim() != '') ? cred : undefined
         const newModel = {
             ...currentModel,
             tags : currentTags,
             method : selectedMethod?.value,
             queryId : selectedQuery?.value,
             format : selectedFormat?.value,
-            preprocess : code
+            preprocess : code,
+            credentials : credentials
         }
         if (scaler.trim() != "") newModel.scaler = JSON.parse(scaler)
         console.log(newModel)
@@ -102,6 +98,11 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
         if(deleteFunction) deleteFunction()
     }
 
+    const checkValueField = (value?:string) => {
+        console.log("valueField", value != undefined && value.trim() != "")
+        return value != undefined && value.trim() != ""
+    }
+
     useEffect(() => {
         if(mode == Mode.EDIT) setDisabled(true)
     }, [mode])
@@ -124,7 +125,6 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             setFormatOptions([])
         }
     }, [context.options.formats])
-    
 
     const buttonEdit = () => {
         if(mode == Mode.CREATE) {
@@ -211,6 +211,16 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                         </InlineField>
                         <InlineField label="URL" labelWidth={10} grow required disabled={disabled}>
                             <Input {...register("url", { required: true })} disabled={disabled} value={currentModel.url} onChange={handleOnChangeModel} required/>
+                        </InlineField>
+                    </InlineFieldRow>
+                    <InlineFieldRow>
+                        <InlineField label="Username" labelWidth={10} grow disabled={disabled}>
+                            <Input {...register("username", { required: checkValueField(currentModel.credentials?.password) })} disabled={disabled} 
+                                value={currentModel.credentials?.username} onChange={handleOnChangeCredentials}/>
+                        </InlineField>
+                        <InlineField label="Password" labelWidth={10} grow disabled={disabled}>
+                            <Input {...register("password", { required: checkValueField(currentModel.credentials?.username) })} type='password' disabled={disabled} 
+                                value={currentModel.credentials?.password} onChange={handleOnChangeCredentials}/>
                         </InlineField>
                     </InlineFieldRow>
                 </Collapse>

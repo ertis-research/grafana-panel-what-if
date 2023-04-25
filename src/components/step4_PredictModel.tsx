@@ -68,9 +68,9 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
         if(col.results){
             return <div className='wrap'>
-                {defaultValue(col)}
-                {newValue(col)}
-                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => r.result).join(',')}
+                <p>{defaultValue(col)}</p>
+                <p>{newValue(col)}</p>
+                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {r.result}</p>)}
             </div>
         } else {
             return <div></div>
