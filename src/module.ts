@@ -29,6 +29,11 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
           },
         ],
       }
+    }).addNumberInput({
+      path: 'decimals',
+      defaultValue: undefined,
+      name : 'Decimals',
+      category: ['General']
     }).addCustomEditor({
       path : 'formats',
       id: 'formats',

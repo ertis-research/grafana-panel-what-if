@@ -83,7 +83,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const handleOnChangeInterval = (event:ChangeEvent<HTMLInputElement>) => {
         setInterval({
             ...interval,
-            [event.currentTarget.name] : (event.target.value == '') ? undefined : Math.abs(Number(event.target.value))
+            [event.currentTarget.name] : (event.target.value == '') ? undefined : Number(event.target.value)
         })
     }
 
@@ -136,8 +136,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             deleteCollection(currentCollection.id)
             setCurrentCollection(undefined)
         }
-        if(collections && collections.length == 0) context.setActualStep(Steps.step_2)
-        
+        if(collections && collections.length == 0) context.setActualStep(Steps.step_2)   
     }
 
 
@@ -155,7 +154,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 ...currentCollection,
                 interval: interval
             })
-            if(interval.max && interval.min && interval.steps) {
+            if(interval.max != undefined && interval.min != undefined && interval.steps != undefined) {
                 setHasInterval(true)
             } else {
                 setHasInterval(false)
@@ -253,7 +252,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>{context.messages._panel._step3.interval}</span>
                         <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' />
+                            <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled}/>
                         </Field>
                         <span style={{ marginRight: '10px' }}>%</span>
                         <Field label={context.messages._panel._step3.max} className='textCenter noSpace' disabled={disabled}>

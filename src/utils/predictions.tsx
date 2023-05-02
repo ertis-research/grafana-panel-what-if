@@ -3,7 +3,7 @@ import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IM
 //import * as dfd from "danfojs"
 import { idDefault, idNew, variableInput, variableOutput } from "./constants"
 import vm from 'vm'
-import { deepCopy } from "./utils"
+import { decimalCount, deepCopy, round } from "./utils"
 import { Buffer } from 'buffer'
 
 
@@ -42,11 +42,14 @@ const getPercentagesFromInterval = (interval:IInterval) : number[] => {
     if(interval.max == undefined || interval.min == undefined || interval.steps == undefined) return []
 
     const min_interval:number = Number(interval.min), max_interval:number = Number(interval.max), step_interval:number = Number(interval.steps)
+    const dec = decimalCount(step_interval)
 
-    const porcentages_min:number[] = Array.from({ length: Math.ceil(min_interval / step_interval)}, (_, i:number) => { var num = 0 - ((i+1) * step_interval); return (num < -min_interval) ? -min_interval : num})
-    const porcentages_max:number[] = Array.from({ length: Math.ceil(max_interval / step_interval)}, (_, i:number) => { var num = (i+1) * step_interval; return (num > max_interval) ? max_interval : num})
+    //const porcentages_min:number[] = Array.from({ length: Math.ceil(min_interval / step_interval)}, (_, i:number) => { var num = 0 - ((i+1) * step_interval); return (num < -min_interval) ? -min_interval : num})
+    //const porcentages_max:number[] = Array.from({ length: Math.ceil(max_interval / step_interval)}, (_, i:number) => { var num = (i+1) * step_interval; return (num > max_interval) ? max_interval : num})
 
-    return porcentages_min.concat(porcentages_max).sort((a,b)=>a-b)
+    //return porcentages_min.concat(porcentages_max).sort((a,b)=>a-b)
+
+    return Array.from({ length: Math.ceil((max_interval - min_interval) / step_interval) + 1 }, (_, i:number) => { var num = round((i * step_interval) + min_interval, dec); return (num > max_interval) ? max_interval : num})
 }
 
 const calculatePercentage = (percent:number, total:number) => {

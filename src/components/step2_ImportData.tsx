@@ -245,6 +245,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         return ImportExcel
     }
 
+    //disabled={disabled}
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 2</p>
         <h4>{context.messages._panel._step2.importData}</h4>
@@ -253,7 +254,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 options={ImportDataOptions(context.messages)}
                 value={mode}
                 onChange={(v) => setMode(v)}
-                disabled={disabled}
+                disabled={true}
             />
             {importConfiguration()}
             <Button fullWidth disabled={disabledButton} onClick={handleOnClickAddData}>{context.messages._panel._step2.addData}</Button>

@@ -105,6 +105,16 @@ export const deepCopy = (obj:any) => {
   return JSON.parse(JSON.stringify(obj))
 }
 
+export const decimalCount = (num:number) => {
+  const c = num.toString().split('.')
+  return (c.length > 1) ? c[1].length : 0
+}
+
+export const round = (num:number, numDec:number) => {
+  const dec = Math.pow(10, numDec)
+  return Math.round(num * dec) / dec
+}
+
 export const getMessagesByLanguage  = (l:Language) : ILocalization => {
   switch (l) {
     case Language.Spanish:

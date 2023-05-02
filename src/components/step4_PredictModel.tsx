@@ -1,6 +1,6 @@
 import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui';
-import React, { useContext, useEffect, useState } from 'react';
-import { Context } from 'utils/utils';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
+import { Context, round } from 'utils/utils';
 import { IDataCollection, IModel, IResult } from 'utils/types';
 import { idDefault, idNew, Steps } from 'utils/constants';
 import { predictAllCollections } from 'utils/predictions';
@@ -40,6 +40,11 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         }
     }
 
+    const setDecimals = (value:any) => {
+        if(!value || typeof value !== 'number' || !context.options.decimals) return value
+        return round(value, context.options.decimals)
+    }
+
     useEffect(() => {
         if(state == StatePredict.LOADING){
             setState(StatePredict.DONE)
@@ -51,7 +56,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idDefault)
-            if(def) res = <div>{context.messages._panel._step4.originalValue}: {def.result}</div>
+            if(def) res = <div>{context.messages._panel._step4.originalValue}: {setDecimals(def.result)}</div>
         }
         return res
     } 
@@ -60,7 +65,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idNew)
-            if(def) res = <div>{context.messages._panel._step4.newValue}: {def.result}</div>
+            if(def) res = <div>{context.messages._panel._step4.newValue}: {setDecimals(def.result)}</div>
         }
         return res
     }
@@ -70,8 +75,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             return <div className='wrap'>
                 <p>{defaultValue(col)}</p>
                 <p>{newValue(col)}</p>
-                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {r.result}</p>)}
-            </div>
+                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {setDecimals(r.result)}</p>)}
+                </div>
         } else {
             return <div></div>
         }
@@ -88,12 +93,14 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         }
     }
 
-    return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
-        <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 4</p>
-        <h4>{context.messages._panel._step4.predictResult}</h4>
-        <VerticalGroup justify='center'>
-            <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
-            {viewResults()}
-        </VerticalGroup>
-    </div>
+    return <Fragment>
+        <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+            <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 4</p>
+            <h4>{context.messages._panel._step4.predictResult}</h4>
+            <VerticalGroup justify='center'>
+                <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
+                {viewResults()}
+            </VerticalGroup>
+        </div>
+    </Fragment>
 }
