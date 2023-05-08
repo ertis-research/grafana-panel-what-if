@@ -65,7 +65,11 @@ const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcenta
         newData[id] = (p < 0) ? defData - v : defData + v
         res.push({
             id : id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
-            data : newData
+            data : newData,
+            correspondsWith: {
+                tag : id,
+                porcentage : p
+            }
         })
     })
 

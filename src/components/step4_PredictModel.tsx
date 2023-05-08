@@ -1,9 +1,11 @@
-import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { Context, round } from 'utils/utils';
-import { IDataCollection, IModel, IResult } from 'utils/types';
-import { idDefault, idNew, Steps } from 'utils/constants';
-import { predictAllCollections } from 'utils/predictions';
+import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
+import React, { Fragment, useContext, useEffect, useState } from 'react'
+import { Context, round } from 'utils/utils'
+import { IDataCollection, IModel, IResult } from 'utils/types'
+import { idDefault, idNew, Steps } from 'utils/constants'
+import { predictAllCollections } from 'utils/predictions'
+import Plot from 'react-plotly.js'
+import { groupBy } from 'utils/utils'
 
 interface Props {
     model ?: IModel,
@@ -51,12 +53,49 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         }
     }, [collections])
     
+    const showPlot = (col:IDataCollection) => {
+        //{col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {setDecimals(r.result)}</p>)}
+        if(col.results){
+            const results = col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew && r.correspondsWith != undefined && r.result != 'ERROR' && r.result != undefined)
+            const tagsGroup : { [tag:string] : IResult[] } = groupBy(results, "tag")
+            console.log("tagGroup", tagsGroup)
+
+            const dataArray:any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
+                // No pongo la x global por si alguna falla que no se rompa toda la grafica
+                var values_x:number[] = [], values_y:number [] = []
+                resultsOfTag.forEach((r:IResult) => { if (r.correspondsWith != undefined) values_x.push(r.correspondsWith.porcentage)})
+                resultsOfTag.forEach((r:IResult) => { if (r.result != undefined && r.result != 'ERROR') values_y.push(r.result)})
+
+                return {
+                    x : values_x,
+                    y : values_y,
+                    type : 'scatter',
+                    name : tag
+                }
+            })
+
+            console.log('dataArrayPLOT', dataArray)
+
+            const layoutObj = {
+                autosize: true
+            }
+
+            return <Plot layout={layoutObj} data={dataArray} />
+        } else {
+            return <div></div>
+        }
+    }
 
     const defaultValue = (col:IDataCollection) => {
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idDefault)
-            if(def) res = <div>{context.messages._panel._step4.originalValue}: {setDecimals(def.result)}</div>
+            if(def) res = <div>
+                <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+                    <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel._step4.originalValue}</p>
+                    <h1 style={{ textAlign: 'center'}}>{setDecimals(def.result)}</h1>
+                </div>
+            </div>
         }
         return res
     } 
@@ -65,18 +104,21 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idNew)
-            if(def) res = <div>{context.messages._panel._step4.newValue}: {setDecimals(def.result)}</div>
+            if(def) res = <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+                <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel._step4.newValue}</p>
+                <h1 style={{ textAlign: 'center'}}>{setDecimals(def.result)}</h1>
+            </div>
         }
         return res
     }
 
     const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
         if(col.results){
-            return <div className='wrap'>
-                <p>{defaultValue(col)}</p>
-                <p>{newValue(col)}</p>
-                {col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {setDecimals(r.result)}</p>)}
-                </div>
+            return <div>
+                {defaultValue(col)}
+                {newValue(col)}
+                {showPlot(col)}
+            </div>
         } else {
             return <div></div>
         }
@@ -99,8 +141,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             <h4>{context.messages._panel._step4.predictResult}</h4>
             <VerticalGroup justify='center'>
                 <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
-                {viewResults()}
             </VerticalGroup>
         </div>
+        {viewResults()}
     </Fragment>
 }

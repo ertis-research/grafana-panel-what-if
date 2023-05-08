@@ -92,12 +92,12 @@ export const formatsToOptions = (formats:IFormat[]) : ISelect[] => {
 
 export const groupBy = (input : any[], key:string) => {
   return input.reduce((acc, currentValue) => {
-    let groupKey = currentValue[key];
+    let groupKey = getValueByKeyAnyDepth(currentValue, key) //currentValue[key];
     if (!acc[groupKey]) {
-      acc[groupKey] = [];
+      acc[groupKey] = []
     }
-    acc[groupKey].push(currentValue);
-    return acc;
+    acc[groupKey].push(currentValue)
+    return acc
   }, {});
 }
 
@@ -115,11 +115,29 @@ export const round = (num:number, numDec:number) => {
   return Math.round(num * dec) / dec
 }
 
-export const getMessagesByLanguage  = (l:Language) : ILocalization => {
+export const getMessagesByLanguage = (l:Language) : ILocalization => {
   switch (l) {
     case Language.Spanish:
       return messages_es
     default:
       return messages_en
   }
+}
+
+export const getValueByKeyAnyDepth = (obj:any, search:string) => {
+  var res:any = undefined
+  const keys = Object.keys(obj)
+  for(var i = 0; i < keys.length && res == undefined; i++) {
+    const key = Object.keys(obj)[i]
+    if(key == search) {
+      res = obj[key]
+    } else if (typeof obj[key] === "object") {
+      res = getValueByKeyAnyDepth(obj[key], search)
+    }
+  }
+  return res
+}
+
+export const isEmpty = (obj:any) => {
+  return Object.keys(obj).length === 0;
 }

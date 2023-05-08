@@ -83,21 +83,26 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   
 
   return <Context.Provider value={contextData}>
-    <div className="containerType container scrollMain" style={{ width: width, height: height }} >
+    <div className="containerType scrollMain" style={{ width: width, height: height, padding: '10px'}} >
       <div className="main-grid">
         <div className="item-0">
-          <SelectModel models={options.models} setModel={setSelectedModel}/>
+          <div style={{ marginBottom: '10px'}}>
+            <SelectModel models={options.models} setModel={setSelectedModel}/>
+          </div>
+          <div style={{ marginBottom: '10px'}}>
+            <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
+          </div>
+          <div className="export-1" style={{ marginBottom: '10px'}}>
+            <ExportData model={selectedModel}/>
+          </div>
         </div>
         <div className="item-1">
-          <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
-        </div>
-        <div className="item-2">
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollection={currentCollection} setCurrentCollection={setCurrentCollection}/>
         </div>
-        <div className="item-3">
+        <div className="item-2">
           <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollection={currentCollection}/>
         </div>
-        <div className="item-4">
+        <div className="item-3">
           <ExportData model={selectedModel}/>
         </div>
       </div>

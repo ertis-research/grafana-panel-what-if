@@ -65,6 +65,10 @@ export interface IResult {
   data: IDataPred,
   processedData?: IDataPred,
   result?: number | 'ERROR'
+  correspondsWith?: {
+    tag : string,
+    porcentage : number
+  }
 }
   
 export interface ICategory {

@@ -229,20 +229,20 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     return <div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
-            <Select
-                    options={collectionsOptions}
-                    value={selectCollection}
-                    onChange={(v) => setSelectCollection(v)}
-                    prefix={<Icon name="file-alt"/>} 
-                    disabled={disabled_collections}
-                    width={30}
-                    defaultValue={collectionsOptions[0]}
-                    placeholder=''
-            />
-            <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteCollection}/>
-        </div>
         <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}> 
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '10px' }}>
+                <Select
+                        options={collectionsOptions}
+                        value={selectCollection}
+                        onChange={(v) => setSelectCollection(v)}
+                        prefix={<Icon name="file-alt"/>} 
+                        disabled={disabled_collections}
+                        width={30}
+                        defaultValue={collectionsOptions[0]}
+                        placeholder=''
+                />
+                <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteCollection}/>
+            </div>
             <div className='row'>
                 <div className='col-12 col-sm-4'>
                     <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 3</p>
