@@ -10,7 +10,7 @@
 }
 
 .main-grid {
-    padding-right: 0px;
+    padding-right: 0.5px;
     display: grid; 
     grid-template-columns: auto; 
     grid-template-rows: auto auto auto auto auto; 

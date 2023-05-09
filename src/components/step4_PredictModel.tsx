@@ -6,6 +6,7 @@ import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/predictions'
 import Plot from 'react-plotly.js'
 import { groupBy } from 'utils/utils'
+import { Layout } from 'plotly.js'
 
 interface Props {
     model ?: IModel,
@@ -26,6 +27,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     const context = useContext(Context);
 
     const [state, setState] = useState<StatePredict>(StatePredict.EMPTY)
+    const [sizePlot, setSizePlot] = useState<{width: number, height: number}>({width: 0, height: 0})
 
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
 
@@ -52,6 +54,28 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             setState(StatePredict.DONE)
         }
     }, [collections])
+
+    useEffect(() => {
+        const divResults = document.getElementById('id-results')
+        if(divResults) {
+            setSizePlot({
+                ...sizePlot,
+                width: divResults.offsetWidth
+            })
+            console.log('width', divResults.offsetWidth)
+        }
+    }, [context.width, state])
+
+    useEffect(() => {
+        const divResults = document.getElementById('id-results')
+        if(divResults) {
+            setSizePlot({
+                ...sizePlot,
+                height: divResults.offsetHeight
+            })
+        }
+    }, [context.height])
+    
     
     const showPlot = (col:IDataCollection) => {
         //{col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {setDecimals(r.result)}</p>)}
@@ -76,8 +100,36 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
 
             console.log('dataArrayPLOT', dataArray)
 
-            const layoutObj = {
-                autosize: true
+            const layoutObj:Partial<Layout> = {
+                width: (sizePlot.width < context.width) ? sizePlot.width : context.width, 
+                height: context.height-220,
+                showlegend: true,
+                legend: {
+                    orientation: 'h',
+                    font: {
+                        color: theme.colors.text.primary
+                    }
+                },
+                margin: {
+                    t: 30,
+                    b: 80,
+                    l: 80,
+                    r: 50
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                xaxis: {
+                    tickcolor: theme.colors.text.primary,
+                    zerolinecolor: theme.colors.text.primary,
+                    gridcolor: theme.colors.text.primary,
+                    color: theme.colors.text.primary
+                },
+                yaxis: {
+                    tickcolor: theme.colors.text.primary,
+                    zerolinecolor: theme.colors.text.primary,
+                    gridcolor: theme.colors.text.primary,
+                    color: theme.colors.text.primary
+                }
             }
 
             return <Plot layout={layoutObj} data={dataArray} />
@@ -90,11 +142,9 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idDefault)
-            if(def) res = <div>
-                <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+            if(def) res = <div className='horizontal-item-1' style={{backgroundColor:theme.colors.background.secondary, padding:'10px', width: '50%', marginRight: '10px'}}>
                     <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel._step4.originalValue}</p>
                     <h1 style={{ textAlign: 'center'}}>{setDecimals(def.result)}</h1>
-                </div>
             </div>
         }
         return res
@@ -104,7 +154,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         var res = <div></div>
         if(col.results){
             const def = col.results.find((r:IResult) => r.id == idNew)
-            if(def) res = <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
+            if(def) res = <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', width: '50%'}}>
                 <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel._step4.newValue}</p>
                 <h1 style={{ textAlign: 'center'}}>{setDecimals(def.result)}</h1>
             </div>
@@ -114,10 +164,14 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
 
     const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
         if(col.results){
-            return <div>
-                {defaultValue(col)}
-                {newValue(col)}
-                {showPlot(col)}
+            return <div style={{ marginTop: '10px', width: '100%' }}>
+                <div style={{ display: 'flex'}}>
+                    {defaultValue(col)}
+                    {newValue(col)}
+                </div>
+                <div id='id-results' style={{ width: '100%', backgroundColor:theme.colors.background.secondary, marginTop: '10px' }}>
+                    {showPlot(col)}
+                </div>
             </div>
         } else {
             return <div></div>

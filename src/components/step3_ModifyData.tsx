@@ -200,7 +200,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const tagField = (tag:ITag) => {
         const findRes = currentCollection?.data.find((d) => d.id == tag.id)
         const data:IData = (findRes) ? findRes : { id: tag.id }
-        return <div className='col-6 col-sm-6 col-lg-4 col-xl-3'>
+        return <div className='col-6 col-md-6 col-lg-6 col-xl-4'>
             <p className='noSpaceBottom id wrap-hidden' style={{ color:theme.colors.text.secondary }}>{tag.id}</p>
             <p className="noSpaceBottom description wrap-hidden">{(tag.description) ? tag.description : <br/>}</p>
             <Field>
