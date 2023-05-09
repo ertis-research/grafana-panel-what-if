@@ -81,6 +81,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         //{col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew).map((r:IResult) => <p>{r.id} = {setDecimals(r.result)}</p>)}
         if(col.results){
             const results = col.results.filter((r:IResult) => r.id != idDefault && r.id != idNew && r.correspondsWith != undefined && r.result != 'ERROR' && r.result != undefined)
+            if(results.length < 1) return <div></div>
+            
             const tagsGroup : { [tag:string] : IResult[] } = groupBy(results, "tag")
             console.log("tagGroup", tagsGroup)
 
