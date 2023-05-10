@@ -59,22 +59,12 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         const divResults = document.getElementById('id-results')
         if(divResults) {
             setSizePlot({
-                ...sizePlot,
-                width: divResults.offsetWidth
+                height: context.height-220,
+                width: (divResults.offsetWidth < context.width) ? divResults.offsetWidth : context.width
             })
             console.log('width', divResults.offsetWidth)
         }
-    }, [context.width, state])
-
-    useEffect(() => {
-        const divResults = document.getElementById('id-results')
-        if(divResults) {
-            setSizePlot({
-                ...sizePlot,
-                height: divResults.offsetHeight
-            })
-        }
-    }, [context.height])
+    }, [context.width, context.height, state])
     
     
     const showPlot = (col:IDataCollection) => {
@@ -92,6 +82,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
                 resultsOfTag.forEach((r:IResult) => { if (r.correspondsWith != undefined) values_x.push(r.correspondsWith.porcentage)})
                 resultsOfTag.forEach((r:IResult) => { if (r.result != undefined && r.result != 'ERROR') values_y.push(r.result)})
 
+                values_y = values_y.map((v:number) => setDecimals(v))
+
                 return {
                     x : values_x,
                     y : values_y,
@@ -103,8 +95,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             console.log('dataArrayPLOT', dataArray)
 
             const layoutObj:Partial<Layout> = {
-                width: (sizePlot.width < context.width) ? sizePlot.width : context.width, 
-                height: context.height-220,
+                width: sizePlot.width, 
+                height: sizePlot.height,
                 showlegend: true,
                 legend: {
                     orientation: 'h',
