@@ -104,6 +104,13 @@ export interface IScaler {
   scale: number[]
 }
 
+export interface ICSVScheme {
+  ID : string,
+  INTERVAL : "YES" | "NO",
+  DEFAULT_VALUE : number,
+  NEW_VALUE : number
+}
+
 export interface Options {
   language: Language,
   models: IModel[],

@@ -47,6 +47,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const disabled = (context.actualStep) ? context.actualStep  < Steps.step_3 : false
     const disabled_collections = disabled || false
 
+    //const NUMERIC_REGEXP = /[-]{0,1}[\d]*[.]{0,1}[\d]+/g;
+
     const intervalColors:IntervalColors = {
         DISABLED : {
             bg: theme.colors.secondary.main,
@@ -252,15 +254,15 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>{context.messages._panel._step3.interval}</span>
                         <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="min" width={6} className='noSpace' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled}/>
+                            <Input name="min" width={9} suffix="%" className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
-                        <span style={{ marginRight: '10px' }}>%</span>
+                        <span style={{ marginRight: '10px' }}></span>
                         <Field label={context.messages._panel._step3.max} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="max" width={6} className='noSpace' value={defaultIfUndefined(interval.max,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
+                            <Input name="max" width={9} suffix="%" className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.max,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
-                        <span style={{ marginRight: '10px' }}>%</span>
+                        <span style={{ marginRight: '10px' }}></span>
                         <Field label={context.messages._panel._step3.steps} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="steps" width={6} className='noSpace' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
+                            <Input name="steps" width={7} className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                     </div>
                 </div>

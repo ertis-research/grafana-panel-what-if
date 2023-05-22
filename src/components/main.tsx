@@ -61,6 +61,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
 
   useEffect(() => {
     console.log("collections", collections)
+    if(currentCollection){
+      const idx = collections.findIndex((col) => col.id == currentCollection.id)
+      setCurrentCollection(collections[idx])
+    }
   }, [collections])
 
   useEffect(() => {
@@ -93,7 +97,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
             <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
           </div>
           <div className="export-1" style={{ marginBottom: '10px'}}>
-            <ExportData model={selectedModel}/>
+            <ExportData model={selectedModel} collections={collections} currentCollection={currentCollection}/>
           </div>
         </div>
         <div className="item-1">
@@ -103,7 +107,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollection={currentCollection}/>
         </div>
         <div className="item-3">
-          <ExportData model={selectedModel}/>
+          <ExportData model={selectedModel} collections={collections} currentCollection={currentCollection}/>
         </div>
       </div>
     </div>

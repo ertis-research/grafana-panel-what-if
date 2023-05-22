@@ -101,3 +101,18 @@
 .scrollMain::-webkit-scrollbar {
     display: none;
 }
+
+.inputWithoutArrows input * {
+    -webkit-appearance: textfield !important;
+    -moz-appearance: textfield !important;
+    appearance: none !important;
+    background-color: red;
+}
+
+.inputWithoutArrows input * ::-webkit-inner-spin-button,
+.inputWithoutArrows input * ::-webkit-outer-spin-button
+{
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+    background-color: blue;
+}

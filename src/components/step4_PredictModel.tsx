@@ -6,7 +6,7 @@ import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/predictions'
 import Plot from 'react-plotly.js'
 import { groupBy } from 'utils/utils'
-import { Layout } from 'plotly.js'
+import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
 
 interface Props {
     model ?: IModel,
@@ -23,8 +23,8 @@ enum StatePredict {
 
 export const PredictModel: React.FC<Props> = ({model, collections, updateCollections, currentCollection}) => {
 
-    const theme = useTheme2();
-    const context = useContext(Context);
+    const theme = useTheme2()
+    const context = useContext(Context)
 
     const [state, setState] = useState<StatePredict>(StatePredict.EMPTY)
     const [sizePlot, setSizePlot] = useState<{width: number, height: number}>({width: 0, height: 0})
@@ -116,7 +116,8 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
                     tickcolor: theme.colors.text.primary,
                     zerolinecolor: theme.colors.text.primary,
                     gridcolor: theme.colors.text.primary,
-                    color: theme.colors.text.primary
+                    color: theme.colors.text.primary,
+                    ticksuffix: "%"
                 },
                 yaxis: {
                     tickcolor: theme.colors.text.primary,
@@ -126,7 +127,34 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
                 }
             }
 
-            return <Plot layout={layoutObj} data={dataArray} />
+            const newButton:ModeBarButtonAny = {
+                title: 'Download plot as png',
+                name: 'Download plot as png',
+                icon: Icons.camera,
+                click: async (gd:PlotlyHTMLElement) => {
+                    console.log("AAA")
+                    await toImage(gd, {
+                        width: 900,
+                        height: 900,
+                        format: 'png'
+                    }).then((img:string) => {
+                        //var image = new Image()
+                        //image.src = img
+                        var w = window.open("")
+                        if (w != null) w.document.write('<iframe src="' + img  + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+
+                         //w.document.write(image.outerHTML)
+                    })
+                }
+            }
+
+            const config:Partial<Config> = {
+                //modeBarButtonsToAdd: [btnCapture],
+                modeBarButtonsToRemove: ['toImage'],
+                modeBarButtonsToAdd: [newButton]
+            }
+
+            return <Plot layout={layoutObj} data={dataArray} config={config}/>
         } else {
             return <div></div>
         }
