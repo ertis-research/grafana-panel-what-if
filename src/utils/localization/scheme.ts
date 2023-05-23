@@ -9,6 +9,8 @@ export interface IPanel {
         setDatetime : string
         variablesGrafana : string
         usingQuery : string
+        uploadFile : string
+        noFile : string
     }
     _step3 : {
         modifyData : string

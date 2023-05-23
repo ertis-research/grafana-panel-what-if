@@ -60,6 +60,7 @@ export const defaultIfUndefined = (obj:any, def:any) => {
 
 export const disabledByJS = (document:any, id:string, disabled:boolean) => {
   const element = document.getElementById(id)
+  console.log("disabledByJS", id)
   if(element != undefined) element.disabled = disabled
 }
 

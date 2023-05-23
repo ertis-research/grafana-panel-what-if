@@ -1,6 +1,7 @@
 import Papa from "papaparse";
-import { IData, IDataCollection, IResult } from "./types";
+import { IData, IDataCollection, IModel, IResult } from "./types";
 import { idDefault, idNew } from "./constants";
+import { IntervalDefault } from "./default";
 
 const compare = (a:IData, b:IData) => {
     if ((a.new_value !== undefined && b.new_value === undefined) 
@@ -105,4 +106,25 @@ export const dataToCSV = (collection:IDataCollection) => {
     // Convertir a CSV
     const blob = new Blob([dateTime + interval + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' })
     return URL.createObjectURL(blob)
+}
+
+export const getIntervalCSV = (csv:any) => {
+    return IntervalDefault
+}
+
+export const getDateTimeCSV = (csv:any) => {
+    return undefined
+}
+
+export const CSVtoData = (csv:any, model:IModel) : IData[] => {
+    const fileData:IData[] = []
+    csv.forEach((d:any) => {
+        if(model.tags.some((t) => t.id == d[0])){
+            fileData.push({
+                id: d[0],
+                default_value: d[1]
+            })
+        }
+    })
+    return fileData
 }

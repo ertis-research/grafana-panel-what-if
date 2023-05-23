@@ -1,13 +1,14 @@
-import { Button, DateTimePicker, FileUpload, Select, useTheme2, VerticalGroup } from '@grafana/ui'
+import { Button, DateTimePicker, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, dateTimeToString, deepCopy, disabledByJS } from 'utils/utils'
-import { IData, IDataCollection, IModel } from 'utils/types'
+import { Context, dateTimeLocalToString, dateTimeToString, deepCopy } from 'utils/utils'
+import { IData, IDataCollection, IInterval, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
 import { DataFrame, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
 import { locationService } from '@grafana/runtime'
+import { CSVtoData, getIntervalCSV } from 'utils/csv'
 
 interface Props {
     model ?: IModel,
@@ -25,7 +26,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     const fieldTag = "tag" // provisional
     const fieldValue = "value" // provisional
 
-    const idFileUpload = "fileUpload"
+    //const idFileUpload = "fileUpload"
     const idDateTimeSet = "dateTimeSet"
 
     const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
@@ -53,7 +54,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         }
         return res
     }
-
+/*
     const applyJS = () => {
         var children = document.getElementById(idDateTimeSet)?.children
         if(children){
@@ -62,7 +63,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 //if(child.tagName != 'button') children[i].setAttribute('width', '100%')
             }
         }
-    }
+    }*/
 
     const importDataFromDateTime = (dt ?: DateTime) => {
         if(dt != undefined && model != undefined) { 
@@ -91,22 +92,14 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 header: false,
                 skipEmptyLines: true,
                 complete: function (results) {
-                    console.log(results.data)
-                    const fileData:IData[] = []
-                    results.data.forEach((d:any) => {
-                        if(model.tags.some((t) => t.id == d[0])){
-                            fileData.push({
-                                id: d[0],
-                                default_value: d[1]
-                            })
-                        }
-                    })
-                    console.log(fileData)
+                    console.log('csv', results.data)
+                    const interval:IInterval = getIntervalCSV(results.data)
+                    const fileData:IData[] = CSVtoData(results.data, model)
                     addCollection({
                         id: "csv_" + fileCSV.name + "_" + (collections.length+1),
                         name : "Data " + (collections.length+1) + " (CSV)",
                         data: fileData,
-                        interval: IntervalDefault
+                        interval: interval
                     })
                 }
             })
@@ -119,10 +112,16 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }
 
     const handleOnFileUploadCSV = (event:FormEvent<HTMLInputElement>) => {
+        console.log("AYUDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         const currentTarget = event.currentTarget
         if(currentTarget?.files && currentTarget.files.length > 0){
             setFileCSV(currentTarget.files[0])
         }
+    }
+
+    const handleButtonFileUpload = () => {
+        const ele = document.getElementById("selectedFile")
+        if(ele != null) ele.click()
     }
 
     const handleOnClickAddData = () => {
@@ -164,8 +163,8 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }, [context.actualStep, fileCSV, dateTimeInput, mode])
     
     useEffect(() => {
-        disabledByJS(document, 'fileUpload', disabled)
-    }, [disabled])
+        //disabledByJS(document, idFileUpload, disabled)
+    }, [disabled, mode])
 
     useEffect(() => {
         console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
@@ -188,17 +187,21 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }, [collections])
 
     useEffect(() => {
-        applyJS()
+        //applyJS()
     }, [mode])
     
     
-    const ImportExcel = <div id={idFileUpload} className='fullWidthChildren' style={{ width: '100%' }}>
-        <FileUpload
+    const ImportExcel = <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} >
+        <input type="file" id="selectedFile" hidden style={{display: 'none'}} onChange={handleOnFileUploadCSV} />
+        <Button icon='upload' fullWidth disabled={disabled} onClick={handleButtonFileUpload}>{context.messages._panel._step2.uploadFile}</Button>
+        <div className='wrap-elipsis' style={{ marginLeft: '5px' }}>{(fileCSV == undefined) ? context.messages._panel._step2.noFile : fileCSV.name}</div>
+    </div>
+    
+    /*<FileUpload
             showFileName
             onFileUpload={handleOnFileUploadCSV}
             accept='.csv'
-        />
-    </div>
+    />*/
 
     /*
         <Input 
@@ -247,7 +250,6 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         return ImportExcel
     }
 
-    //disabled={disabled}
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px'}}>
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 2</p>
         <h4>{context.messages._panel._step2.importData}</h4>
@@ -256,7 +258,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 options={ImportDataOptions(context.messages)}
                 value={mode}
                 onChange={(v) => setMode(v)}
-                disabled={true}
+                disabled={disabled}
             />
             {importConfiguration()}
             <Button fullWidth disabled={disabledButton} onClick={handleOnClickAddData}>{context.messages._panel._step2.addData}</Button>

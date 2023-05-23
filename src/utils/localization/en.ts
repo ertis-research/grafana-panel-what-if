@@ -14,7 +14,9 @@ export const messages_en:ILocalization = {
             addData : "Add data",
             setDatetime : "Set datetime",
             variablesGrafana : "Variable of Grafana",
-            usingQuery : "Using query"
+            usingQuery : "Using query",
+            uploadFile : "Upload file",
+            noFile : "No file"
         },
         _step3 : {
             modifyData : "Modify data",
