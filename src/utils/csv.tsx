@@ -1,51 +1,108 @@
 import Papa from "papaparse";
-import { ICSVScheme, IData, IDataCollection, IResult } from "./types";
+import { IData, IDataCollection, IResult } from "./types";
 import { idDefault, idNew } from "./constants";
 
+const compare = (a:IData, b:IData) => {
+    if ((a.new_value !== undefined && b.new_value === undefined) 
+        || (a.set_percentage === true && b.set_percentage !== true && b.new_value === undefined && a.new_value === undefined)){
+        return -1
+    } else if (a.set_percentage == b.set_percentage && (a.new_value === undefined) == (b.new_value === undefined)) {
+        return 0
+    } else {
+        return 1 
+    }
+}
+
 export const dataToCSV = (collection:IDataCollection) => {
-    let res:any[] = collection.data.map((d:IData) => {
-        return {
-            ID : d.id,
-            _INTERVAL : (d.set_percentage) ? "YES" : "NO",
-            DEFAULT_VALUE : d.default_value,
-            NEW_VALUE : d.new_value
+    let res : any[] = [], others : any[] = []
+    let _int:any = {}, _def:any = {}, _new:any = {}
+    const has_interval = collection.interval.max && collection.interval.min && collection.interval.steps
+
+    collection.data.sort(compare).forEach((d:IData) => {
+        if(has_interval) {
+            _int = {
+                ..._int,
+                [d.id] : (d.set_percentage) ? "YES" : "NO"
+            }
+        }
+
+        _def = {
+            ..._def,
+            [d.id] : d.default_value
+        }
+
+        _new = {
+            ..._new,
+            [d.id] : (has_interval && d.set_percentage) ? "" :  d.new_value
         }
     })
+
     
     console.log("COLECCION?", collection)
 
     if (collection.results !== undefined) {
         const def = collection.results.find((r:IResult) => r.id == idDefault)
         const ne = collection.results.find((r:IResult) => r.id == idNew)
-        let result = {
-            ID: "_result",
-            _INTERVAL : "",
-            DEFAULT_VALUE : (def !== undefined && def.result !== undefined) ? def.result : "",
-            NEW_VALUE : (ne !== undefined && ne.result !== undefined) ? ne.result : ""
+
+        _int = { _RESULT : "", ..._int }
+        _def = {
+            _RESULT : (def !== undefined && def.result !== undefined) ? def.result : "",
+            ..._def
+        }
+        _new = {
+            _RESULT : (ne !== undefined && ne.result !== undefined) ? ne.result : "",
+            ..._new
         }
 
         console.log("AAA", "collection.results")
-        collection.results.filter((r:IResult) => r.correspondsWith !== undefined).forEach((r:any, idx:number) => {
-            if(r.correspondsWith.porcentage !== 0){
-                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.porcentage < 0) ? "- " : "+") + " " + Math.abs(r.correspondsWith.porcentage) + "%"
-                res = res.map((row:ICSVScheme) => {
-                    return {
+        collection.results.filter((r:IResult) => r.correspondsWith !== undefined).forEach((r:IResult, idx:number) => {
+            if(r.correspondsWith && r.correspondsWith.porcentage !== 0){
+                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.porcentage < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.porcentage) + "%"
+                let row:any = {
+                    ID : id,
+                    _RESULT : r.result
+                }
+                
+                Object.entries(r.data).forEach(([key, value]:[key:string, value:number]) => {
+                    row = {
                         ...row,
-                        [id] : (r.data[row.ID] !== row.DEFAULT_VALUE || r.correspondsWith.tag == row.ID) ? r.data[row.ID] : ""
+                        [key] : ((r.correspondsWith && r.correspondsWith.tag == key) || value !== _def[key]) ? value : ""
                     }
                 })
-                result = {
-                    ...result,
-                    [id] : r.result
-                }
-                console.log("AAA", res)
+
+                others.push(row)
             }
         })
-
-        res.unshift(result)
     }
-    //const dateTime = "# DateTime: "
-    const interval = "# Interval: " + collection.interval.min + "," + collection.interval.max + "," + collection.interval.steps + "\n"
-    const blob = new Blob([interval + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' })
+
+    if (has_interval) {
+        res = [
+            {
+                ID : "_INTERVAL",
+                ..._int
+            }
+        ]
+    }
+
+    // Lo junto todo
+    res = [
+        ...res,
+        {
+            ID : "DEFAULT_VALUE",
+            ..._def
+        },
+        {
+            ID : "NEW_VALUE",
+            ..._new
+        },
+        ...others
+    ]
+
+    // Metadata
+    const dateTime = (collection.dateTime) ? "# DateTime: " + collection.dateTime.toISOString() + "\n" : ""
+    const interval = (collection.interval.max && collection.interval.min && collection.interval.steps) ? "# Interval: " + collection.interval.min + " " + collection.interval.max + " " + collection.interval.steps + "\n" : ""
+    
+    // Convertir a CSV
+    const blob = new Blob([dateTime + interval + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' })
     return URL.createObjectURL(blob)
 }

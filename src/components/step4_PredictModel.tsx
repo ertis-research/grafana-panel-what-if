@@ -30,6 +30,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     const [sizePlot, setSizePlot] = useState<{width: number, height: number}>({width: 0, height: 0})
 
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
+    const disabledModifyAgain = (context.actualStep) ? context.actualStep < Steps.step_4 : false
 
     const onClickPredictHandle = () => {
         console.log("COLLECTIONS PREDICT", collections) 
@@ -42,6 +43,19 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         if (context.setActualStep) {
             context.setActualStep(Steps.step_5)
         }
+    }
+
+    const onClickModifyAgainHandle = () => {
+        let newCollections:IDataCollection[] = []
+        collections.forEach((col:IDataCollection) => {
+            let newCol = {...col}
+            delete newCol.results
+            newCollections.push(newCol)
+        })
+        updateCollections(newCollections)
+        setState(StatePredict.EMPTY)
+        context.setActualStep(Steps.step_3)
+        console.log("AGAIN")
     }
 
     const setDecimals = (value:any) => {
@@ -184,6 +198,11 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         return res
     }
 
+    const getButton = (currentCollection && currentCollection.results) ? 
+        <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={onClickModifyAgainHandle}>{context.messages._panel._step4.modifyAgain}</Button>
+        : <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
+
+
     const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
         if(col.results){
             return <div style={{ marginTop: '10px', width: '100%' }}>
@@ -216,7 +235,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 4</p>
             <h4>{context.messages._panel._step4.predictResult}</h4>
             <VerticalGroup justify='center'>
-                <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
+                {getButton}
             </VerticalGroup>
         </div>
         {viewResults()}

@@ -76,6 +76,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 addCollection({
                     id: "DateTime: " + dateTimeLocalToString(dt) + " (" + (collections.length+1) + ")",
                     name : "Data " + (collections.length+1) + " (DateTime)",
+                    dateTime : dt,
                     interval: IntervalDefault,
                     data : copyColData
                 })
@@ -155,7 +156,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         let newDisabledButton:boolean = true
 
         if(context.actualStep) {
-            newDisabled = context.actualStep < Steps.step_2
+            newDisabled = context.actualStep !== Steps.step_2 && context.actualStep !== Steps.step_3
             if(!newDisabled) newDisabledButton = !((mode.value == ImportDataEnum.EXCEL && fileCSV != undefined) || (dateTimeInput != undefined))
         }
         setDisabled(newDisabled)
@@ -175,6 +176,7 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
             addCollection({
                 id: "DateTime: " + dateTimeLocalToString(dateTimeInput) + " (" + (collections.length+1) + ")",
                 name : "Data " + (collections.length+1) + " (DateTime)",
+                dateTime : dateTimeInput,
                 interval: IntervalDefault,
                 data : getArrayOfData(data, model.queryId)
             })

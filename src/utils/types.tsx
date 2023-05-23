@@ -1,3 +1,4 @@
+import { DateTime } from "@grafana/data"
 import { Steps } from "./constants"
 import { ILocalization } from "./localization/scheme"
 
@@ -48,6 +49,7 @@ export interface ITag {
 export interface IDataCollection {
   id: string,
   name: string,
+  dateTime?: DateTime
   data: IData[],
   interval: IInterval,
   results?: IResult[]

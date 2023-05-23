@@ -23,6 +23,7 @@ export interface IPanel {
         predictResult : string
         originalValue : string
         newValue: string
+        modifyAgain : string
     }
     _step5 : {
         exportData : string

@@ -44,8 +44,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // Auxiliar
     // -------------------------------------------------------------------------------------------------------------
 
-    const disabled = (context.actualStep) ? context.actualStep  < Steps.step_3 : false
-    const disabled_collections = disabled || false
+    const disabled = (context.actualStep) ? context.actualStep != Steps.step_3 : true
+    const disabled_collections = (context.actualStep) ? context.actualStep < Steps.step_3 : true // JULIA ESCRIBE ESTO 
 
     //const NUMERIC_REGEXP = /[-]{0,1}[\d]*[.]{0,1}[\d]+/g;
 
@@ -209,7 +209,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 <HorizontalGroup>
                     <Input width={8} value={defaultIfUndefined(data.default_value, "")} disabled type='text'/>
                     <Input name={tag.id} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
-                    <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval} onChange={handleOnChangePercentage} />
+                    <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval || disabled} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
         </div>

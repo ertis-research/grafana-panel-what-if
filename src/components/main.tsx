@@ -60,7 +60,6 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }
 
   useEffect(() => {
-    console.log("collections", collections)
     if(currentCollection){
       const idx = collections.findIndex((col) => col.id == currentCollection.id)
       setCurrentCollection(collections[idx])

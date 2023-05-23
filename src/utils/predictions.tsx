@@ -76,10 +76,10 @@ const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcenta
     return res
 }
 
-const dataToObject = (data:IData[], isNew:boolean) : IDataPred => {
+const dataToObject = (data:IData[], isNew:boolean, hasInterval:boolean) : IDataPred => {
     var res:IDataPred = {}
     data.forEach((d:IData) => {
-        res[d.id] = (isNew && !d.set_percentage && d.new_value != undefined) ? Number(d.new_value) : ((d.default_value) ? d.default_value : 0)
+        res[d.id] = (isNew && !(hasInterval && d.set_percentage) && d.new_value != undefined) ? Number(d.new_value) : ((d.default_value) ? d.default_value : 0)
     })
     return res
 }
@@ -87,10 +87,11 @@ const dataToObject = (data:IData[], isNew:boolean) : IDataPred => {
 const prepareData = (dataCollection:IDataCollection) : IResult[] => {
     let res:IResult[] = []
     var baseData:IDataPred = {}
-    
+    const hasInterval = dataCollection.interval.max !== undefined && dataCollection.interval.min !== undefined && dataCollection.interval.steps !== undefined
+
     // Prediccion basica con los valores nuevos
     if(!(dataCollection.data.some((d:IData) => d.default_value == undefined))){
-        const defaultData:IDataPred = dataToObject(dataCollection.data, false)  //dataCollection.data.map((d:IData) => (d.default_value) ? d.default_value : 0)
+        const defaultData:IDataPred = dataToObject(dataCollection.data, false, hasInterval)  //dataCollection.data.map((d:IData) => (d.default_value) ? d.default_value : 0)
         res.push({
             id : idDefault, // ESTOY METIENDO LOS DATOS DEFAULT 
             data : defaultData
@@ -100,7 +101,7 @@ const prepareData = (dataCollection:IDataCollection) : IResult[] => {
 
     if(dataCollection.data.some((d:IData) => d.new_value != undefined && d.new_value.trim() != '')){
         //const onlyNewData:number[] = dataCollection.data.map((d:IData) => (d.set_percentage == true || d.new_value == undefined) ? ((d.default_value) ? d.default_value : 0) : Number(d.new_value))
-        const onlyNewData:IDataPred = dataToObject(dataCollection.data, true)
+        const onlyNewData:IDataPred = dataToObject(dataCollection.data, true, hasInterval)
         res.push({
             id : idNew,
             data : onlyNewData

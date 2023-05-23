@@ -25,15 +25,16 @@ export const messages_es:ILocalization = {
             searchPlaceholder : "Buscar"
         },
         _step4 : {
-            predict : "Predicir",
+            predict : "Predicir todo",
             predictResult : "Predecir resultado",
             originalValue : "Valor original",
-            newValue : "Valor nuevo"
+            newValue : "Valor nuevo",
+            modifyAgain : "Volver a modificar los datos"
         },
         _step5 : {
             exportData : "Exportar datos",
             downloadData : "Descargar datos",
-            downloadResults : "Descargar resultados"
+            downloadResults : "Descargar datos y resultados"
         }
     }
 }

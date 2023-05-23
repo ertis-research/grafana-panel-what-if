@@ -15,6 +15,8 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     const theme = useTheme2();
     const context = useContext(Context);
 
+    const disabled = (context.actualStep) ? context.actualStep > Steps.step_3 : false
+
     const [value, setValue] = useState<SelectableValue<number>>()
     const [modelsOptions, setModelsOptions] = useState<ISelect[]>([])
 
@@ -43,6 +45,7 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
             value={value}
             onChange={(v) => setValue(v)}
             placeholder={""}
+            disabled={disabled}
         />
     </div>
 }
