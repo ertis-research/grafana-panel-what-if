@@ -97,15 +97,22 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
 
             const dataArray:any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
                 // No pongo la x global por si alguna falla que no se rompa toda la grafica
-                var values_x:number[] = [], values_y:number [] = []
-                resultsOfTag.forEach((r:IResult) => { if (r.correspondsWith != undefined) values_x.push(r.correspondsWith.porcentage)})
-                resultsOfTag.forEach((r:IResult) => { if (r.result != undefined && r.result != 'ERROR') values_y.push(r.result)})
+                var values_x:number[] = [], values_y:number [] = [], text:number[] = []
+                resultsOfTag.forEach((r:IResult) => { 
+                    if (r.result != undefined && r.result != 'ERROR' 
+                        && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined) {
+                        values_x.push(r.correspondsWith.porcentage)
+                        values_y.push(r.result)
+                        text.push(setDecimals(r.data[r.correspondsWith.tag]))
+                    }
+                })
 
                 values_y = values_y.map((v:number) => setDecimals(v))
-
+                console.log("text", text)
                 return {
                     x : values_x,
                     y : values_y,
+                    text : text,
                     type : 'scatter',
                     name : tag
                 }
