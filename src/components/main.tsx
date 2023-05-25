@@ -19,7 +19,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
   const [collections, setCollections] = useState<IDataCollection[]>([])
-  const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
+  const [currentCollIdx, setCurrentCollIdx] = useState<number|undefined>(undefined)
 
   const contextData:IContext = {
       actualStep: actualStep, 
@@ -32,17 +32,20 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }
 
   const addCollection = (newCollection:IDataCollection) => {
+    const newIdx = collections.length
+    setCurrentCollIdx(newIdx)
     setCollections([...collections, newCollection])
+    
   }
 
   const deleteCollection = (id:string) => {
     const idx = collections.findIndex((col) => col.id == id)
     if(idx >= 0) {
-      setCurrentCollection(undefined)
+      setCurrentCollIdx(undefined)
       const updatedCollections:IDataCollection[] = [...collections]
       updatedCollections.splice(idx, 1)
       setCollections(updatedCollections)
-      if(updatedCollections.length > 0) setCurrentCollection(updatedCollections[0])
+      if(updatedCollections.length > 0) setCurrentCollIdx(updatedCollections.length-1)
     }
   }
 
@@ -59,16 +62,20 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
     setCollections([...allCollections])
   }
 
-  useEffect(() => {
-    if(currentCollection){
-      const idx = collections.findIndex((col) => col.id == currentCollection.id)
-      setCurrentCollection(collections[idx])
+  /*useEffect(() => {
+    if(currentCollIdx){
+      const idx = collections.findIndex((col) => col.id == collections[currentCollIdx].id)
+      setCurrentCollIdx(idx)
     }
-  }, [collections])
+  }, [collections])*/
 
   useEffect(() => {
     console.log(data)
   }, [data])
+
+  useEffect(() => {
+    console.log('currentCollIdx', currentCollIdx)
+  }, [currentCollIdx])
 
   useEffect(() => {
     if(options.varTags == options.varTime) throw new Error('Variable has to be different')
@@ -96,17 +103,17 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
             <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
           </div>
           <div className="export-1" style={{ marginBottom: '10px'}}>
-            <ExportData model={selectedModel} collections={collections} currentCollection={currentCollection}/>
+            <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined}/>
           </div>
         </div>
         <div className="item-1">
-          <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollection={currentCollection} setCurrentCollection={setCurrentCollection}/>
+          <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollIdx={currentCollIdx} setCurrentCollIdx={setCurrentCollIdx}/>
         </div>
         <div className="item-2">
-          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollection={currentCollection}/>
+          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollIdx={currentCollIdx}/>
         </div>
         <div className="item-3">
-          <ExportData model={selectedModel} collections={collections} currentCollection={currentCollection}/>
+          <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined}/>
         </div>
       </div>
     </div>

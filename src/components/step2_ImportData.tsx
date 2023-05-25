@@ -1,24 +1,23 @@
 import { Button, DateTimePicker, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
 import { Context, dateTimeLocalToString, dateTimeToString, deepCopy } from 'utils/utils'
-import { IData, IDataCollection, IInterval, IModel } from 'utils/types'
+import { IData, IDataCollection, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
 import { DataFrame, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault } from 'utils/default'
 import { locationService } from '@grafana/runtime'
-import { CSVtoData, getIntervalCSV } from 'utils/csv'
+import { CSVtoData, getDateTimeCSV, getIntervalCSV } from 'utils/csv'
 
 interface Props {
     model ?: IModel,
-    setModel ?: any,
     collections : IDataCollection[],
-    addCollection ?: any,
+    addCollection : (newCollection: IDataCollection) => void,
     data : PanelData
 }
 
-export const ImportData: React.FC<Props> = ({ model, setModel, collections, addCollection, data }) => {
+export const ImportData: React.FC<Props> = ({ model, collections, addCollection, data }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -90,16 +89,15 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
         if(fileCSV && model != undefined){
             Papa.parse(fileCSV, {
                 header: false,
-                skipEmptyLines: true,
+                skipEmptyLines: 'greedy',
                 complete: function (results) {
-                    console.log('csv', results.data)
-                    const interval:IInterval = getIntervalCSV(results.data)
-                    const fileData:IData[] = CSVtoData(results.data, model)
+                    const d = results.data as string[][]
                     addCollection({
-                        id: "csv_" + fileCSV.name + "_" + (collections.length+1),
+                        id: "csv_" + fileCSV.name + " (" + (collections.length+1) + ")",
                         name : "Data " + (collections.length+1) + " (CSV)",
-                        data: fileData,
-                        interval: interval
+                        dateTime: getDateTimeCSV(d),
+                        interval: getIntervalCSV(d),
+                        data: CSVtoData(d, model),
                     })
                 }
             })
@@ -112,7 +110,6 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
     }
 
     const handleOnFileUploadCSV = (event:FormEvent<HTMLInputElement>) => {
-        console.log("AYUDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         const currentTarget = event.currentTarget
         if(currentTarget?.files && currentTarget.files.length > 0){
             setFileCSV(currentTarget.files[0])
@@ -142,9 +139,6 @@ export const ImportData: React.FC<Props> = ({ model, setModel, collections, addC
                 break
         }
     }
-
-    useEffect(() => {
-    }, [mode])
 
     useEffect(() => {
     }, [context.messages])

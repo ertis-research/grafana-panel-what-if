@@ -12,7 +12,7 @@ interface Props {
     model ?: IModel,
     collections : IDataCollection[],
     updateCollections : any,
-    currentCollection ?: IDataCollection
+    currentCollIdx ?: number
 }
 
 enum StatePredict {
@@ -21,7 +21,7 @@ enum StatePredict {
     DONE
 }
 
-export const PredictModel: React.FC<Props> = ({model, collections, updateCollections, currentCollection}) => {
+export const PredictModel: React.FC<Props> = ({model, collections, updateCollections, currentCollIdx}) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -55,7 +55,6 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         updateCollections(newCollections)
         setState(StatePredict.EMPTY)
         context.setActualStep(Steps.step_3)
-        console.log("AGAIN")
     }
 
     const setDecimals = (value:any) => {
@@ -68,6 +67,12 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
             setState(StatePredict.DONE)
         }
     }, [collections])
+
+    useEffect(() => {
+    }, [currentCollIdx])
+
+    useEffect(() => {
+    }, [state])
 
     useEffect(() => {
         const divResults = document.getElementById('id-results')
@@ -198,13 +203,14 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         return res
     }
 
-    const getButton = (currentCollection && currentCollection.results) ? 
+    const getButton = (currentCollIdx != undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ? 
         <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={onClickModifyAgainHandle}>{context.messages._panel._step4.modifyAgain}</Button>
         : <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{context.messages._panel._step4.predict}</Button>
 
 
-    const showResults = collections.filter((col:IDataCollection) => col.id == currentCollection?.id).map((col:IDataCollection) => {
-        if(col.results){
+    const showResults = () => {
+        if(currentCollIdx != undefined && currentCollIdx < collections.length && collections[currentCollIdx].results){
+            const col:IDataCollection = collections[currentCollIdx]
             return <div style={{ marginTop: '10px', width: '100%' }}>
                 <div style={{ display: 'flex'}}>
                     {defaultValue(col)}
@@ -217,14 +223,14 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         } else {
             return <div></div>
         }
-    })
-
+    }
+    
     const viewResults = () => {
         switch(state){
             case StatePredict.LOADING:
                 return <VerticalGroup align='center'><Spinner size={30}/></VerticalGroup>
             case StatePredict.DONE:
-                return showResults
+                return showResults()
             case StatePredict.EMPTY:
                 return <div></div>
         }

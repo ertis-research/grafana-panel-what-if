@@ -10,13 +10,13 @@ import { CollectionDefault, IntervalDefault } from 'utils/default';
 interface Props {
     model ?: IModel,
     collections ?: IDataCollection[],
-    currentCollection ?: IDataCollection,
-    setCurrentCollection : any,
+    currentCollIdx ?: number,
+    setCurrentCollIdx : React.Dispatch<React.SetStateAction<number | undefined>>,
     deleteCollection : any,
     updateCollection : any
 }
 
-export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollection, updateCollection, currentCollection, setCurrentCollection }) => {
+export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollection, updateCollection, currentCollIdx, setCurrentCollIdx }) => {
 
     const theme = useTheme2()
     const context = useContext(Context)
@@ -25,9 +25,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // UseState hook
     // -------------------------------------------------------------------------------------------------------------
 
-    const [selectCollection, setSelectCollection] = useState<SelectableValue<IDataCollection>>()
-    //const [currentCollection, setCurrentCollection] = useState<IDataCollection|undefined>()
-    //const [fileData, setfileData] = useState<IData[]>([])
+    const [selectCollection, setSelectCollection] = useState<SelectableValue<number>>()
     const [collectionsOptions, setcollectionsOptions] = useState<ISelect[]>([])
 
     const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
@@ -91,9 +89,9 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     const handleOnChangeTagValue = (event:ChangeEvent<HTMLInputElement>) => {
         console.log(event.target.value)
-        if(currentCollection){
-            const dataIndex = currentCollection.data.findIndex((d:IData) => d.id == event.currentTarget.name)
-            const updatedCollectionData = [...currentCollection.data]
+        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length){
+            const dataIndex = collections[currentCollIdx].data.findIndex((d:IData) => d.id == event.currentTarget.name)
+            const updatedCollectionData = [...collections[currentCollIdx].data]
             if(dataIndex >= 0){
                 if (event.target.value == '') {
                     delete updatedCollectionData[dataIndex].new_value
@@ -106,17 +104,17 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     new_value : event.target.value
                 })
             }
-            setCurrentCollection({
-                ...currentCollection,
+            updateCollection({
+                ...collections[currentCollIdx],
                 data : updatedCollectionData
             })
         }
     }
 
     const handleOnChangePercentage = (event:ChangeEvent<HTMLInputElement>) => {
-        if(currentCollection){
-            const dataIndex = currentCollection.data.findIndex((d:IData) => d.id == event.currentTarget.name)
-            const updatedCollectionData = [...currentCollection.data]
+        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length){
+            const dataIndex = collections[currentCollIdx].data.findIndex((d:IData) => d.id == event.currentTarget.name)
+            const updatedCollectionData = [...collections[currentCollIdx].data]
             if(dataIndex >= 0){
                 const old_value = updatedCollectionData[dataIndex].set_percentage
                 updatedCollectionData[dataIndex].set_percentage = (!old_value) ? true : false
@@ -126,17 +124,16 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     set_percentage : true
                 })
             }
-            setCurrentCollection({
-                ...currentCollection,
+            updateCollection({
+                ...collections[currentCollIdx],
                 data : updatedCollectionData
             })
         }
     }
 
     const handleOnClickDeleteCollection = () => {
-        if(currentCollection) {
-            deleteCollection(currentCollection.id)
-            setCurrentCollection(undefined)
+        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
+            deleteCollection(collections[currentCollIdx].id)
         }
         if(collections && collections.length == 0) context.setActualStep(Steps.step_2)   
     }
@@ -151,9 +148,9 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [model])
 
     useEffect(() => {
-        if(currentCollection){
-            setCurrentCollection({
-                ...currentCollection,
+        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length){
+            updateCollection({
+                ...collections[currentCollIdx],
                 interval: interval
             })
             if(interval.max != undefined && interval.min != undefined && interval.steps != undefined) {
@@ -174,25 +171,52 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [searchInputValue])
 
     useEffect(() => {
-        const options:ISelect[] = collectionsToSelect( (collections != undefined) ? collections : [])
+        const options:ISelect[] = collectionsToSelect((collections != undefined) ? collections : [])
         setcollectionsOptions(options)
-        if(!selectCollection && options.length > 0) setSelectCollection(options[0])
     }, [collections])
 
     useEffect(() => {
-        if(selectCollection && selectCollection.value){
-            setCurrentCollection(selectCollection.value)
-            setInterval(selectCollection.value.interval)
+        if(collectionsOptions.length > 0 && collections && currentCollIdx !== undefined && currentCollIdx < collections.length) {
+            console.log("BUENAS")
+            setSelectCollection(collectionsOptions[currentCollIdx])
+        }
+    }, [collectionsOptions])
+    
+
+    useEffect(() => {
+    }, [currentCollIdx])
+    
+    useEffect(() => {
+    }, [selectCollection?.value])
+
+    useEffect(() => {
+        console.log("selectCollection", selectCollection)
+        console.log("selectCollection.value", selectCollection?.value)
+        console.log("collections", collections)
+
+        if(selectCollection && selectCollection.value !== undefined && collections){
+            const currentCol = collections[selectCollection.value]
+            if(selectCollection.value != currentCollIdx) {
+                console.log("Establezco selectCollection")
+                setCurrentCollIdx(selectCollection.value)
+            } 
+            if(interval.max !== currentCol.interval.max || interval.min !== currentCol.interval.min || interval.steps !== currentCol.interval.steps) {
+                setInterval(collections[selectCollection.value].interval)
+            }
         } else {
-            setCurrentCollection(CollectionDefault)
+            console.log("Establezco undefined")
+            setCurrentCollIdx(undefined)
             setInterval(IntervalDefault)
         }
     }, [selectCollection])
 
+    /*
     useEffect(() => {
-        console.log(currentCollection)
-        if(currentCollection) updateCollection(currentCollection)
-    }, [currentCollection])
+        if(currentCollIdx !== undefined && (!selectCollection || selectCollection.value !== currentCollIdx)) {
+            console.log("UseEffect currentCollIdx")
+            setSelectCollection(collectionsOptions[currentCollIdx])
+        } 
+    }, [currentCollIdx])*/
     
 
 
@@ -200,7 +224,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     const tagField = (tag:ITag) => {
-        const findRes = currentCollection?.data.find((d) => d.id == tag.id)
+        const currentCol = (currentCollIdx != undefined && collections && currentCollIdx < collections.length) ? collections[currentCollIdx] : CollectionDefault
+        const findRes = currentCol.data.find((d) => d.id == tag.id)
         const data:IData = (findRes) ? findRes : { id: tag.id }
         return <div className='col-6 col-md-6 col-lg-6 col-xl-4'>
             <p className='noSpaceBottom id wrap-hidden' style={{ color:theme.colors.text.secondary }}>{tag.id}</p>
@@ -240,8 +265,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                         prefix={<Icon name="file-alt"/>} 
                         disabled={disabled_collections}
                         width={30}
-                        defaultValue={collectionsOptions[0]}
-                        placeholder=''
+                        allowCustomValue={false}
                 />
                 <IconButton name='trash-alt' style={{ marginLeft: '5px'}} disabled={disabled} onClick={handleOnClickDeleteCollection}/>
             </div>

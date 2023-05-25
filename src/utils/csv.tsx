@@ -1,7 +1,10 @@
 import Papa from "papaparse";
-import { IData, IDataCollection, IModel, IResult } from "./types";
+import { IData, IDataCollection, IInterval, IModel, IResult, ITag } from "./types";
 import { idDefault, idNew } from "./constants";
 import { IntervalDefault } from "./default";
+import { DateTime } from "@grafana/data";
+import { isDateTime } from "@grafana/data";
+import { dateTime } from "@grafana/data";
 
 const compare = (a:IData, b:IData) => {
     if ((a.new_value !== undefined && b.new_value === undefined) 
@@ -108,23 +111,61 @@ export const dataToCSV = (collection:IDataCollection) => {
     return URL.createObjectURL(blob)
 }
 
-export const getIntervalCSV = (csv:any) => {
+export const getIntervalCSV = (csv:string[][]) : IInterval => {
+    const comment:string[]|undefined = csv.find((v:string[]) => v.length > 0 && v.join("").replace(/ /g,'').toUpperCase().startsWith('#INTERVAL:'))
+    if(comment != undefined && comment.length > 0) {
+        const interval:string[] = comment.join("").toUpperCase().replace("#", "").replace("INTERVAL", "").replace(":", "").trim().split(" ")
+        if(interval.length >= 3) {
+            return {
+                min : Number(interval[0]),
+                max : Number(interval[1]),
+                steps : Number(interval[2])
+            }
+        }
+    }
     return IntervalDefault
 }
 
-export const getDateTimeCSV = (csv:any) => {
+export const getDateTimeCSV = (csv:string[][]) : DateTime | undefined => {
+    const comment:string[]|undefined = csv.find((v:string[]) => v.length > 0 && v.join("").replace(/ /g,'').toUpperCase().startsWith('#DATETIME:'))
+    if(comment != undefined && comment.length > 0) {
+        const dt:string = comment.join("").toUpperCase().replace(/ /g,'').replace("#DATETIME:", "").trim()
+        if(isDateTime(dt)) return dateTime(dt)
+    }
     return undefined
 }
 
-export const CSVtoData = (csv:any, model:IModel) : IData[] => {
+const fixEnd = (list:string[]|undefined) => {
+    if(list && list.length > 0) {
+        if (list[list.length-1].endsWith("\n")) list[list.length-1] = list[list.length-1].slice(0, -1)
+        if (list[list.length-1].endsWith("\r")) list[list.length-1] = list[list.length-1].slice(0, -1)
+    }
+    return list
+}
+
+export const CSVtoData = (csv:string[][], model:IModel) : IData[] => {
     const fileData:IData[] = []
-    csv.forEach((d:any) => {
-        if(model.tags.some((t) => t.id == d[0])){
-            fileData.push({
-                id: d[0],
-                default_value: d[1]
-            })
-        }
-    })
+    
+    //const noComments:string[][] = csv.filter((v:string[]) => v.length > 0 && !v.join("").replace(/ /g,'').toUpperCase().startsWith('#'))
+    const ids:string[]|undefined = fixEnd(csv.find((v:string[]) => v.length > 0 && v[0].toUpperCase().trim() == "ID"))
+    const def:string[]|undefined = fixEnd(csv.find((v:string[]) => v.length > 0 && v[0].toUpperCase().trim() == "DEFAULT_VALUE"))
+    let nw:string[]|undefined = fixEnd(csv.find((v:string[]) => v.length > 0 && v[0].toUpperCase().trim() == "NEW_VALUE"))
+    let interval:string[]|undefined = fixEnd(csv.find((v:string[]) => v.length > 0 && v[0].toUpperCase().trim() == "_INTERVAL"))
+
+    if(ids && def && ids.length == def.length) {
+        if(nw && nw.length != ids.length) nw = undefined
+        if(interval && interval.length != ids.length) interval = undefined
+
+        ids.forEach((d:string, idx:number) => {
+            if(model.tags.some((t:ITag) => t.id == d)){
+                fileData.push({
+                    id: d,
+                    default_value: (def[idx].trim() != "") ? Number(def[idx]) : undefined,
+                    new_value: (nw && nw[idx].trim() != "") ? nw[idx] : undefined,
+                    set_percentage: (interval) ? interval[idx] == "YES" : undefined
+                })
+            }
+        })
+    }
     return fileData
 }

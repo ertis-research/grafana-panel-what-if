@@ -29,11 +29,11 @@ export const modelsToSelect = (models : IModel[]) : ISelect[] => {
 }
 
 export const collectionsToSelect = (collections : IDataCollection[]) : ISelect[] => {
-  return collections.map((col:IDataCollection) => {
+  return collections.map((col:IDataCollection, idx: number) => {
     return {
       label : col.name,
       description : col.id,
-      value : col
+      value : idx
     }
   })
 }
