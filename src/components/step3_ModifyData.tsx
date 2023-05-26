@@ -229,11 +229,11 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         const data:IData = (findRes) ? findRes : { id: tag.id }
         return <div className='col-6 col-md-6 col-lg-6 col-xl-4'>
             <p className='noSpaceBottom id wrap-hidden' style={{ color:theme.colors.text.secondary }}>{tag.id}</p>
-            <p className="noSpaceBottom description wrap-hidden">{(tag.description) ? tag.description : <br/>}</p>
+            <p className="noSpaceBottom description wrap-hidden" style={{ color:(data.default_value === undefined && data.new_value === undefined && currentCollIdx !== undefined) ? theme.colors.error.text : theme.colors.text.primary }}>{(tag.description) ? tag.description : <br/>}</p>
             <Field>
                 <HorizontalGroup>
                     <Input width={8} value={defaultIfUndefined(data.default_value, "")} disabled type='text'/>
-                    <Input name={tag.id} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
+                    <Input name={tag.id} required={data.default_value == undefined} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
                     <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval || disabled} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
@@ -309,7 +309,9 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             />
             <div className='container scroll' style={{ marginTop: '20px', width: '100%', height: context.height-190, minHeight:'380px'}}>
                 <CustomScrollbar className='scroll'> 
-                    {getListTags()}
+                    <form id='form_tags'>
+                        {getListTags()}
+                    </form>
                 </CustomScrollbar>
             </div>
         </div>

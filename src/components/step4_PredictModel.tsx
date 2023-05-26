@@ -1,12 +1,14 @@
 import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { Context, round } from 'utils/utils'
-import { IDataCollection, IModel, IResult } from 'utils/types'
+import { IData, IDataCollection, IModel, IResult, ITag } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/predictions'
 import Plot from 'react-plotly.js'
 import { groupBy } from 'utils/utils'
 import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
+import { getAppEvents } from '@grafana/runtime'
+import { AppEvents } from '@grafana/data'
 
 interface Props {
     model ?: IModel,
@@ -32,17 +34,43 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
     const disabledModifyAgain = (context.actualStep) ? context.actualStep < Steps.step_4 : false
 
-    const onClickPredictHandle = () => {
-        console.log("COLLECTIONS PREDICT", collections) 
-        if(model) {
-            setState(StatePredict.LOADING)
-            predictAllCollections(model, collections).then((res:IDataCollection[]) => {
-                updateCollections(res)
+    const validate = () => {
+        let msg:string = ""
+        if(model){
+            collections.forEach((col:IDataCollection) => {
+                let error_tags:string[] = col.data.filter((d:IData) => d.default_value == undefined && (d.new_value == undefined || d.new_value.trim() == "")).map((d:IData) => d.id)
+                error_tags = error_tags.concat(model.tags.filter((t:ITag) => !col.data.some((d:IData) => d.id == t.id)).map((t:ITag) => t.id))
+                if (error_tags.length > 0) {
+                    msg = msg + "Data missing in " + col.name + ": " + error_tags.join(", ") + "\n"
+                }
             })
         }
-        if (context.setActualStep) {
-            context.setActualStep(Steps.step_5)
+        
+        if (msg == "") {
+            return true
+        } else {
+            const appEvents = getAppEvents();
+            appEvents.publish({
+                type: AppEvents.alertError.name,
+                payload: [msg]
+            })
+            return false
         }
+    }
+
+    const onClickPredictHandle = () => {
+        if(validate()){
+            console.log("COLLECTIONS PREDICT", collections) 
+            if(model) {
+                setState(StatePredict.LOADING)
+                predictAllCollections(model, collections).then((res:IDataCollection[]) => {
+                    updateCollections(res)
+                })
+            }
+            if (context.setActualStep) {
+                context.setActualStep(Steps.step_5)
+            }
+        } 
     }
 
     const onClickModifyAgainHandle = () => {
@@ -201,10 +229,10 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
     const newValue = (col:IDataCollection) => {
         var res = <div></div>
         if(col.results){
-            const def = col.results.find((r:IResult) => r.id == idNew)
-            if(def) res = <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', width: '50%'}}>
+            const nw = col.results.find((r:IResult) => r.id == idNew)
+            if(nw) res = <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', width: '50%'}}>
                 <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel._step4.newValue}</p>
-                <h1 style={{ textAlign: 'center'}}>{setDecimals(def.result)}</h1>
+                <h1 style={{ textAlign: 'center'}}>{setDecimals(nw.result)}</h1>
             </div>
         }
         return res

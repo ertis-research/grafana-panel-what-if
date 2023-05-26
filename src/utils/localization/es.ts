@@ -13,7 +13,7 @@ export const messages_es:ILocalization = {
             importData : "Importar datos",
             addData : "Añadir datos",
             setDatetime : "Establecer día y hora",
-            variablesGrafana : "Variables de Grafana",
+            variablesGrafana : "Tiempo del tablero",
             usingQuery : "Usando consulta",
             uploadFile : "Subir archivo",
             noFile : "Ningún archivo"

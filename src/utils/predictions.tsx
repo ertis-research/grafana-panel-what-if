@@ -79,7 +79,7 @@ const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcenta
 const dataToObject = (data:IData[], isNew:boolean, hasInterval:boolean) : IDataPred => {
     var res:IDataPred = {}
     data.forEach((d:IData) => {
-        res[d.id] = (isNew && !(hasInterval && d.set_percentage) && d.new_value != undefined) ? Number(d.new_value) : ((d.default_value) ? d.default_value : 0)
+        res[d.id] = (isNew && !(hasInterval && d.set_percentage) && d.new_value != undefined) ? Number(d.new_value) : ((d.default_value) ? d.default_value : 0) // Nunca deberia ser 0
     })
     return res
 }

@@ -35,7 +35,6 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
     const newIdx = collections.length
     setCurrentCollIdx(newIdx)
     setCollections([...collections, newCollection])
-    
   }
 
   const deleteCollection = (id:string) => {

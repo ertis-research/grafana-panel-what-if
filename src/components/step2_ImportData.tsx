@@ -188,7 +188,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const ImportExcel = <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} >
         <input type="file" id="selectedFile" hidden style={{display: 'none'}} onChange={handleOnFileUploadCSV} />
         <Button icon='upload' fullWidth disabled={disabled} onClick={handleButtonFileUpload}>{context.messages._panel._step2.uploadFile}</Button>
-        <div className='wrap-elipsis' style={{ marginLeft: '5px' }}>{(fileCSV == undefined) ? context.messages._panel._step2.noFile : fileCSV.name}</div>
+        <div className='wrap-elipsis' style={{ marginLeft: '10px' }}>{(fileCSV == undefined) ? context.messages._panel._step2.noFile : fileCSV.name}</div>
     </div>
     
     /*<FileUpload
@@ -205,8 +205,6 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             onChange={handleOnChangeDateTime}
         />
     */
-
-
 
     const ImportDatetimeSet = <div id={idDateTimeSet} className='fullWidthChildren' style={{ width: '100%' }}>
         <DateTimePicker 

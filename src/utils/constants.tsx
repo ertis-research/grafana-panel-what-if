@@ -28,6 +28,7 @@ export enum ImportDataEnum {
     DATETIME_QUERY = 3
 }
 
+/*
 export const ImportDataOptions = (messages:ILocalization) => {
     return [
         { 
@@ -51,6 +52,23 @@ export const ImportDataOptions = (messages:ILocalization) => {
                     value: ImportDataEnum.DATETIME_QUERY
                 }
             ]
+        }
+    ]
+}*/
+
+export const ImportDataOptions = (messages:ILocalization) => {
+    return [
+        {
+            label: messages._panel._step2.setDatetime,
+            value: ImportDataEnum.DATETIME_SET,
+        },
+        { 
+            label: 'CSV', 
+            value: ImportDataEnum.EXCEL
+        },
+        {
+            label: messages._panel._step2.variablesGrafana,
+            value: ImportDataEnum.DATETIME_VARIABLE_GRAFANA
         }
     ]
 }
