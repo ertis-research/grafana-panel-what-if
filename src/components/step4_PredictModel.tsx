@@ -1,7 +1,7 @@
 import { Button, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { Context, round } from 'utils/utils'
-import { IData, IDataCollection, IModel, IResult, ITag } from 'utils/types'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/predictions'
 import Plot from 'react-plotly.js'
@@ -129,7 +129,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
                 resultsOfTag.forEach((r:IResult) => { 
                     if (r.result != undefined && r.result != 'ERROR' 
                         && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined) {
-                        values_x.push(r.correspondsWith.porcentage)
+                        values_x.push(r.correspondsWith.intervalValue)
                         values_y.push(r.result)
                         text.push(setDecimals(r.data[r.correspondsWith.tag]))
                     }
@@ -171,7 +171,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
                     zerolinecolor: theme.colors.text.primary,
                     gridcolor: theme.colors.text.primary,
                     color: theme.colors.text.primary,
-                    ticksuffix: "%"
+                    ticksuffix: (col.interval.type == IntervalTypeEnum.percentage) ? "%" : ""
                 },
                 yaxis: {
                     tickcolor: theme.colors.text.primary,

@@ -21,7 +21,11 @@ export const messages_en:ILocalization = {
             min : "Min",
             max : "Max",
             steps : "Steps",
-            searchPlaceholder : "Search"
+            type : "Type",
+            searchPlaceholder : "Search",
+            units : "Units",
+            intervalTypeTooltipPercentage : "Switch to interval by percentages",
+            intervalTypeTooltipUnits : "Switch to interval by absolute values"
         },
         _step4 : {
             predict : "Predict all",

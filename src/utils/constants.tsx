@@ -55,6 +55,19 @@ export const ImportDataOptions = (messages:ILocalization) => {
         }
     ]
 }*/
+/*
+export const IntervalModeOptions = (messages:ILocalization) => { 
+    return [
+        {
+            label: "%",
+            value: IntervalModeEnum.porcentage
+        },
+        {
+            label: messages._panel._step3.units,
+            value: IntervalModeEnum.units
+        }
+    ]
+}*/
 
 export const ImportDataOptions = (messages:ILocalization) => {
     return [

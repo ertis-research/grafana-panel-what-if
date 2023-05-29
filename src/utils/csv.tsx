@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { IData, IDataCollection, IInterval, IModel, IResult, ITag } from "./types";
+import { IData, IDataCollection, IInterval, IModel, IResult, ITag, IntervalTypeEnum } from "./types";
 import { idDefault, idNew } from "./constants";
 import { IntervalDefault } from "./default";
 import { DateTime } from "@grafana/data";
@@ -60,8 +60,8 @@ export const dataToCSV = (collection:IDataCollection) => {
 
         console.log("AAA", "collection.results")
         collection.results.filter((r:IResult) => r.correspondsWith !== undefined).forEach((r:IResult, idx:number) => {
-            if(r.correspondsWith && r.correspondsWith.porcentage !== 0){
-                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.porcentage < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.porcentage) + "%"
+            if(r.correspondsWith && r.correspondsWith.intervalValue !== 0){
+                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.intervalValue < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.intervalValue) + "%"
                 let row:any = {
                     ID : id,
                     _RESULT : r.result
@@ -104,11 +104,20 @@ export const dataToCSV = (collection:IDataCollection) => {
 
     // Metadata
     const dateTime = (collection.dateTime) ? "# DateTime: " + collection.dateTime.toISOString() + "\n" : ""
-    const interval = (collection.interval.max && collection.interval.min && collection.interval.steps) ? "# Interval: " + collection.interval.min + " " + collection.interval.max + " " + collection.interval.steps + "\n" : ""
+    const interval = (collection.interval.max && collection.interval.min && collection.interval.steps) ? 
+        "# Interval: " + collection.interval.min + " " + collection.interval.max + " " + collection.interval.steps + " " + intervalModeToString(collection.interval.type) + "\n" : ""
     
     // Convertir a CSV
     const blob = new Blob([dateTime + interval + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' })
     return URL.createObjectURL(blob)
+}
+
+export const stringToIntervalMode = (str:string) => {
+    return str.toLowerCase().trim() == "units" ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
+}
+
+export const intervalModeToString = (intMode:IntervalTypeEnum) => {
+    return intMode == IntervalTypeEnum.units ? "units" : "percentage"
 }
 
 export const getIntervalCSV = (csv:string[][]) : IInterval => {
@@ -119,7 +128,8 @@ export const getIntervalCSV = (csv:string[][]) : IInterval => {
             return {
                 min : Number(interval[0]),
                 max : Number(interval[1]),
-                steps : Number(interval[2])
+                steps : Number(interval[2]),
+                type : (interval.length >= 4) ? stringToIntervalMode(interval[3]) : IntervalTypeEnum.percentage
             }
         }
     }

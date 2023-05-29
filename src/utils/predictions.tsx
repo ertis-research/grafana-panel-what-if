@@ -1,5 +1,5 @@
 import { PreprocessCodeDefault } from "./default";
-import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler } from "./types"
+import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum } from "./types"
 //import * as dfd from "danfojs"
 import { idDefault, idNew, variableInput, variableOutput } from "./constants"
 import vm from 'vm'
@@ -38,7 +38,7 @@ const predictData = async (model:IModel, dataCollection:IDataCollection) => {
     return results.map<IResult>((r:IResult, indx:number) => { return {...r, result: predictions[indx]}})
 }
 
-const getPercentagesFromInterval = (interval:IInterval) : number[] => {
+const getValuesFromInterval = (interval:IInterval) : number[] => {
     if(interval.max == undefined || interval.min == undefined || interval.steps == undefined) return []
 
     const min_interval:number = Number(interval.min), max_interval:number = Number(interval.max), step_interval:number = Number(interval.steps)
@@ -48,27 +48,31 @@ const getPercentagesFromInterval = (interval:IInterval) : number[] => {
     //const porcentages_max:number[] = Array.from({ length: Math.ceil(max_interval / step_interval)}, (_, i:number) => { var num = (i+1) * step_interval; return (num > max_interval) ? max_interval : num})
 
     //return porcentages_min.concat(porcentages_max).sort((a,b)=>a-b)
-
     return Array.from({ length: Math.ceil((max_interval - min_interval) / step_interval) + 1 }, (_, i:number) => { var num = round((i * step_interval) + min_interval, dec); return (num > max_interval) ? max_interval : num})
+
 }
 
 const calculatePercentage = (percent:number, total:number) => {
     return (percent / 100) * total
 } 
 
-const addResultsFromPorcentage = (res:IResult[], defaultData:IDataPred, porcentages:number[], id:string) => {
+const addResultsFromValues = (res:IResult[], defaultData:IDataPred, values:number[], id:string, intervalType:IntervalTypeEnum) => {
     const defData:number = defaultData[id]
 
-    porcentages.forEach((p:number) => {
-        const v = calculatePercentage(Math.abs(p), defData)
+    values.forEach((p:number) => {
         let newData = deepCopy(defaultData)
-        newData[id] = (p < 0) ? defData - v : defData + v
+        if(intervalType == IntervalTypeEnum.percentage) {
+            const v = calculatePercentage(Math.abs(p), defData)
+            newData[id] = (p < 0) ? defData - v : defData + v
+        } else {
+            newData[id] = defData + p
+        }
         res.push({
             id : id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
             data : newData,
             correspondsWith: {
                 tag : id,
-                porcentage : p
+                intervalValue : p
             }
         })
     })
@@ -113,10 +117,10 @@ const prepareData = (dataCollection:IDataCollection) : IResult[] => {
     // Predicciones cambiando el intervalo
     const interval:IInterval = dataCollection.interval
     if(interval.max != undefined && interval.min != undefined && interval.steps != undefined) {
-        const porcentages:number[] = getPercentagesFromInterval(interval)
-        console.log('porcentages', porcentages)
+        const values:number[] = getValuesFromInterval(interval)
+        console.log('values', values)
         dataCollection.data.filter((sData:IData) => sData.set_percentage).forEach((sData:IData) => {
-            res = addResultsFromPorcentage(res, baseData, porcentages, sData.id)
+            res = addResultsFromValues(res, baseData, values, sData.id, interval.type)
         })
     }
 

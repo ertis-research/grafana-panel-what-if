@@ -1,8 +1,8 @@
 import { SelectableValue } from '@grafana/data';
-import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, CustomScrollbar, useTheme2 } from '@grafana/ui';
+import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect } from '../utils/utils'
-import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors } from '../utils/types'
+import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
@@ -43,7 +43,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     const disabled = (context.actualStep) ? context.actualStep != Steps.step_3 : true
-    const disabled_collections = (context.actualStep) ? context.actualStep < Steps.step_3 : true // JULIA ESCRIBE ESTO 
+    const disabled_collections = (context.actualStep) ? context.actualStep < Steps.step_3 : true
 
     //const NUMERIC_REGEXP = /[-]{0,1}[\d]*[.]{0,1}[\d]+/g;
 
@@ -138,6 +138,14 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         if(collections && collections.length == 0) context.setActualStep(Steps.step_2)   
     }
 
+
+    const handleOnChangeIntervalType = () => {
+        const newType = (interval.type == IntervalTypeEnum.percentage) ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
+        setInterval({
+            ...interval,
+            type : newType
+        })
+    }
 
     // UseEffect hook
     // -------------------------------------------------------------------------------------------------------------
@@ -278,17 +286,31 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                     <div className='horizontalDiv' style = {{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom:'3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text')}}>{context.messages._panel._step3.interval}</span>
                         <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="min" width={9} suffix="%" className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
+                            <Input name="min" width={9} suffix={interval.type == IntervalTypeEnum.percentage ? "%" : ""} 
+                                className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.min,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                         <span style={{ marginRight: '10px' }}></span>
                         <Field label={context.messages._panel._step3.max} className='textCenter noSpace' disabled={disabled}>
-                            <Input name="max" width={9} suffix="%" className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.max,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
+                            <Input name="max" width={9} suffix={interval.type == IntervalTypeEnum.percentage ? "%" : ""} 
+                                className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.max,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
                         <span style={{ marginRight: '10px' }}></span>
                         <Field label={context.messages._panel._step3.steps} className='textCenter noSpace' disabled={disabled}>
                             <Input name="steps" width={7} className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.steps,"")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                         </Field>
+                        <span style={{ marginRight: '10px' }}></span>
+                        <Field label={context.messages._panel._step3.type} className='textCenter noSpace' disabled={disabled}>
+                        <ButtonGroup>
+                            <ToolbarButton icon="percentage" iconOnly={true} tooltip={context.messages._panel._step3.intervalTypeTooltipPercentage} disabled={disabled} onClick={handleOnChangeIntervalType}
+                                variant={interval.type == IntervalTypeEnum.percentage ? 'primary' : 'default'}/>
+                            <ToolbarButton tooltip={context.messages._panel._step3.intervalTypeTooltipUnits} disabled={disabled} onClick={handleOnChangeIntervalType}
+                                variant={interval.type == IntervalTypeEnum.units ? 'primary' : 'default'}>Abs.</ToolbarButton>
+                        </ButtonGroup>
+                        </Field>
                     </div>
+                </div>
+                <div>
+
                 </div>
             </div>
             <Select

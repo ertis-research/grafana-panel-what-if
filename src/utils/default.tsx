@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum } from "./types";
 
 export const PreprocessCodeDefault:string = "console.log('Preprocess')"
 
@@ -43,7 +43,8 @@ export const ContextDefault:IContext = {
 export const IntervalDefault:IInterval = {
     min: undefined, 
     max: undefined, 
-    steps: undefined
+    steps: undefined,
+    type : IntervalTypeEnum.percentage
 }
 
 export const CollectionDefault:IDataCollection = {

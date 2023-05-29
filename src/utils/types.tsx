@@ -20,6 +20,11 @@ export enum Method {
   PATCH = "PATCH"
 }
 
+export enum IntervalTypeEnum {
+  percentage = 0,
+  units = 1
+}
+
 export interface IDataPred {
   [key: string]: number
 }
@@ -69,7 +74,7 @@ export interface IResult {
   result?: number | 'ERROR'
   correspondsWith?: {
     tag : string,
-    porcentage : number
+    intervalValue : number
   }
 }
   
@@ -126,7 +131,8 @@ export interface Options {
 export type IInterval = {
     min?: number,
     max?: number,
-    steps?: number
+    steps?: number,
+    type : IntervalTypeEnum
 }
 
 export type IntervalColors = {

@@ -18,7 +18,11 @@ export interface IPanel {
         min : string
         max : string
         steps : string
+        type : string
         searchPlaceholder : string
+        units : string
+        intervalTypeTooltipPercentage : string
+        intervalTypeTooltipUnits : string
     }
     _step4 : {
         predict : string
