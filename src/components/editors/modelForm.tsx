@@ -238,11 +238,11 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                         value={scaler}
                         height={200}
                         onBlur={(c) => {
-                            console.log(c)
                             setScaler(c)
                         }}
                         showLineNumbers={true}
                         showMiniMap={false}
+                        readOnly={disabled}
                         monacoOptions={{ formatOnPaste: true, formatOnType: true }}
                     />
                 </div>
@@ -254,11 +254,11 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                         value={code}
                         height={200}
                         onBlur={(c) => {
-                            console.log(c)
                             setCode(c)
                         }}
                         showLineNumbers={true}
                         showMiniMap={false}
+                        readOnly={disabled}
                         monacoOptions={{ formatOnPaste: true, formatOnType: true }}
                     />
                 </div>

@@ -1,6 +1,6 @@
 import { Button, DateTimePicker, Select, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, dateTimeToString, deepCopy } from 'utils/utils'
+import { Context, dateTimeLocalToString, dateTimeToString, deepCopy, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IModel } from 'utils/types'
 import { saveVariableValue } from 'utils/handleGrafanaVariable'
 import { DataFrame, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
@@ -53,16 +53,6 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         }
         return res
     }
-/*
-    const applyJS = () => {
-        var children = document.getElementById(idDateTimeSet)?.children
-        if(children){
-            for(var i = 0; i < children.length; i++){
-                //const child = children[i]
-                //if(child.tagName != 'button') children[i].setAttribute('width', '100%')
-            }
-        }
-    }*/
 
     const importDataFromDateTime = (dt ?: DateTime) => {
         if(dt != undefined && model != undefined) { 
@@ -157,7 +147,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [context.actualStep, fileCSV, dateTimeInput, mode])
     
     useEffect(() => {
-        //disabledByJS(document, idFileUpload, disabled)
+        disabledByJS(disabled, idDateTimeSet, document)
     }, [disabled, mode])
 
     useEffect(() => {
@@ -179,10 +169,6 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
     useEffect(() => {
     }, [collections])
-
-    useEffect(() => {
-        //applyJS()
-    }, [mode])
     
     
     const ImportExcel = <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} >

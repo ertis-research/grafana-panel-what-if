@@ -58,10 +58,27 @@ export const defaultIfUndefined = (obj:any, def:any) => {
   return (obj == undefined) ? def : obj
 }
 
+/*
 export const disabledByJS = (document:any, id:string, disabled:boolean) => {
   const element = document.getElementById(id)
   console.log("disabledByJS", id)
   if(element != undefined) element.disabled = disabled
+}*/
+
+export const disabledByJS = (disabled:boolean, id:string, document:any) => {
+  const div = document.getElementById(id)
+  if (div) {
+      const children:HTMLCollectionOf<Element> = div.getElementsByTagName("*")
+      if (children) {
+          for(let i = 0; i < children.length; i++) {
+              const child = children.item(i) as any
+              if (child && (child.tagName.toLowerCase() === "input" || child.tagName.toLowerCase() === "button" || child.tagName.toLowerCase() === "textarea")) {
+                  console.log("CHILD", child)
+                  child.disabled = disabled 
+              }
+          }
+      }
+  }
 }
 
 export const dateTimeToString = (dt:DateTime) : string => {
