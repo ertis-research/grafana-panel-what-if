@@ -155,12 +155,12 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             return (
             <div>
                 <InlineField label="ID" labelWidth={10} required disabled={disabled}>
-                    <Input {...register("id", { required: true })} value={currentModel.id} disabled={disabled} onChange={handleOnChangeModel} required/>
+                    <Input {...register("id")} value={currentModel.id} disabled={disabled} onChange={handleOnChangeModel} required/>
                 </InlineField>
-                <InlineField label="Descripción" labelWidth={10} disabled={disabled}>
+                <InlineField label="Description" labelWidth={10} disabled={disabled}>
                     <Input {...register("description", { required: false })} disabled={disabled} value={currentModel.description} onChange={handleOnChangeModel}/>
                 </InlineField>
-                <InlineField label="Consulta" labelWidth={10} required disabled={disabled}>
+                <InlineField label="Query" labelWidth={10} required disabled={disabled}>
                     <InputControl
                         render={({field}) => 
                             <Select 
@@ -175,7 +175,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                         name="method"
                     />
                 </InlineField>
-                <InlineField label="Formato" labelWidth={10} required disabled={disabled}>
+                <InlineField label="Format" labelWidth={10} required disabled={disabled}>
                     <InputControl
                         render={({field}) => 
                             <Select 
@@ -190,7 +190,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                         name="format"
                     />
                 </InlineField>
-                <Collapse label="Conexión con el modelo" collapsible={false} isOpen={true}>
+                <Collapse label="Connection with model" collapsible={false} isOpen={true}>
                     <InlineFieldRow>
                         <InlineField label="Method" labelWidth={9} required disabled={disabled}>
                             <InputControl
@@ -210,16 +210,16 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                             />
                         </InlineField>
                         <InlineField label="URL" labelWidth={10} grow required disabled={disabled}>
-                            <Input {...register("url", { required: true })} disabled={disabled} value={currentModel.url} onChange={handleOnChangeModel} required/>
+                            <Input {...register("url")} disabled={disabled} value={currentModel.url} onChange={handleOnChangeModel} required/>
                         </InlineField>
                     </InlineFieldRow>
                     <InlineFieldRow>
                         <InlineField label="Username" labelWidth={10} grow disabled={disabled}>
-                            <Input {...register("username", { required: checkValueField(currentModel.credentials?.password) })} disabled={disabled} 
+                            <Input {...register("username")} disabled={disabled} required={checkValueField(currentModel.credentials?.password)}
                                 value={currentModel.credentials?.username} onChange={handleOnChangeCredentials}/>
                         </InlineField>
                         <InlineField label="Password" labelWidth={10} grow disabled={disabled}>
-                            <Input {...register("password", { required: checkValueField(currentModel.credentials?.username) })} type='password' disabled={disabled} 
+                            <Input {...register("password")} type='password' disabled={disabled} required={checkValueField(currentModel.credentials?.username)}
                                 value={currentModel.credentials?.password} onChange={handleOnChangeCredentials}/>
                         </InlineField>
                     </InlineFieldRow>
@@ -227,11 +227,11 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
             </div>
             )}}
         </Form>
-        <ControlledCollapse label="Tags de entrada del modelo" collapsible isOpen={false}>
+        <ControlledCollapse label="Model input tags" collapsible isOpen={false}>
             <TagsForm currentTags={currentTags} setCurrentTags={setCurrentTags} disabled={disabled} />
         </ControlledCollapse>
-        <ControlledCollapse label="Preproceso de datos de entrada (opcional)" collapsible isOpen={false}>
-            <InlineField label='Scaler' labelWidth={10} disabled={disabled} grow>
+        <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false}>
+            <InlineField label='Scaler' labelWidth={12} disabled={disabled} grow>
                 <div style={{ width: '100%'}}>
                     <CodeEditor 
                         language='JSON'
@@ -247,7 +247,7 @@ export const ModelForm: React.FC<Props>  = ({ model, updateFunction, deleteFunct
                     />
                 </div>
             </InlineField>
-            <InlineField label={"Preproceso"} disabled={disabled} labelWidth={10} grow  >
+            <InlineField label={"Pre-process"} disabled={disabled} labelWidth={12} grow  >
                 <div style={{ width: '100%'}}>
                     <CodeEditor 
                         language='JavaScript'

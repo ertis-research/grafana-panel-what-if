@@ -34,11 +34,6 @@ export interface IPanel {
     }
 }
 
-export interface IConfig {
-    pluginLanguage : string
-}
-
 export interface ILocalization {
-    _config : IConfig
     _panel : IPanel
 }

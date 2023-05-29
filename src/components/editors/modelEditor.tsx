@@ -49,7 +49,7 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
 
     return (<div style={{ marginRight: '15px'}}>
         {listModels}
-        <ControlledCollapse label="Añadir nuevo modelo" collapsible isOpen={false}>
+        <ControlledCollapse label={"Add new model"} collapsible isOpen={false}>
             <ModelForm model={ModelDefault} updateFunction={addElement} mode={Mode.CREATE} context={context}/>
         </ControlledCollapse>
     </div>)

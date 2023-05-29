@@ -45,10 +45,10 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
                     <InlineField label="ID" labelWidth={6.5} required disabled={disabled}>
                         <Input name='id' value={tag.id} width={20} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
-                    <InlineField label="Descripción" labelWidth={10} grow disabled={disabled}>
+                    <InlineField label="Description" labelWidth={10} grow disabled={disabled}>
                         <Input name='description' value={tag.description} disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
-                    <InlineField label="Categoría" labelWidth={10} required disabled={disabled}>
+                    <InlineField label="Category" labelWidth={10} required disabled={disabled}>
                         <Input name='category' value={tag.category} width={17} required disabled={disabled} onChange={(e:ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)}/>
                     </InlineField>
                     <div style={{ height: '32px', display:'flex', alignItems: 'center' }}>
@@ -84,7 +84,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
     <div>
         <HorizontalGroup justify='flex-end'>
             <InlineSwitch 
-                label={'Modo ' + (isTagsForm) ? "formulario" : "JSON"}
+                label={'Mode ' + (isTagsForm) ? "form" : "JSON"}
                 showLabel
                 value={isTagsForm}
                 onChange={() => setIsTagsForm(!isTagsForm)}

@@ -46,7 +46,7 @@ export const FormatEditor: React.FC<Props> = ({ value: elements, onChange, conte
 
     return (<div style={{ marginRight: '15px'}}>
         {listFormats}
-        <ControlledCollapse label="Añadir nuevo formato" collapsible isOpen={false}>
+        <ControlledCollapse label="Add new format" collapsible isOpen={false}>
             <FormatForm format={FormatDefault} updateFunction={addElement} mode={Mode.CREATE} context={context}/>
         </ControlledCollapse>
     </div>)

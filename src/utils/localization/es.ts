@@ -1,9 +1,6 @@
 import { ILocalization } from "./scheme"
 
 export const messages_es:ILocalization = {
-    _config : {
-        pluginLanguage : "Lenguaje del plugin"
-    },
     _panel : {
         step : "Paso",
         _step1 : {
