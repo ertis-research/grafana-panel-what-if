@@ -132,10 +132,13 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnClickDeleteCollection = () => {
-        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
+        if(collections == undefined || collections.length - 1 <= 0) {
+            context.setActualStep(Steps.step_2)
+            setSelectCollection(undefined)
+        } 
+        if(currentCollIdx != undefined && collections && currentCollIdx < collections.length) {   
             deleteCollection(collections[currentCollIdx].id)
         }
-        if(collections && collections.length == 0) context.setActualStep(Steps.step_2)   
     }
 
 
@@ -198,10 +201,6 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [selectCollection?.value])
 
     useEffect(() => {
-        console.log("selectCollection", selectCollection)
-        console.log("selectCollection.value", selectCollection?.value)
-        console.log("collections", collections)
-
         if(selectCollection && selectCollection.value !== undefined && collections){
             const currentCol = collections[selectCollection.value]
             if(selectCollection.value != currentCollIdx) {
