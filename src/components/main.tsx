@@ -14,7 +14,7 @@ import { checkIfVariableExists, saveVariableValue } from 'utils/handleGrafanaVar
 
 interface Props extends PanelProps<Options> {}
 
-export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables }) => {
+export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables, onOptionsChange }) => {
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
@@ -28,7 +28,8 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       messages : getMessagesByLanguage(options.language),
       height : height,
       width : width,
-      options : options
+      options : options,
+      refresh : onOptionsChange
   }
 
   const addCollection = (newCollection:IDataCollection) => {

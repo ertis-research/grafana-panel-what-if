@@ -42,7 +42,8 @@ export interface IContext {
   height: number,
   width: number,
   messages: ILocalization,
-  options: Options
+  options: Options,
+  refresh : any
 }
 
 export interface ITag {

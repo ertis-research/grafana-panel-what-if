@@ -1,10 +1,12 @@
-import { SelectableValue } from '@grafana/data';
+import { SelectableValue, dateTime } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, IconButton, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect } from '../utils/utils'
+import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect, dateTimeToString } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
+import { locationService } from '@grafana/runtime';
+import { saveVariableValue } from 'utils/handleGrafanaVariable';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
@@ -135,6 +137,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         if(collections == undefined || collections.length - 1 <= 0) {
             context.setActualStep(Steps.step_2)
             setSelectCollection(undefined)
+            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTime()))
         } 
         if(currentCollIdx != undefined && collections && currentCollIdx < collections.length) {   
             deleteCollection(collections[currentCollIdx].id)

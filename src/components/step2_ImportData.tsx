@@ -34,7 +34,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const [fileCSV, setFileCSV] = useState<File>()
     const [disabled, setDisabled] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
-    const [hasToSaveNewData, setHasToSaveNewData] = useState(false)
+    const [hasToSaveNewData, setHasToSaveNewData] = useState<DateTime|undefined>(undefined)
 
     const getArrayOfData = (data:PanelData, idQuery:string) => {
         let res:IData[] = []
@@ -54,13 +54,20 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         return res
     }
 
+    // Para imitar el bug: añadir varias veces data del mismo tiempo, eliminarlos todos y añadir otro
     const importDataFromDateTime = (dt ?: DateTime) => {
         if(dt != undefined && model != undefined) { 
             const indx = collections.findIndex((col:IDataCollection) => col.id.includes(dateTimeLocalToString(dt)))
             if(indx < 0){
-                setHasToSaveNewData(true)
+                console.log("NO encuentra")
+                console.log("HOLA")
+                setHasToSaveNewData(dt)
                 saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
+                context.refresh(context.options)
+                // Para arreglar bug: actualizar query
             } else {
+                console.log("SI encuentra")
+                console.log(collections)
                 var copyColData:IData[] = deepCopy(collections[indx].data)
                 copyColData = copyColData.map((d:IData) => {delete d.new_value; delete d.set_percentage; return d})
                 addCollection({
@@ -155,7 +162,9 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [dateTimeInput])
     
     useEffect(() => {
-        if(hasToSaveNewData && model != undefined && (data.state == LoadingState.Done || data.state == LoadingState.Error)){
+        console.log("LLEGAN DATA")
+        if(hasToSaveNewData !== undefined && hasToSaveNewData === dateTimeInput && model != undefined && (data.state == LoadingState.Done || data.state == LoadingState.Error)){
+            console.log("data", data)
             addCollection({
                 id: "DateTime: " + dateTimeLocalToString(dateTimeInput) + " (" + (collections.length+1) + ")",
                 name : "Data " + (collections.length+1) + " (DateTime)",
@@ -163,7 +172,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                 interval: IntervalDefault,
                 data : getArrayOfData(data, model.queryId)
             })
-            setHasToSaveNewData(false)
+            setHasToSaveNewData(undefined)
         }
     }, [data])
 

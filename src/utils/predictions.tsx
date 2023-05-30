@@ -17,7 +17,6 @@ export const predictAllCollections = async (model:IModel, allData:IDataCollectio
 const predictData = async (model:IModel, dataCollection:IDataCollection) => {
     let results:IResult[] = prepareData(dataCollection)
     let dataToPredict:IDataPred[] = []
-    console.log('results', results)
     for(const [i, r] of results.entries()){
         let finalData = deepCopy(r.data)
         //console.log("rawData", JSON.stringify(r.data))
@@ -33,7 +32,6 @@ const predictData = async (model:IModel, dataCollection:IDataCollection) => {
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData : finalData }
     }
-    console.log('dataToPredict', dataToPredict)
     const predictions:number[] = await sendRequest(model.url, model.method, dataToPredict, model.credentials, model.format)
     return results.map<IResult>((r:IResult, indx:number) => { return {...r, result: predictions[indx]}})
 }
@@ -118,7 +116,6 @@ const prepareData = (dataCollection:IDataCollection) : IResult[] => {
     const interval:IInterval = dataCollection.interval
     if(interval.max != undefined && interval.min != undefined && interval.steps != undefined) {
         const values:number[] = getValuesFromInterval(interval)
-        console.log('values', values)
         dataCollection.data.filter((sData:IData) => sData.set_percentage).forEach((sData:IData) => {
             res = addResultsFromValues(res, baseData, values, sData.id, interval.type)
         })
@@ -143,7 +140,6 @@ export const applyPreprocess = async (code:string, data:IDataPred) => {
             const sandbox = { data: data }
             var context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
             data = vm.runInContext(code, context)
-            console.log('data del preprocess', data)
         } catch (error) {
             console.log(error)
             console.error("Preprocess failed")
@@ -186,7 +182,6 @@ const sendRequest = async (url:string, method:string,  data:IDataPred[], credent
     if (credentials) myHeaders.append('Authorization', 'Basic ' + Buffer.from(credentials.username + ":" + credentials.password).toString('base64'))
 
     let body = addFormatInput(data, format)
-    console.log(body)
     
     let requestOptions:RequestInit = {
         method: method,
