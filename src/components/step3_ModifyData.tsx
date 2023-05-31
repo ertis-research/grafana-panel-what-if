@@ -308,12 +308,13 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             </div>
         </div>
         <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', paddingBottom: '0px' }}>
+            <div className="containerType" style={{ margin: '0px', padding: '0px', overflow: 'hidden' }}>
             <div className='row'>
-                <div className='col-12 col-md-4'>
+                <div className='col-12 col-sm-4'>
                     <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{context.messages._panel.step} 3</p>
                     <h4>{context.messages._panel._step3.modifyData}</h4>
                 </div>
-                <div className='col-12 col-md-8'>
+                <div className='col-12 col-sm-8'>
                     <div className='horizontalDiv' style={{ marginBottom: '15px', marginTop: '10px' }}>
                         <span style={{ marginRight: '10px', marginBottom: '3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text') }}>{context.messages._panel._step3.interval}</span>
                         <Field label={context.messages._panel._step3.min} className='textCenter noSpace' disabled={disabled}>
@@ -339,6 +340,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                             </ButtonGroup>
                         </Field>
                     </div>
+                </div>
                 </div>
             </div>
             <Select
