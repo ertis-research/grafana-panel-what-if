@@ -106,7 +106,7 @@ export const PredictModel: React.FC<Props> = ({model, collections, updateCollect
         const divResults = document.getElementById('id-results')
         if(divResults) {
             setSizePlot({
-                height: context.height-220,
+                height: context.height-247,
                 width: (divResults.offsetWidth < context.width) ? divResults.offsetWidth : context.width
             })
             console.log('width', divResults.offsetWidth)

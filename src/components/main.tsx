@@ -93,20 +93,20 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   
 
   return <Context.Provider value={contextData}>
-    <div className="containerType scrollMain" style={{ width: width, height: height, padding: '10px'}} >
-      <div className="main-grid">
+    <div className="containerType scrollMain" style={{ width: width, height: height-10, padding: '10px', paddingBottom: '0px' }} >
+      <div className="main-grid" style={{ height: '100%' }}>
         <div className="item-0">
           <div style={{ marginBottom: '10px'}}>
             <SelectModel models={options.models} setModel={setSelectedModel}/>
           </div>
-          <div style={{ marginBottom: '10px'}}>
+          <div style={{ marginBottom: '0px'}}>
             <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data}/>
           </div>
-          <div className="export-1" style={{ marginBottom: '10px'}}>
+          <div className="export-1" style={{ marginBottom: '10px', marginTop:'10px'}}>
             <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined}/>
           </div>
         </div>
-        <div className="item-1">
+        <div className="item-1" id='id-item-1'>
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollIdx={currentCollIdx} setCurrentCollIdx={setCurrentCollIdx}/>
         </div>
         <div className="item-2">

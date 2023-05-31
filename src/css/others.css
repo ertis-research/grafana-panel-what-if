@@ -100,15 +100,17 @@
 }
 
 .scrollMain {
+    overflow-y: auto;
+    /*
     overflow-y: scroll;
-    -ms-overflow-style: none;  /* IE and Edge */
+    -ms-overflow-style: none;
     scrollbar-width: none;
-    scroll-behavior: smooth;
+    scroll-behavior: smooth;*/
 }
-
+/*
 .scrollMain::-webkit-scrollbar {
     display: none;
-}
+}*/
 
 .inputWithoutArrows input * {
     -webkit-appearance: textfield !important;

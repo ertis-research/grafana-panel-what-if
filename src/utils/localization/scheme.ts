@@ -22,7 +22,9 @@ export interface IPanel {
         searchPlaceholder : string
         units : string
         intervalTypeTooltipPercentage : string
-        intervalTypeTooltipUnits : string
+        intervalTypeTooltipUnits : string,
+        showCategories : string
+        currentCollection : string
     }
     _step4 : {
         predict : string

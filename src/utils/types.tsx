@@ -49,7 +49,8 @@ export interface IContext {
 export interface ITag {
   id: string,
   description?: string,
-  category: string
+  category?: string,
+  priority?: number
 }
 
 export interface IDataCollection {

@@ -25,7 +25,9 @@ export const messages_en:ILocalization = {
             searchPlaceholder : "Search",
             units : "Units",
             intervalTypeTooltipPercentage : "Switch to interval by percentages",
-            intervalTypeTooltipUnits : "Switch to interval by absolute values"
+            intervalTypeTooltipUnits : "Switch to interval by absolute values",
+            showCategories : "Show categories",
+            currentCollection : "Current data collection"
         },
         _step4 : {
             predict : "Predict all",
