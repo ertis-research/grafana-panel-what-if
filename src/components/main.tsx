@@ -9,7 +9,7 @@ import { Context, getMessagesByLanguage, tagsToString } from 'utils/utils'
 import { IContext, IDataCollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { getTemplateSrv, locationService } from '@grafana/runtime'
-import { checkIfVariableExists, saveVariableValue } from 'utils/handleGrafanaVariable'
+import { checkIfVariableExists, saveVariableValue } from 'utils/datasources/grafana'
 
 
 interface Props extends PanelProps<Options> {}
@@ -28,8 +28,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       messages : getMessagesByLanguage(options.language),
       height : height,
       width : width,
-      options : options,
-      refresh : onOptionsChange
+      options : options
   }
 
   const addCollection = (newCollection:IDataCollection) => {
@@ -94,7 +93,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
 
   return <Context.Provider value={contextData}>
     <div className="containerType scrollMain" style={{ width: width, height: height-10, padding: '10px', paddingBottom: '0px' }} >
-      <div className="main-grid" style={{ height: '100%' }}>
+      <div className="main-grid" style={{ height: '100%', paddingBottom: '0px' }}>
         <div className="item-0">
           <div style={{ marginBottom: '10px'}}>
             <SelectModel models={options.models} setModel={setSelectedModel}/>
@@ -110,7 +109,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <ModifyData model={selectedModel} collections={collections} deleteCollection={deleteCollection} updateCollection={updateCollection} currentCollIdx={currentCollIdx} setCurrentCollIdx={setCurrentCollIdx}/>
         </div>
         <div className="item-2">
-          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollIdx={currentCollIdx}/>
+          <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollIdx={currentCollIdx} data={data}/>
         </div>
         <div className="item-3">
           <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined}/>

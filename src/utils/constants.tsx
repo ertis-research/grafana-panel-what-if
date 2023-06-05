@@ -1,7 +1,8 @@
 import { dateTime } from "@grafana/data"
-import { getVariableValue } from "./handleGrafanaVariable"
+import { getVariableValue } from "./datasources/grafana"
 import { ISelect } from "./types"
 import { ILocalization } from "./localization/scheme"
+import { dateTimeLocalToString } from "./utils"
 
 export const variableInput = '$input'
 export const variableOutput = '$output'
@@ -86,18 +87,22 @@ export const ImportDataOptions = (messages:ILocalization) => {
     ]
 }
 
-export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => [
-    {
-        label: 'From',
-        value: dateTime(getVariableValue(replaceVariables, '{__from:date:iso}')),
-        description: getVariableValue(replaceVariables, '{__from:date:iso}')
-    },
-    {
-        label: 'To',
-        value: dateTime(getVariableValue(replaceVariables, '{__to:date:iso}')),
-        description: getVariableValue(replaceVariables, '{__to:date:iso}')
-    }
-]
+export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => {
+    const from = dateTime(Date.parse(getVariableValue(replaceVariables, '{__from:date:iso}')))
+    const to = dateTime(Date.parse(getVariableValue(replaceVariables, '{__to:date:iso}')))
+    return [
+        {
+            label: 'From',
+            value: from,
+            description: dateTimeLocalToString(from)
+        },
+        {
+            label: 'To',
+            value: to,
+            description: dateTimeLocalToString(to)
+        }
+    ]
+}
 
 
 export const DefaultImportData = (messages:ILocalization) => {

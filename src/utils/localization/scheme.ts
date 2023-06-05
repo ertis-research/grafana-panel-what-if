@@ -11,6 +11,9 @@ export interface IPanel {
         usingQuery : string
         uploadFile : string
         noFile : string
+        alertCollectionAdded : string
+        alertCSVnoData : string
+        alertDateTimenoData : string
     }
     _step3 : {
         modifyData : string
@@ -25,6 +28,11 @@ export interface IPanel {
         intervalTypeTooltipUnits : string,
         showCategories : string
         currentCollection : string
+        tooltipShowCategory : string
+        tooltipDeleteCurrentCollection : string
+        tooltipInterval : string
+        alertCollectionDeleted : string
+        delete : string
     }
     _step4 : {
         predict : string
@@ -32,11 +40,14 @@ export interface IPanel {
         originalValue : string
         newValue: string
         modifyAgain : string
+        extraInfo : string,
+        seeMore : string
     }
     _step5 : {
         exportData : string
         downloadData : string
         downloadResults : string
+        tooltipButton : string
     }
 }
 

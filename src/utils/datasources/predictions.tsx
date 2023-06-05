@@ -1,9 +1,9 @@
-import { PreprocessCodeDefault } from "./default";
-import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum } from "./types"
+import { PreprocessCodeDefault } from "../default";
+import { ICredentials, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum } from "../types"
 //import * as dfd from "danfojs"
-import { idDefault, idNew, variableInput, variableOutput } from "./constants"
+import { idDefault, idNew, variableInput, variableOutput } from "../constants"
 import vm from 'vm'
-import { decimalCount, deepCopy, round } from "./utils"
+import { decimalCount, deepCopy, round } from "../utils"
 import { Buffer } from 'buffer'
 
 

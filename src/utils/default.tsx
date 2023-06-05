@@ -37,8 +37,7 @@ export const ContextDefault:IContext = {
         varTime : '',
         formatTags : FormatTags.DoubleQuotes,
         formats : []
-    },
-    refresh : undefined
+    }
 }
 
 export const IntervalDefault:IInterval = {

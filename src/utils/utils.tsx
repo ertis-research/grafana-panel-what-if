@@ -8,107 +8,104 @@ import { messages_en } from './localization/en'
 
 export const Context = createContext<IContext>(ContextDefault)
 
-export const tagsToSelect = (tags : ITag[]) : ISelect[] => {
-  return tags.map((tag:ITag) => {
+export const tagsToSelect = (tags: ITag[]): ISelect[] => {
+  return tags.map((tag: ITag) => {
     return {
-      label : tag.id,
-      value : tag.id,
-      description : tag.description
+      label: tag.id,
+      value: tag.id,
+      description: tag.description
     }
   })
 }
 
-export const modelsToSelect = (models : IModel[]) : ISelect[] => {
-  return models.map((model:IModel) => {
+export const modelsToSelect = (models: IModel[]): ISelect[] => {
+  return models.map((model: IModel) => {
     return {
-      label : model.id,
-      value : model,
-      description : model.description
+      label: model.id,
+      value: model,
+      description: model.description
     }
   })
 }
 
-export const collectionsToSelect = (collections : IDataCollection[]) : ISelect[] => {
-  return collections.map((col:IDataCollection, idx: number) => {
+export const collectionsToSelect = (collections: IDataCollection[]): ISelect[] => {
+  return collections.map((col: IDataCollection, idx: number) => {
     return {
-      label : col.name,
-      description : col.id,
-      value : idx
+      label: col.name,
+      description: col.id,
+      value: idx
     }
   })
 }
 
-export const enumToSelect = (e:any) => {
-  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
+export const enumToSelect = (e: any) => {
+  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value }))
 }
 
-export const tagsToString = (tags:ITag[], format:FormatTags) => {
-  const onlyIds:string[] = tags.map((item:ITag) => item.id)
-  switch(format) {
-    case FormatTags.DoubleQuotes: 
+export const tagsToString = (tags: ITag[], format: FormatTags) => {
+  const onlyIds: string[] = tags.map((item: ITag) => item.id)
+  switch (format) {
+    case FormatTags.DoubleQuotes:
       return '"' + onlyIds.join('", "') + '"'
-    case FormatTags.SingleQuotes: 
+    case FormatTags.SingleQuotes:
       return "'" + onlyIds.join("', '") + "'"
-    default: 
+    default:
       return onlyIds.join(', ')
   }
 }
 
-export const defaultIfUndefined = (obj:any, def:any) => {
+export const defaultIfUndefined = (obj: any, def: any) => {
   return (obj == undefined) ? def : obj
 }
 
-/*
-export const disabledByJS = (document:any, id:string, disabled:boolean) => {
-  const element = document.getElementById(id)
-  console.log("disabledByJS", id)
-  if(element != undefined) element.disabled = disabled
-}*/
-
-export const disabledByJS = (disabled:boolean, id:string, document:any) => {
+export const disabledByJS = (disabled: boolean, id: string, document: any) => {
   const div = document.getElementById(id)
   if (div) {
-      const children:HTMLCollectionOf<Element> = div.getElementsByTagName("*")
-      if (children) {
-          for(let i = 0; i < children.length; i++) {
-              const child = children.item(i) as any
-              if (child && (child.tagName.toLowerCase() === "input" || child.tagName.toLowerCase() === "button" || child.tagName.toLowerCase() === "textarea")) {
-                  console.log("CHILD", child)
-                  child.disabled = disabled 
-              }
-          }
+    const children: HTMLCollectionOf<Element> = div.getElementsByTagName("*")
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
+        const child = children.item(i) as any
+        if (child && (child.tagName.toLowerCase() === "input" || child.tagName.toLowerCase() === "button" || child.tagName.toLowerCase() === "textarea")) {
+          console.log("CHILD", child)
+          child.disabled = disabled
+        }
       }
+    }
   }
 }
 
-export const dateTimeToString = (dt:DateTime) : string => {
+export const dateTimeToString = (dt: DateTime): string => {
   return dt.toISOString()
 }
 
-export const dateTimeLocalToString = (dt ?: DateTime) : string => {
+export const dateTimeToTimestamp = (dt: DateTime): number => {
+  return Math.floor(dt.toDate().getTime() / 1000)
+}
+
+export const dateTimeLocalToString = (dt?: DateTime): string => {
   return (dt) ? dt.local().format('YYYY-MM-DD HH:mm') : ""
 }
 
-export const dataFrameToOptions = (dataFrame:DataFrame[]) : ISelect[] => {
-  return dataFrame.map((f:DataFrame) => {
+export const dataFrameToOptions = (dataFrame: DataFrame[]): ISelect[] => {
+  return dataFrame.map((f: DataFrame) => {
     const id = (f.refId) ? f.refId : ""
     return {
-      value : id,
-      label : id
+      value: id,
+      label: id
     }
   })
 }
 
-export const formatsToOptions = (formats:IFormat[]) : ISelect[] => {
-  return formats.map((f:IFormat) => {
+export const formatsToOptions = (formats: IFormat[]): ISelect[] => {
+  return formats.map((f: IFormat) => {
     return {
-      value : f,
-      label : f.id
+      value: f,
+      label: f.id
     }
   })
 }
 
-export const groupBy = (input : any[], key:string) => {
+export const groupBy = (input: any[], key: string) => {
   return input.reduce((acc, currentValue) => {
     let groupKey = getValueByKeyAnyDepth(currentValue, key) //currentValue[key];
     if (!acc[groupKey]) {
@@ -119,21 +116,21 @@ export const groupBy = (input : any[], key:string) => {
   }, {});
 }
 
-export const deepCopy = (obj:any) => {
+export const deepCopy = (obj: any) => {
   return JSON.parse(JSON.stringify(obj))
 }
 
-export const decimalCount = (num:number) => {
+export const decimalCount = (num: number) => {
   const c = num.toString().split('.')
   return (c.length > 1) ? c[1].length : 0
 }
 
-export const round = (num:number, numDec:number) => {
+export const round = (num: number, numDec: number) => {
   const dec = Math.pow(10, numDec)
   return Math.round(num * dec) / dec
 }
 
-export const getMessagesByLanguage = (l:Language) : ILocalization => {
+export const getMessagesByLanguage = (l: Language): ILocalization => {
   switch (l) {
     case Language.Spanish:
       return messages_es
@@ -142,12 +139,12 @@ export const getMessagesByLanguage = (l:Language) : ILocalization => {
   }
 }
 
-export const getValueByKeyAnyDepth = (obj:any, search:string) => {
-  var res:any = undefined
+export const getValueByKeyAnyDepth = (obj: any, search: string) => {
+  let res: any = undefined
   const keys = Object.keys(obj)
-  for(var i = 0; i < keys.length && res == undefined; i++) {
+  for (let i = 0; i < keys.length && res == undefined; i++) {
     const key = Object.keys(obj)[i]
-    if(key == search) {
+    if (key == search) {
       res = obj[key]
     } else if (typeof obj[key] === "object") {
       res = getValueByKeyAnyDepth(obj[key], search)
@@ -156,6 +153,6 @@ export const getValueByKeyAnyDepth = (obj:any, search:string) => {
   return res
 }
 
-export const isEmpty = (obj:any) => {
+export const isEmpty = (obj: any) => {
   return Object.keys(obj).length === 0;
 }

@@ -61,7 +61,7 @@
 
     .item-2 { 
         grid-area: item-2; 
-        margin-bottom: 6px !important; 
+        margin-bottom: 0px !important; 
     }
 
     .item-3 {

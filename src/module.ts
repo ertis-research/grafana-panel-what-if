@@ -8,7 +8,7 @@ import './css/grid.css';
 import './css/others.css';
 import { Options, FormatTags } from 'utils/types';
 import { getTemplateSrv } from '@grafana/runtime';
-import { getOptionsVariable } from 'utils/handleGrafanaVariable';
+import { getOptionsVariable } from 'utils/datasources/grafana';
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder

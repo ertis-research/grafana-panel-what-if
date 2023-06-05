@@ -2,9 +2,9 @@ import { DateTime } from "@grafana/data"
 import { Steps } from "./constants"
 import { ILocalization } from "./localization/scheme"
 
-export enum Language { 
+export enum Language {
   English = 'en',
-  Spanish = 'es' 
+  Spanish = 'es'
 }
 
 export enum FormatTags {
@@ -34,7 +34,7 @@ export interface ISelect {
   value: any
   description?: string
 }
-  
+
 export interface IContext {
   actualStep?: Steps,
   setActualStep?: any,
@@ -42,8 +42,7 @@ export interface IContext {
   height: number,
   width: number,
   messages: ILocalization,
-  options: Options,
-  refresh : any
+  options: Options
 }
 
 export interface ITag {
@@ -60,6 +59,7 @@ export interface IDataCollection {
   data: IData[],
   interval: IInterval,
   results?: IResult[]
+  extraInfo?: { [key: string]: any }
 }
 
 export interface IData {
@@ -75,11 +75,11 @@ export interface IResult {
   processedData?: IDataPred,
   result?: number | 'ERROR'
   correspondsWith?: {
-    tag : string,
-    intervalValue : number
+    tag: string,
+    intervalValue: number
   }
 }
-  
+
 export interface ICategory {
   [key: string]: ITag[]
 }
@@ -99,7 +99,8 @@ export interface IModel {
   tags: ITag[],
   preprocess?: string,
   scaler?: IScaler,
-  format?: IFormat
+  format?: IFormat,
+  extraInfo?: string
 }
 
 export interface IFormat {
@@ -114,10 +115,10 @@ export interface IScaler {
 }
 
 export interface ICSVScheme {
-  ID : string,
-  INTERVAL : "YES" | "NO",
-  DEFAULT_VALUE : number,
-  NEW_VALUE : number
+  ID: string,
+  INTERVAL: "YES" | "NO",
+  DEFAULT_VALUE: number,
+  NEW_VALUE: number
 }
 
 export interface Options {
@@ -127,20 +128,20 @@ export interface Options {
   formatTags: FormatTags,
   varTime: string,
   formats: IFormat[],
-  decimals ?: number
+  decimals?: number
 }
 
 export type IInterval = {
-    min?: number,
-    max?: number,
-    steps?: number,
-    type : IntervalTypeEnum
+  min?: number,
+  max?: number,
+  steps?: number,
+  type: IntervalTypeEnum
 }
 
 export type IntervalColors = {
   DISABLED: Colors,
   UNREADY: Colors,
-  READY: Colors   
+  READY: Colors
 }
 
 export type Colors = {

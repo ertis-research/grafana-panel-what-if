@@ -1,10 +1,8 @@
 import Papa from "papaparse";
-import { IData, IDataCollection, IInterval, IModel, IResult, ITag, IntervalTypeEnum } from "./types";
-import { idDefault, idNew } from "./constants";
-import { IntervalDefault } from "./default";
-import { DateTime } from "@grafana/data";
-import { isDateTime } from "@grafana/data";
-import { dateTime } from "@grafana/data";
+import { IData, IDataCollection, IInterval, IModel, IResult, ITag, IntervalTypeEnum } from "../types";
+import { idDefault, idNew } from "../constants";
+import { IntervalDefault } from "../default";
+import { DateTime, dateTime } from "@grafana/data";
 
 const compare = (a:IData, b:IData) => {
     if ((a.new_value !== undefined && b.new_value === undefined) 
@@ -61,7 +59,7 @@ export const dataToCSV = (collection:IDataCollection) => {
         console.log("AAA", "collection.results")
         collection.results.filter((r:IResult) => r.correspondsWith !== undefined).forEach((r:IResult, idx:number) => {
             if(r.correspondsWith && r.correspondsWith.intervalValue !== 0){
-                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.intervalValue < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.intervalValue) + "%"
+                const id:string = r.correspondsWith.tag +  " " + ((r.correspondsWith.intervalValue < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.intervalValue) + ((collection.interval.type === IntervalTypeEnum.percentage) ? "%" : "") 
                 let row:any = {
                     ID : id,
                     _RESULT : r.result
@@ -140,7 +138,9 @@ export const getDateTimeCSV = (csv:string[][]) : DateTime | undefined => {
     const comment:string[]|undefined = csv.find((v:string[]) => v.length > 0 && v.join("").replace(/ /g,'').toUpperCase().startsWith('#DATETIME:'))
     if(comment != undefined && comment.length > 0) {
         const dt:string = comment.join("").toUpperCase().replace(/ /g,'').replace("#DATETIME:", "").trim()
-        if(isDateTime(dt)) return dateTime(dt)
+        console.log("getDateTime", dt)
+        const timestamp = Date.parse(dt)
+        if(!isNaN(timestamp)) return dateTime(timestamp)
     }
     return undefined
 }
