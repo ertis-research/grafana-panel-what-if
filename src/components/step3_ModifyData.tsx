@@ -1,7 +1,7 @@
 import { AppEvents, SelectableValue, dateTime } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon,  Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect, dateTimeToString } from '../utils/utils'
+import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect, dateTimeToString, deepCopy } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
@@ -75,13 +75,19 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const compareTagsByPriority = (a: ITag, b: ITag): number => { //Descending
-        const ap = a.priority, bp = b.priority
-        if (ap === bp) return 0
-        if (ap !== undefined && bp === undefined) return 1
-        if (ap !== undefined && bp !== undefined) {
-            return (ap < bp) ? 1 : -1
+        const ap = (a.priority) ? Number(a.priority) : undefined
+        const bp = (b.priority) ? Number(b.priority) : undefined
+
+        let res = 1
+        if (ap == bp) {
+            res = 0 //Importante igual debil
+        } else if (ap !== undefined && bp === undefined) {
+            res = -1
+        } else if (ap !== undefined && bp !== undefined) {
+            res = (ap < bp) ? 1 : -1
         }
-        return 1
+
+        return res
     }
 
     const updateFilteredTags = () => {
@@ -108,7 +114,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnChangeTagValue = (event: ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value)
+        //console.log(event.target.value)
         if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
             const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id == event.currentTarget.name)
             const updatedCollectionData = [...collections[currentCollIdx].data]
@@ -181,8 +187,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        console.log(model)
-        if (model && model.tags) setTags(model.tags)
+        //console.log("CAMBIO MODEL", model)
+        if (model && model.tags) setTags(deepCopy(model.tags)) 
     }, [model])
 
     useEffect(() => {
@@ -215,7 +221,6 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     useEffect(() => {
         if (collectionsOptions.length > 0 && collections && currentCollIdx !== undefined && currentCollIdx < collections.length) {
-            console.log("BUENAS")
             setSelectCollection(collectionsOptions[currentCollIdx])
         }
     }, [collectionsOptions])
@@ -231,14 +236,14 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         if (selectCollection && selectCollection.value !== undefined && collections) {
             const currentCol = collections[selectCollection.value]
             if (selectCollection.value != currentCollIdx) {
-                console.log("Establezco selectCollection")
+                //console.log("Establezco selectCollection")
                 setCurrentCollIdx(selectCollection.value)
             }
             if (interval.max !== currentCol.interval.max || interval.min !== currentCol.interval.min || interval.steps !== currentCol.interval.steps) {
                 setInterval(collections[selectCollection.value].interval)
             }
         } else {
-            console.log("Establezco undefined")
+            //console.log("Establezco undefined")
             setCurrentCollIdx(undefined)
             setInterval(IntervalDefault)
         }

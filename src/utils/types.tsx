@@ -49,7 +49,7 @@ export interface ITag {
   id: string,
   description?: string,
   category?: string,
-  priority?: number
+  priority?: string
 }
 
 export interface IDataCollection {
