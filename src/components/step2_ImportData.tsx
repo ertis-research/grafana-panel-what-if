@@ -233,6 +233,9 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [collections])
 
 
+    // HTML
+    // -------------------------------------------------------------------------------------------------------------
+
     const ImportExcel = <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} >
         <input type="file" accept='.csv, text/csv' id="selectedFile" hidden style={{ display: 'none' }} onChange={handleOnFileUploadCSV} />
         <Button icon='upload' fullWidth disabled={disabled} onClick={handleButtonFileUpload}>{context.messages._panel._step2.uploadFile}</Button>

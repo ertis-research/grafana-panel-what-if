@@ -120,6 +120,10 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }, [context.width, context.height, state, currentCollIdx, isCollapseExtraInfo])
 
 
+    
+    // HTML
+    // -------------------------------------------------------------------------------------------------------------
+
     const showPlot = (col: IDataCollection) => {
         if (col.results) {
             const results = col.results.filter((r: IResult) => r.id != idDefault && r.id != idNew && r.correspondsWith != undefined && r.result != 'ERROR' && r.result != undefined)
@@ -213,7 +217,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 modeBarButtonsToAdd: [newButton]
             }
 
-            return <Plot style={{ margin: '0px', padding: '0px'}} layout={layoutObj} data={dataArray} config={config} />
+            return <Plot style={{ margin: '0px', padding: '0px' }} layout={layoutObj} data={dataArray} config={config} />
         } else {
             return <div></div>
         }
@@ -243,24 +247,24 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return res
     }
 
-    const processExtraInfo = (extraInfo : {[key: string]: any}) => {
-        let res:JSX.Element[] = []
+    const processExtraInfo = (extraInfo: { [key: string]: any }) => {
+        let res: JSX.Element[] = []
         Object.entries(extraInfo).map(([key, value]) => {
             if (isDateTime(value)) {
                 value = dateTimeLocalToString(value)
-            } else if(!isNaN(value) && context.options.decimals) {
+            } else if (!isNaN(value) && context.options.decimals) {
                 value = round(value, context.options.decimals)
             }
             res.push(<div className='wrap-elipsis' title={key + ": " + value}>{key + ": " + value}</div>)
         })
-        if(res.length < 3) {
+        if (res.length < 3) {
             return res
         } else {
-            return <div className='containerType' style={{ width: '100%'}}>
+            return <div className='containerType' style={{ width: '100%' }}>
                 <div className="row justify-content-between align-items-end">
                     <div className="col-12 col-sm-9">
                         {res.slice(0, 2)}
-                        <Modal title={msgs.extraInfo} children={res} isOpen={isOpenModal} onDismiss={() => setIsOpenModal(false)}/>
+                        <Modal title={msgs.extraInfo} children={res} isOpen={isOpenModal} onDismiss={() => setIsOpenModal(false)} />
                     </div>
                     <div className="col-12 col-sm-3">
                         <Button variant='secondary' style={{ width: '100%', marginTop: '5px' }} fullWidth onClick={() => setIsOpenModal(!isOpenModal)}>{msgs.seeMore}</Button>
@@ -270,17 +274,17 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         }
     }
 
-    const divExtraInfo = () => { 
-        if(currentCollIdx != undefined && currentCollIdx < collections.length){
+    const divExtraInfo = () => {
+        if (currentCollIdx != undefined && currentCollIdx < collections.length) {
             const col: IDataCollection = collections[currentCollIdx]
             if (col.extraInfo && Object.keys(col.extraInfo).length > 0) {
-                return <div style={{ backgroundColor: theme.colors.background.canvas, padding: '10px', marginTop: '10px', width: '100%' }}>
+                return <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', marginTop: '10px', width: '100%' }}>
                     <HorizontalGroup align='center'>
-                        <IconButton variant='secondary' name={(isCollapseExtraInfo) ? 'angle-right' : 'angle-down'} onClick={() => setIsCollapseExtraInfo(!isCollapseExtraInfo)} style={{ marginRight: '0px', paddingRight: '0px' }}/>
+                        <IconButton variant='secondary' name={(isCollapseExtraInfo) ? 'angle-right' : 'angle-down'} onClick={() => setIsCollapseExtraInfo(!isCollapseExtraInfo)} style={{ marginRight: '0px', paddingRight: '0px' }} />
                         <div style={{ color: theme.colors.text.secondary, marginLeft: '0px' }}>{msgs.extraInfo}</div>
                     </HorizontalGroup>
-                    {(!isCollapseExtraInfo) ? <div style={{ marginTop: '2px'}}>{processExtraInfo(col.extraInfo)}</div> : <div></div>}
-                </div> 
+                    {(!isCollapseExtraInfo) ? <div style={{ marginTop: '2px' }}>{processExtraInfo(col.extraInfo)}</div> : <div></div>}
+                </div>
             }
         }
         return <div></div>

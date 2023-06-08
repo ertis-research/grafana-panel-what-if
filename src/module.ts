@@ -32,20 +32,20 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
     }).addNumberInput({
       path: 'decimals',
       defaultValue: undefined,
-      name : 'Decimals',
+      name: 'Decimals',
       category: ['General']
     }).addCustomEditor({
-      path : 'formats',
+      path: 'formats',
       id: 'formats',
-      name : 'Formats',
-      category : ['Formats'],
-      editor : FormatEditor
+      name: 'Formats',
+      category: ['Formats'],
+      editor: FormatEditor
     }).addCustomEditor({
-      path : 'models',
+      path: 'models',
       id: 'models',
-      name : 'Models',
-      category : ['Models'],
-      editor : ModelEditor
+      name: 'Models',
+      category: ['Models'],
+      editor: ModelEditor
     }).addSelect({
       path: 'varTags',
       description: 'Name of the query field that indicates the id to which the data refers.',

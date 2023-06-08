@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "panel",
-  "name": "What If",
+  "name": "What-If Analysis",
   "id": "ertis-whatif-panel",
   "info": {
     "keywords": ["panel"],
-    "description": "What if",
+    "description": "This plugin serves as a powerful tool for conducting What-If queries using AI models. The integration with What-If analysis offers an valuable resource for improving the interpretability of models. With this feature, users can effortlessly assess the predictions of a model and obtain meaningful insights by delving into different hypothetical scenarios.",
     "author": {
       "name": "ERTIS"
     },
@@ -19,7 +19,7 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=9.2.5",
+    "grafanaDependency": ">=8.5.3",
     "plugins": []
   }
 }

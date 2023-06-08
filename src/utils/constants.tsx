@@ -70,14 +70,14 @@ export const IntervalModeOptions = (messages:ILocalization) => {
     ]
 }*/
 
-export const ImportDataOptions = (messages:ILocalization) => {
+export const ImportDataOptions = (messages: ILocalization) => {
     return [
         {
             label: messages._panel._step2.setDatetime,
             value: ImportDataEnum.DATETIME_SET,
         },
-        { 
-            label: 'CSV', 
+        {
+            label: 'CSV',
             value: ImportDataEnum.EXCEL
         },
         {
@@ -87,7 +87,7 @@ export const ImportDataOptions = (messages:ILocalization) => {
     ]
 }
 
-export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => {
+export const VariablesGrafanaOptions = (replaceVariables: any): ISelect[] => {
     const from = dateTime(Date.parse(getVariableValue(replaceVariables, '{__from:date:iso}')))
     const to = dateTime(Date.parse(getVariableValue(replaceVariables, '{__to:date:iso}')))
     return [
@@ -105,7 +105,7 @@ export const VariablesGrafanaOptions = (replaceVariables:any) : ISelect[] => {
 }
 
 
-export const DefaultImportData = (messages:ILocalization) => {
+export const DefaultImportData = (messages: ILocalization) => {
     return {
         label: messages._panel._step2.setDatetime,
         value: ImportDataEnum.DATETIME_SET

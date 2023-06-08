@@ -142,9 +142,9 @@ export const getMessagesByLanguage = (l: Language): ILocalization => {
 export const getValueByKeyAnyDepth = (obj: any, search: string) => {
   let res: any = undefined
   const keys = Object.keys(obj)
-  for (let i = 0; i < keys.length && res == undefined; i++) {
+  for (let i = 0; i < keys.length && res === undefined; i++) {
     const key = Object.keys(obj)[i]
-    if (key == search) {
+    if (key === search) {
       res = obj[key]
     } else if (typeof obj[key] === "object") {
       res = getValueByKeyAnyDepth(obj[key], search)

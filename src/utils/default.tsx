@@ -1,60 +1,60 @@
 import { messages_en } from "./localization/en";
 import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum } from "./types";
 
-export const PreprocessCodeDefault:string = "console.log('Preprocess')"
+export const PreprocessCodeDefault: string = "console.log('Preprocess')"
 
-export const FormatDefault:IFormat = {
-    id : "",
-    input : "",
-    output : ""
+export const FormatDefault: IFormat = {
+    id: "",
+    input: "",
+    output: ""
 }
 
-export const ModelDefault:IModel = {
-    id : "",
-    url : "",
+export const ModelDefault: IModel = {
+    id: "",
+    url: "",
     description: "",
-    queryId : "",
-    method : Method.POST,
-    tags : [],
-    format : FormatDefault,
-    preprocess : PreprocessCodeDefault
+    queryId: "",
+    method: Method.POST,
+    tags: [],
+    format: FormatDefault,
+    preprocess: PreprocessCodeDefault
 }
 
-export const TagDefault:ITag = {
-    id : "",
-    category : "default"
+export const TagDefault: ITag = {
+    id: "",
+    category: "default"
 }
 
-export const ContextDefault:IContext = {
-    height : 0, 
-    width : 0,
-    replaceVariables : undefined,
-    messages : messages_en,
-    options : {
-        language : Language.English,
-        models : [],
-        varTags : '',
-        varTime : '',
-        formatTags : FormatTags.DoubleQuotes,
-        formats : []
+export const ContextDefault: IContext = {
+    height: 0,
+    width: 0,
+    replaceVariables: undefined,
+    messages: messages_en,
+    options: {
+        language: Language.English,
+        models: [],
+        varTags: '',
+        varTime: '',
+        formatTags: FormatTags.DoubleQuotes,
+        formats: []
     }
 }
 
-export const IntervalDefault:IInterval = {
-    min: undefined, 
-    max: undefined, 
+export const IntervalDefault: IInterval = {
+    min: undefined,
+    max: undefined,
     steps: undefined,
-    type : IntervalTypeEnum.percentage
+    type: IntervalTypeEnum.percentage
 }
 
-export const CollectionDefault:IDataCollection = {
-    id : "",
-    name : "",
-    data : [],
-    interval : IntervalDefault
+export const CollectionDefault: IDataCollection = {
+    id: "",
+    name: "",
+    data: [],
+    interval: IntervalDefault
 }
 
-export const sampleData : ITag[] = [
+export const sampleData: ITag[] = [
     {
         id: "TAG1",
         description: "ADSADSDSADSA",
