@@ -1,116 +1,50 @@
-# Grafana panel plugin template
+# What-If Analysis of ML models for Grafana
 
-This template is a starting point for building a panel plugin for Grafana.
+![Grafana 8.5.3](https://img.shields.io/badge/Grafana-8.5.3-orange)
+[![Watch on GitHub](https://img.shields.io/github/watchers/ertis-research/whatif-panel-for-Grafana?style=social)](https://github.com/ertis-research/whatif-panel-for-Grafana/watchers)
+[![Star on GitHub](https://img.shields.io/github/stars/ertis-research/whatif-panel-for-Grafana?style=social)](https://github.com/ertis-research/whatif-panel-for-Grafana/stargazers)
 
-## What are Grafana panel plugins?
+This Grafana panel is a powerful tool for conducting **What-If predictive analysis with Artificial Intelligence models**, with a special focus on Machine Learning. Currently, the panel is compatible with **AI/ML models that receive a list of numeric fields through an HTTP request**.
 
-Panel plugins allow you to add new types of visualizations to your dashboard, such as maps, clocks, pie charts, lists, and more.
+The tool enables easy loading of data into the model directly from a data source configured in Grafana. It allows direct modifications to the data or through value intervals and presents the results in a pleasant and easily interpretable manner, using interactive graphs when necessary. Additionally, it provides the capability to export and import both the data and the obtained results.
 
-Use panel plugins when you want to do things like visualize data returned by data source queries, navigate between dashboards, or control external systems (such as smart home devices).
+## :wrench: Installation
 
-## Getting started
+To compile and install the plugin, it is necessary to download the code from this repository. This can be achieved by cloning it using the following command:
 
-### Frontend
+```bash
+git clone https://github.com/ertis-research/whatif-panel-for-Grafana.git
+cd whatif-panel-for-Grafana
+```
+### Development mode
 
-1. Install dependencies
+To add the plugin in a development environment, you need to include the folder containing the complete code inside the [Grafana designated folder for plugins](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins). Then, the following commands must be executed to install dependencies and build plugin:
 
-   ```bash
-   yarn install
-   ```
+```bash
+yarn install
+yarn dev
+```
 
-2. Build plugin in development mode and run in watch mode
+This will enable the plugin in the instance of Grafana where it has been placed, remaining in watch mode waiting for changes to be saved.
 
-   ```bash
-   yarn dev
-   ```
+> **Warning**
+> If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
 
-3. Build plugin in production mode
+### Production mode
 
-   ```bash
-   yarn build
-   ```
+To allow the plugin to run, it needs to be signed following the [guidelines](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/) provided by Grafana. However, there is also the option to explicitly indicate that the plugin can be executed without signature. To do this, its identifier must be included in the [*allow_loading_unsigned_plugins*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins) option of the *grafana.ini* file.
 
-4. Run the tests (using Jest)
+To build the plugin for a production environment, run the following command to install dependencies and build plugin:
 
-   ```bash
-   # Runs the tests and watches for changes, requires git init first
-   yarn test
-   
-   # Exists after running all the tests
-   yarn test:ci
-   ```
+```bash
+yarn install
+yarn build
+```
 
-5. Spin up a Grafana instance and run the plugin inside it (using Docker)
+As output, a folder called *dist* will be generated in the root of the project, which will contain the plugin build. **This folder should be placed inside the [plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) of the production environment.** 
 
-   ```bash
-   yarn server
-   ```
-
-6. Run the E2E tests (using Cypress)
-
-   ```bash
-   # Spin up a Grafana instance first that we tests against 
-   yarn server
-   
-   # Start the tests
-   yarn e2e
-   ```
-
-7. Run the linter
-
-   ```bash
-   yarn lint
-   
-   # or
-
-   yarn lint:fix
-   ```
+Once these steps are completed, the plugin will be available for selection when adding a new panel to a dashboard.
 
 
-# Distributing your plugin
+## :rocket: Getting started
 
-When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.
-
-_Note: It's not necessary to sign a plugin during development. The docker development environment that is scaffolded with `@grafana/create-plugin` caters for running the plugin without a signature._
-
-## Initial steps
-
-Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/docs/grafana/latest/developers/plugins/publishing-and-signing-criteria/) documentation carefully.
-
-`@grafana/create-plugin` has added the necessary commands and workflows to make signing and distributing a plugin via the grafana plugins catalog as straightforward as possible.
-
-Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/#plugin-signature-levels) documentation to understand the differences between the types of signature level.
-
-1. Create a [Grafana Cloud account](https://grafana.com/signup).
-2. Make sure that the first part of the plugin ID matches the slug of your Grafana Cloud account.
-   - _You can find the plugin ID in the plugin.json file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
-3. Create a Grafana Cloud API key with the `PluginPublisher` role.
-4. Keep a record of this API key as it will be required for signing a plugin
-
-## Signing a plugin
-
-### Using Github actions release workflow
-
-If the plugin is using the github actions supplied with `@grafana/create-plugin` signing a plugin is included out of the box. The [release workflow](./.github/workflows/release.yml) can prepare everything to make submitting your plugin to Grafana as easy as possible. Before being able to sign the plugin however a secret needs adding to the Github repository.
-
-1. Please navigate to "settings > secrets > actions" within your repo to create secrets.
-2. Click "New repository secret"
-3. Name the secret "GRAFANA_API_KEY"
-4. Paste your Grafana Cloud API key in the Secret field
-5. Click "Add secret"
-
-#### Push a version tag
-
-To trigger the workflow we need to push a version tag to github. This can be achieved with the following steps:
-
-1. Run `npm version <major|minor|patch>`
-2. Run `git push origin main --follow-tags`
-
-
-## Learn more
-
-Below you can find source code for existing app plugins and other related documentation.
-
-- [Basic panel plugin example](https://github.com/grafana/grafana-plugin-examples/tree/master/examples/panel-basic#readme)
-- [Plugin.json documentation](https://grafana.com/docs/grafana/latest/developers/plugins/metadata/)
-- [How to sign a plugin?](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/)
