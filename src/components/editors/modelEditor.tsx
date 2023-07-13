@@ -1,10 +1,11 @@
 import React from 'react'
 import { StandardEditorProps } from "@grafana/data";
 import { IModel } from 'utils/types';
-import { ControlledCollapse } from '@grafana/ui';
+import { ControlledCollapse, useTheme2 } from '@grafana/ui';
 import { ModelForm } from './modelForm';
 import { ModelDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
+import { css } from '@emotion/css';
 
 
 interface Props extends StandardEditorProps<IModel[]> {}
@@ -49,7 +50,7 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
 
     return (<div style={{ marginRight: '15px'}}>
         {listModels}
-        <ControlledCollapse label={"Add new model"} collapsible isOpen={false}>
+        <ControlledCollapse label={"Add new model"} collapsible isOpen={false} className={css({color: useTheme2().colors.info.main})}>
             <ModelForm model={ModelDefault} updateFunction={addElement} mode={Mode.CREATE} context={context}/>
         </ControlledCollapse>
     </div>)

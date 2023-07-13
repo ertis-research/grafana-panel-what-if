@@ -1,10 +1,11 @@
 import React from 'react'
 import { StandardEditorProps } from "@grafana/data";
 import { IFormat } from 'utils/types';
-import { ControlledCollapse } from '@grafana/ui';
+import { ControlledCollapse, useTheme2 } from '@grafana/ui';
 import { Mode } from 'utils/constants';
 import { FormatForm } from './formatForm';
 import { FormatDefault } from 'utils/default';
+import { css } from '@emotion/css';
 
 
 interface Props extends StandardEditorProps<IFormat[]> {}
@@ -46,7 +47,7 @@ export const FormatEditor: React.FC<Props> = ({ value: elements, onChange, conte
 
     return (<div style={{ marginRight: '15px'}}>
         {listFormats}
-        <ControlledCollapse label="Add new format" collapsible isOpen={false}>
+        <ControlledCollapse label="Add new format" collapsible isOpen={false} className={css({color: useTheme2().colors.info.main})}>
             <FormatForm format={FormatDefault} updateFunction={addElement} mode={Mode.CREATE} context={context}/>
         </ControlledCollapse>
     </div>)

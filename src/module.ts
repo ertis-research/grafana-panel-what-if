@@ -34,24 +34,12 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
       defaultValue: undefined,
       name: 'Decimals',
       category: ['General']
-    }).addCustomEditor({
-      path: 'formats',
-      id: 'formats',
-      name: 'Formats',
-      category: ['Formats'],
-      editor: FormatEditor
-    }).addCustomEditor({
-      path: 'models',
-      id: 'models',
-      name: 'Models',
-      category: ['Models'],
-      editor: ModelEditor
     }).addSelect({
       path: 'varTags',
       description: 'Name of the query field that indicates the id to which the data refers.',
       name: 'Variable tags',
       defaultValue: undefined,
-      category: ['General'],
+      category: ['Queries'],
       settings: {
         options: OptionsVariable
       }
@@ -60,7 +48,7 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
       description: 'Name of the query field that indicates the id to which the data refers.',
       name: 'Variable time',
       defaultValue: undefined,
-      category: ['General'],
+      category: ['Queries'],
       settings: {
         options: OptionsVariable
       }
@@ -68,7 +56,7 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
       path: 'formatTags',
       defaultValue: 'dq',
       name: 'Format for list of tags',
-      category: ['General'],
+      category: ['Queries'],
       settings: {
         options: [
           {
@@ -85,6 +73,18 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
           }
         ],
       }
+    }).addCustomEditor({
+      path: 'formats',
+      id: 'formats',
+      name: 'Formats',
+      category: ['Formats'],
+      editor: FormatEditor
+    }).addCustomEditor({
+      path: 'models',
+      id: 'models',
+      name: 'Models',
+      category: ['Models'],
+      editor: ModelEditor
     })
 })
 

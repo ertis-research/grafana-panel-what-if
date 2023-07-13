@@ -1,7 +1,7 @@
 import { AppEvents, SelectableValue, dateTime } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon,  Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, defaultIfUndefined, collectionsToSelect, groupBy, tagsToSelect, dateTimeToString, deepCopy } from '../utils/utils'
+import { Context, defaultIfUndefined, collectionsToSelect, groupBy, dateTimeToString, deepCopy } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
@@ -33,12 +33,12 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const [selectCollection, setSelectCollection] = useState<SelectableValue<number>>()
     const [collectionsOptions, setcollectionsOptions] = useState<ISelect[]>([])
 
-    const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
+//    const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
     const [searchInputValue, setSearchInputValue] = useState<string>("")
 
     const [tags, setTags] = useState<ITag[]>([])
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
-    const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
+//    const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
 
     const [interval, setInterval] = useState<IInterval>(IntervalDefault)
     const [hasInterval, setHasInterval] = useState<boolean>(false)
@@ -111,6 +111,10 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             ...interval,
             [name]: (value !== undefined && name === 'steps') ? Math.abs(value) : value
         })
+    }
+
+    const handleOnChangeSearch = (event: ChangeEvent<HTMLInputElement>) => {
+        setSearchInputValue(event.target.value)
     }
 
     const handleOnChangeTagValue = (event: ChangeEvent<HTMLInputElement>) => {
@@ -206,7 +210,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [interval])
 
     useEffect(() => {
-        setTagsSearch(tagsToSelect(tags))
+        //setTagsSearch(tagsToSelect(tags))
         updateFilteredTags()
     }, [tags])
 
@@ -360,21 +364,12 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                         </div>
                     </div>
                 </div>
-                <Select
-                    options={tagsSearch}
-                    value={searchValue}
-                    inputValue={searchInputValue}
-                    onChange={(v) => setSearchValue(v)}
+                <Input
+                    value={searchInputValue}
                     prefix={<Icon name="search" />}
                     placeholder={msgs.searchPlaceholder}
                     disabled={disabled}
-                    isOpen={false}
-                    backspaceRemovesValue={false}
-                    onInputChange={(v, action) => {
-                        if (action.action == 'set-value' || action.action == 'input-change') {
-                            setSearchInputValue(v)
-                        }
-                    }}
+                    onChange={handleOnChangeSearch}
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <InlineField label={msgs.showCategories} disabled={disabled} title={msgs.tooltipShowCategory} transparent={true}>

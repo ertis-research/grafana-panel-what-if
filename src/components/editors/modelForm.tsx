@@ -1,11 +1,12 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
 import { ICredentials, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select } from '@grafana/ui';
+import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
 import { Mode } from 'utils/constants';
+import { css } from '@emotion/css';
 
 interface Props {
     model: IModel,
@@ -19,6 +20,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
 
     const methodList: ISelect[] = enumToSelect(Method)
 
+    const [rnd, setRnd] = useState<number>()
     const [currentModel, setCurrentModel] = useState<IModel>(ModelDefault)
     const [currentTags, setCurrentTags] = useState<ITag[]>([])
     const [selectedMethod, setSelectedMethod] = useState<SelectableValue<string>>()
@@ -107,6 +109,10 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     }
 
     useEffect(() => {
+        setRnd(Math.random())
+    }, [])
+
+    useEffect(() => {
         if (mode == Mode.EDIT) setDisabled(true)
     }, [mode])
 
@@ -154,7 +160,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     return <div>
         {buttonEdit()}
 
-        <Form id="modelForm" onSubmit={handleOnSubmitAddModel} maxWidth="none">{({ register, errors, control }: FormAPI<any>) => {
+        <Form id={"modelForm" + rnd} onSubmit={handleOnSubmitAddModel} maxWidth="none">{({ register, errors, control }: FormAPI<any>) => {
             return (
                 <div>
                     <InlineField label="ID" labelWidth={10} required disabled={disabled} grow>
@@ -208,7 +214,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                             name="format"
                         />
                     </InlineField>
-                    <Collapse label="Connection with model" collapsible={false} isOpen={true}>
+                    <Collapse label="Connection with model" collapsible={false} isOpen={true} className={css({color: useTheme2().colors.text.primary})}>
                         <InlineFieldRow>
                             <InlineField label="Method" labelWidth={9} required disabled={disabled}>
                                 <InputControl
@@ -246,10 +252,10 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             )
         }}
         </Form>
-        <ControlledCollapse label="Model input tags" collapsible isOpen={false}>
+        <ControlledCollapse label="Model input tags" collapsible isOpen={false} className={css({color: useTheme2().colors.text.primary})}>
             <TagsForm currentTags={currentTags} setCurrentTags={setCurrentTags} disabled={disabled} />
         </ControlledCollapse>
-        <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false}>
+        <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false} className={css({color: useTheme2().colors.text.primary})}>
             <InlineField label='Scaler' labelWidth={12} disabled={disabled} grow>
                 <div style={{ width: '100%' }}>
                     <CodeEditor
@@ -285,7 +291,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         </ControlledCollapse>
         <HorizontalGroup justify='flex-end'>
             <Button type="button" hidden={(mode == Mode.EDIT) ? disabled : true} variant='primary' disabled={disabled} fill="text" onClick={handleOnClickCancel}>Cancel</Button>
-            <Button type='submit' form='modelForm' hidden={disabled} variant='primary' disabled={disabled} icon={(mode == Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} model</Button>
+            <Button type='submit' form={"modelForm" + rnd} hidden={disabled} variant='primary' disabled={disabled} icon={(mode == Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} model</Button>
         </HorizontalGroup>
     </div>
 }
