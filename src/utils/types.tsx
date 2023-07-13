@@ -128,7 +128,11 @@ export interface Options {
   formatTags: FormatTags,
   varTime: string,
   formats: IFormat[],
-  decimals?: number
+  decimals?: number,
+  columnTag: string,
+  columnValue: string,
+  columnNameExtraInfo: string,
+  columnValueExtraInfo: string
 }
 
 export type IInterval = {

@@ -73,6 +73,26 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
           }
         ],
       }
+    }).addTextInput({
+      path: 'columnTag',
+      defaultValue: "tag",
+      name: 'Name of column containing tags',
+      category: ['Queries']
+    }).addTextInput({
+      path: 'columnValue',
+      defaultValue: "value",
+      name: 'Name of column containing values',
+      category: ['Queries']
+    }).addTextInput({
+      path: 'columnNameExtraInfo',
+      defaultValue: "name",
+      name: 'ExtraInfo - Name of column containing names',
+      category: ['Queries']
+    }).addTextInput({
+      path: 'columnValueExtraInfo',
+      defaultValue: "value",
+      name: 'ExtraInfo - Name of column containing values',
+      category: ['Queries']
     }).addCustomEditor({
       path: 'formats',
       id: 'formats',

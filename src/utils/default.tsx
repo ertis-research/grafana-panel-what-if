@@ -36,7 +36,11 @@ export const ContextDefault: IContext = {
         varTags: '',
         varTime: '',
         formatTags: FormatTags.DoubleQuotes,
-        formats: []
+        formats: [],
+        columnTag: "tag",
+        columnValue: "value",
+        columnNameExtraInfo: "name",
+        columnValueExtraInfo: "value"
     }
 }
 

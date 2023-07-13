@@ -22,10 +22,10 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const theme = useTheme2()
     const context = useContext(Context)
 
-    const fieldTag = "tag" // provisional
-    const fieldValue = "value" // provisional
-    const fieldValueExtraInfo = "value"
-    const fieldNameInfo = "name" 
+    const fieldTag = context.options.columnTag 
+    const fieldValue = context.options.columnValue 
+    const fieldValueExtraInfo = context.options.columnValueExtraInfo
+    const fieldNameInfo = context.options.columnNameExtraInfo
 
     //const idFileUpload = "fileUpload"
     const idDateTimeSet = "dateTimeSet"
