@@ -245,9 +245,130 @@ In the general tab, you will find the options that are common to the whole panel
 
 #### Models
 
+**At least one AI/ML model must be configured in order to use the panel.** 
+
+In the Models tab, the list of models already configured (if any) and a section with the blue text to add a new one (_Add new model_) are displayed. This will always appear last in the list, after all the configured models. Clicking on any of these elements will display a form whose content will vary depending on whether it is a configured model or the section for adding a new model.
+
+##### Adding a new model
+Clicking on the _Add new model_ section will display a blank form that allows you to define a new model. 
+
+The basic configuration of the model has the following fields:
+- **ID** (required): Identifier of the model (it will be shown as main text in the selector of step 1).
+- **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of step 1).
+- **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab.
+- **Extra info** (optional): Query that allows to add extra information to the models. This must be configured in its corresponding tab.
+- **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the corresponding section.
+
+Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
+- **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
+- **URL** (required): URL address where the model expects to receive the input data.
+- **Username** (optional): Username for basic authentication.
+- **Password** (optional): Password for basic authentication.
+
+##### Delete and edit models
+For an already configured model, the form will be displayed filled with the model data. The fields will be disabled to prevent unwanted editing.
+
+If you want to **delete the model**, click on the red button with the bin icon. When you press it, a confirmation will appear allowing you to cancel this action (_Cancel_ button, the model will not be deleted) or to confirm it (_Delete_ button, the model will be deleted). **If the panel is deleted and saved, this action cannot be undone**.
+
+If you want to **edit the model**, it will be necessary to click on the blue _Edit_ button. By doing so, the fields of the model form will be enabled, making it possible to modify their values. At this point, the information can be modified in the same way as in the creation form. The edit mode will be terminated by clicking on one of the two buttons at the bottom: 
+- _Cancel_ button: The changes made will be discarded, returning the model to its previous state. 
+- _Save model_ button: The changes made to the model will be saved. These changes can be used in the preview, but **to save them definitively you must also save the changes in the Grafana panel**.
+
+##### List of tags
+To define the list of tags that enter the model, the section entitled _Model input tags_ must be expanded. Here you can add as many tags as the model requires (there is no limit). 
+The list can be viewed in two ways: as a form or as JSON format. To switch from one mode to the other, use the switch in the top left corner. Both modes will display the same data at any time. The form mode allows you to add tags easily, while the JSON mode is very useful if you want to copy the tag list from another model or automate the creation of the tag list if it is very large.
+
+Each tag can have the following information:
+- **ID** (required): Identifier of the tag.
+- **Category** (optional): Category of the tag. It allows to group the different tags in categories to find them easily when modifying ([step 3](#step-3-modify-data)). This field is case sensitive. The same text must be entered in those tags that will belong to the same category. The default category is default.
+- **Priority** (optional): Numeric field indicating the importance of the tag. It is used to order the tags according to the user's preference, taking into account that the tags will be displayed from highest to lowest priority. This order is only visual, **when sending the data to the model they will keep the position given in the configuration**.
+- **Description** (optional): Description of the tag. It is shown next to the identifier in [step 3](#step-3-modify-data) and allows to describe the tag with a more natural name.
+
+##### Pre-processing and scaling of input data
+
+Before sending the data to the model, it is possible to apply some [pre-processing](https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing-data) to it. In particular, it is supported to apply a JavaScript code block and to apply scaling. **Neither is required and if both are defined, the JavaScript code will be applied first, followed by the scaling**.
+
+The JavaScript code must be included in the _Pre-process_ field and allows you to **perform preprocessing before sending the data to the model**. For example, it can be useful if one of the inputs of the model is the sum of several tags or if you want to modify the order of the list.
+This block will be executed in an sandbox and will receive as input a JSON object called _data_ whose key-value pairs will correspond to the identifier of each tag and its value to send to the model respectively. The output of the code should also be a _data_ object following the same scheme. For example, if the model had 3 tags the _data_ object both as input and output could correspond to:
+
+```json
+{
+  "01PHD.LMNN4001.PV": 0.43,
+  "01PHD.LMLC4028.PV": 0.23,
+  "01PHD.LMLC4401.PV": 0.10
+}
+```
+
+Taking into account the input and output, the code offers the freedom to define as many functions and variables as necessary to obtain the list of values to be sent to the model. Since the code runs in an isolated environment, **no import of libraries is allowed**. An example of JavaScript code to preprocess the input data would be the following (not including the content of the functions _parse_to_ratios_, _get_used_filter_vars_ and _order_ which would also be defined in the same place):
+
+<p align="center">
+  <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/5d30f1b7-172c-4255-a84e-a6bf72295569" />
+</p>
+
+As for the scaling (_Scaler_ field), this is equivalent to the standard scaling (_StandardScaler_ in sklearn) which uses the mean and standard deviation obtained from the training data of the model. This data will be defined by means of a JSON object with a _mean_ key for the mean and a _scale_ key for the standard deviation, whose values are numeric lists of length equal to the number of tags that the model must receive. The scheme is as follows:
+
+```json
+{
+  mean: number[],
+  scale: number[]
+}
+```
+
+With this data the following formula shall be applied, where _data_ is the list of raw tag values to be sent to the model and _res_ the list with the resulting values to be sent to the model. This formula consists of obtaining a new list of values by subtracting from each value in the original list the value of mean in the same position and dividing the result by the value of scale in the same position.
+
+<p align="center">
+  <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/0f078160-817b-4c0f-aa51-5639b088c8cf" />
+</p>
+
 #### Formats
+
+The IA/ML models will receive the list of values to predict within one schema and send the prediction result within another. These formats may coincide for several models, as they mainly depend on the service where they are hosted.
+
+The _Formats_ tab shows the list of defined formats (if any) and a section with blue text to add a new one (_Add new format_). This will always appear last in the list, after all the formats configured. Clicking on any of these elements will display a form that will be filled in if it is a defined format or empty if a new format is to be added.
+
+In case of an already configured format, editing and deleting will be allowed following the [same logic as the model creation form](#delete-and-edit-models).
+
+This form consists of 3 fields:
+- **ID** (required): Identifier of the format. It will be shown in the format selector in the model configuration.
+- **Input** (required): Format in which the list of tag values must be mapped just before being sent to the model. This can correspond to any text, although typically it will be a JSON object. The variable $input is used to mark where the list of values should be added, which will be replaced by before sending:
+  - If **only one** dataset is predicted, by a numeric list with the tag values separated by commas and enclosed in square brackets (e.g.: [0.43, 0.23, 0.10]).
+  - If **multiple** datasets are predicted, by the above representation for each set enclosed in commas and without square brackets (e.g. [0.43, 0.23, 0.10], [0.35, 0.33, 0.21]).
+- **Output** (required): Format from which the prediction result of the model will be extracted. This can correspond to any text, although it will typically be a JSON object. The $output variable is used to mark which part of the response corresponds to the prediction. When processing the received response, the corresponding part of the message will be extracted and this text will be separated by commas in case more than one prediction has been requested. From these texts, the numerical value they contain will be extracted, which will be the results of the predictions requested.
+
+An example of a configured format is as follows:
+
+<p align="center">
+  <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/4217c1ea-6921-4219-aebc-bdee8632b2bb" />
+</p>
 
 #### Data import queries
 
+The values of the tags of the model can be imported directly from one of the data sources configured in Grafana. To do this, a query must be constructed which, taking into account the list of tags in the model, performs the necessary calculations to obtain the input values at a specific time instant. This must return a table that relates each tag with its value. For example, a possible result would be:
+
+This query must be defined within the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration.
+
+In order to use the configured tag list and consider the time instant given by the user in the _Set datetime_ section, the query must include [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/variable-syntax/). These variables must be created in the dashboard configuration (not the panel configuration) and assigned in the corresponding fields in the _Queries_ section of the panel configuration:
+- **Variable tags** (required): Dashboard variable to be replaced by the list of tags of the model. Within the query, this variable must be added where the list of identifiers from which information will be extracted is indicated.
+- **Format for list of tags** (required): Format to be used for the list of tags of the model when it is replaced in the query. This will correspond to the identifiers of the list separated by commas, being able to choose that each one is contained between double, single or no inverted commas.
+- **Variable time** (required): Table variable to be replaced by the time instant in ISO 8601 UTC (e.g. 2023-03-01T13:46:58Z) selected by the user during the data import ([step 2](#step-2-import-data)) from date and time (_Set datetime_). Within the query, this variable must be added where the time instant at which the data will be extracted is indicated.
+
+On the other hand, in order to extract the data from the table, the name of the columns containing the information must be indicated:
+- **Name of column containing tags** (required): Name of the column containing the tag identifier.
+- **Name of column containing values** (required): Name of the column containing the tag value.
+
+With this configuration, the tool will be able to replace the value of the dashboard variables with the appropriate ones and extract the information returned by the data source to be entered as original data in the tag list of the modification section ([step 3](#step-3-modify-data)).
+
 #### Extra information
 
+This functionality allows adding some useful information in the prediction section in order to help the user to understand the reliability of the data displayed or to provide any other type of message that may be relevant.
+
+This information must be contained in a query that can use the variables specified in the [data import](#data-import-queries) (time and tag list) if necessary. This query should return a table relating a text identifier to a value of any type. It should also be noted that the tool will only display the first two rows, while the remaining rows (if any) can be consulted by clicking on the _See more_ button.
+
+> **Note**
+> If the value is an instant of time in ISO 8601 UTC the tool will automatically display it in **YYYYY-MM-DD HH:mm** format in local time.
+
+This query must be defined in the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration. On the other hand, in order to be able to extract the data from the table, the name of the columns containing the information must be indicated:
+- **ExtraInfo - Name of column containing names** (optional): Name of column containing the text that names and identifies the information.
+- **ExtraInfo - Name of column containing values** (optional): Name of the column containing the value of the identified information.
+ 
+With this configuration, the tool will be able to extract the information returned by the data source to introduce it as extra information in a section within the prediction section ([step 4](#step-4-predict-result)).
