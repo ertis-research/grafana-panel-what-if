@@ -29,7 +29,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Tag filtering and sorting](#tag-filtering-and-sorting)
       - [Interval behaviour](#interval-behaviour)
       - [Understanding the comparative graph](#understanding-the-comparative-graph)
-      - [Extra information](#extra-information)
+      - [Extra information about models](#extra-information-about-models)
       - [CSV import/export](#csv-importexport)
       - [Lack of data](#lack-of-data)
    - [Configuration](#configuration)
@@ -193,7 +193,7 @@ You can also interact with the graph through the tools provided by [Plotly](http
 - **Reset axes**: Returns the graph to its original view.
 - **Download plot as png**: Allows you to download the graph in PNG format. Clicking the button will open a new tab with the generated image. To download it, right click on the image and select *Save image as*.
 
-#### Extra information
+#### Extra information about models
 
 Some model information can be added in the tool to support the understanding of the prediction results. If configured, this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
 
