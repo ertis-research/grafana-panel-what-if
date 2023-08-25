@@ -29,7 +29,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Tag filtering and sorting](#tag-filtering-and-sorting)
       - [Interval behaviour](#interval-behaviour)
       - [Understanding the comparative graph](#understanding-the-comparative-graph)
-      - [Extra information about models](#extra-information)
+      - [Extra information](#extra-information)
       - [CSV import/export](#csv-importexport)
       - [Lack of data](#lack-of-data)
    - [Configuration](#configuration)
