@@ -25,7 +25,19 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 - [Getting started](#rocket-getting-started)
 - [Documentation](#page_facing_up-documentation)
    - [Panel usage](#panel-usage)
+      - [Data collections](#data-collections)
+      - [Tag filtering and sorting](#tag-filtering-and-sorting)
+      - [Interval behaviour](#interval-behaviour)
+      - [Understanding the comparative graph](#understanding-the-comparative-graph)
+      - [Extra information about models](#extra-information)
+      - [CSV import/export](#csv-importexport)
+      - [Lack of data](#lack-of-data)
    - [Configuration](#configuration)
+      - [Basic options](#basic-options)
+      - [Models](#models)
+      - [Formats](#formats)
+      - [Data import queries](#data-import-queries)
+      - [Extra information](#extra-information)
 
 ## :wrench: Installation
 
@@ -108,7 +120,7 @@ Results may include:
 
 - **Original value:** This value will appear as long as there is no missing data in the original data collection. It represents the prediction for the data collection without considering any modifications.
 - **New value:** This value will appear when at least one tag has a directly modified value. It represents the prediction for the data collection in which the original values are replaced by new values, in the tags where they exist. If there is any tag marked to be analysed by an interval, the corresponding original value will be considered.
-- **Comparative graph:** This [graph](#graph-information) will appear when the interval is active and there is at least one tag with the box ticked for interval analysis. Each line of the graph will represent the predicted values obtained by considering, individually for each tag, the values within the range instead of their original value.
+- **Comparative graph:** This [graph](#understanding-the-comparative-graph) will appear when the interval is active and there is at least one tag with the box ticked for interval analysis. Each line of the graph will represent the predicted values obtained by considering, individually for each tag, the values within the range instead of their original value.
 
 In case you want to modify the data again, you need to click on the red *Modify data again* button located where the predict button used to be. This will discard all results and allow rewriting in any of the available data collections, keeping the modifications previously indicated.
 
@@ -181,7 +193,7 @@ You can also interact with the graph through the tools provided by [Plotly](http
 - **Reset axes**: Returns the graph to its original view.
 - **Download plot as png**: Allows you to download the graph in PNG format. Clicking the button will open a new tab with the generated image. To download it, right click on the image and select *Save image as*.
 
-#### Extra information about models
+#### Extra information
 
 Some model information can be added in the tool to support the understanding of the prediction results. If configured, this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
 
@@ -253,8 +265,8 @@ In the Models tab, the list of models already configured (if any) and a section 
 Clicking on the _Add new model_ section will display a blank form that allows you to define a new model. 
 
 The basic configuration of the model has the following fields:
-- **ID** (required): Identifier of the model (it will be shown as main text in the selector of step 1).
-- **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of step 1).
+- **ID** (required): Identifier of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
+- **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
 - **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab.
 - **Extra info** (optional): Query that allows to add extra information to the models. This must be configured in its corresponding tab.
 - **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the corresponding section.
