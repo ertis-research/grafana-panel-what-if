@@ -3,6 +3,7 @@ import { IData, IDataCollection, IInterval, IModel, IResult, ITag, IntervalTypeE
 import { idDefault, idNew } from "../constants";
 import { IntervalDefault } from "../default";
 import { DateTime, dateTime } from "@grafana/data";
+import { getMean } from "utils/utils";
 
 const compare = (a: IData, b: IData) => {
     if ((a.new_value !== undefined && b.new_value === undefined)
@@ -30,7 +31,7 @@ export const dataToCSV = (collection: IDataCollection) => {
 
         _def = {
             ..._def,
-            [d.id]: d.default_value
+            [d.id]: d.raw_values
         }
 
         _new = {
@@ -40,7 +41,7 @@ export const dataToCSV = (collection: IDataCollection) => {
     })
 
 
-    console.log("COLECCION?", collection)
+    //console.log("COLECCION?", collection)
 
     if (collection.results !== undefined) {
         const def = collection.results.find((r: IResult) => r.id == idDefault)
@@ -56,7 +57,7 @@ export const dataToCSV = (collection: IDataCollection) => {
             ..._new
         }
 
-        console.log("AAA", "collection.results")
+        //console.log("AAA", "collection.results")
         collection.results.filter((r: IResult) => r.correspondsWith !== undefined).forEach((r: IResult, idx: number) => {
             if (r.correspondsWith && r.correspondsWith.intervalValue !== 0) {
                 const id: string = r.correspondsWith.tag + " " + ((r.correspondsWith.intervalValue < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.intervalValue) + ((collection.interval.type === IntervalTypeEnum.percentage) ? "%" : "")
@@ -65,7 +66,7 @@ export const dataToCSV = (collection: IDataCollection) => {
                     _RESULT: r.result
                 }
 
-                Object.entries(r.data).forEach(([key, value]: [key: string, value: number]) => {
+                Object.entries(r.data).forEach(([key, value]: [key: string, value: number|number[]]) => {
                     row = {
                         ...row,
                         [key]: ((r.correspondsWith && r.correspondsWith.tag == key) || value !== _def[key]) ? value : ""
@@ -138,7 +139,7 @@ export const getDateTimeCSV = (csv: string[][]): DateTime | undefined => {
     const comment: string[] | undefined = csv.find((v: string[]) => v.length > 0 && v.join("").replace(/ /g, '').toUpperCase().startsWith('#DATETIME:'))
     if (comment != undefined && comment.length > 0) {
         const dt: string = comment.join("").toUpperCase().replace(/ /g, '').replace("#DATETIME:", "").trim()
-        console.log("getDateTime", dt)
+        //console.log("getDateTime", dt)
         const timestamp = Date.parse(dt)
         if (!isNaN(timestamp)) return dateTime(timestamp)
     }
@@ -168,9 +169,14 @@ export const CSVtoData = (csv: string[][], model: IModel): IData[] => {
 
         ids.forEach((d: string, idx: number) => {
             if (model.tags.some((t: ITag) => t.id == d)) {
+                let raw_values:number[] = []
+                if (def[idx].trim() != "") {
+                    raw_values = def[idx].split(",").map((v:string) => Number(v))
+                }
                 fileData.push({
                     id: d,
-                    default_value: (def[idx].trim() != "") ? Number(def[idx]) : undefined,
+                    default_value: getMean(raw_values),
+                    raw_values: raw_values,
                     new_value: (nw && nw[idx].trim() != "") ? nw[idx] : undefined,
                     set_percentage: (interval) ? interval[idx] == "YES" : undefined
                 })

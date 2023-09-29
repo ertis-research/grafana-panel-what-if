@@ -3,11 +3,15 @@
 }
 
 .fullWidthChildren div * :not([class$='addon']) {
-    width: 100.6%;
+    width: 100%;
 }
 
 .fullWidthChildren div * [class$='button'] * {
     width: min-content;
+}
+
+.timePicker span {
+    display: flex !important
 }
 
 .noSpaceTop {

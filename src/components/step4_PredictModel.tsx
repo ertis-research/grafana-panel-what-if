@@ -1,6 +1,6 @@
 import { Button, HorizontalGroup, IconButton, Modal, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, round } from 'utils/utils'
+import { Context, dateTimeLocalToString, getMean, round } from 'utils/utils'
 import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/datasources/predictions'
@@ -63,7 +63,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     const onClickPredictHandle = () => {
         if (validate()) {
-            console.log("COLLECTIONS PREDICT", collections)
+            //console.log("COLLECTIONS PREDICT", collections)
             if (model) {
                 setState(StatePredict.LOADING)
                 predictAllCollections(model, collections).then((res: IDataCollection[]) => {
@@ -89,8 +89,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const setDecimals = (value: any) => {
-        if (!value || typeof value !== 'number' || !context.options.decimals) return value
-        return round(value, context.options.decimals)
+        if (!value || typeof value !== 'number' || !model || !model.decimals) return value
+        return round(value, model.decimals)
     }
 
     useEffect(() => {
@@ -114,8 +114,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 height: context.height - divHeaders.offsetHeight - divResultsBase.offsetHeight - 41.5,//- 47,
                 width: (divResults.offsetWidth < context.width) ? divResults.offsetWidth : context.width
             })
-            console.log('width', divResults.offsetWidth)
-            console.log('height', divHeaders.offsetHeight + divResultsBase.offsetHeight)
+            //console.log('width', divResults.offsetWidth)
+            //console.log('height', divHeaders.offsetHeight + divResultsBase.offsetHeight)
         }
     }, [context.width, context.height, state, currentCollIdx, isCollapseExtraInfo])
 
@@ -130,22 +130,22 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             if (results.length < 1) return <div></div>
 
             const tagsGroup: { [tag: string]: IResult[] } = groupBy(results, "tag")
-            console.log("tagGroup", tagsGroup)
+            //console.log("tagGroup", tagsGroup)
 
             const dataArray: any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
                 // No pongo la x global por si alguna falla que no se rompa toda la grafica
                 var values_x: number[] = [], values_y: number[] = [], text: number[] = []
                 resultsOfTag.forEach((r: IResult) => {
                     if (r.result != undefined && r.result != 'ERROR'
-                        && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined) {
+                        && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined && typeof r.result === 'number') {
                         values_x.push(r.correspondsWith.intervalValue)
                         values_y.push(r.result)
-                        text.push(setDecimals(r.data[r.correspondsWith.tag]))
+                        text.push(setDecimals(getMean(r.data[r.correspondsWith.tag])))
                     }
                 })
 
                 values_y = values_y.map((v: number) => setDecimals(v))
-                console.log("text", text)
+                //console.log("text", text)
                 return {
                     x: values_x,
                     y: values_y,
@@ -155,7 +155,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 }
             })
 
-            console.log('dataArrayPLOT', dataArray)
+            //console.log('dataArrayPLOT', dataArray)
 
             const layoutObj: Partial<Layout> = {
                 width: sizePlot.width,
@@ -195,7 +195,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 name: 'Download plot as png',
                 icon: Icons.camera,
                 click: async (gd: PlotlyHTMLElement) => {
-                    console.log("AAA")
+                    //console.log("AAA")
                     await toImage(gd, {
                         width: 900,
                         height: 900,
@@ -229,7 +229,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             const def = col.results.find((r: IResult) => r.id == idDefault)
             if (def) res = <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%', marginRight: '10px' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.originalValue}</p>
-                <h1 style={{ textAlign: 'center' }}>{setDecimals(def.result)}</h1>
+                <h1 style={{ textAlign: 'center' }}>{(typeof def.result === 'number') ? setDecimals(def.result) : 'ERROR'}</h1>
             </div>
         }
         return res
@@ -241,7 +241,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             const nw = col.results.find((r: IResult) => r.id == idNew)
             if (nw) res = <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.newValue}</p>
-                <h1 style={{ textAlign: 'center' }}>{setDecimals(nw.result)}</h1>
+                <h1 style={{ textAlign: 'center' }}>{(typeof nw.result === 'number') ? setDecimals(nw.result) : 'ERROR'}</h1>
             </div>
         }
         return res
@@ -252,8 +252,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         Object.entries(extraInfo).map(([key, value]) => {
             if (isDateTime(value)) {
                 value = dateTimeLocalToString(value)
-            } else if (!isNaN(value) && context.options.decimals) {
-                value = round(value, context.options.decimals)
+            } else if (!isNaN(value) && model != undefined && model.decimals) {
+                value = round(value, model.decimals)
             }
             res.push(<div className='wrap-elipsis' title={key + ": " + value}>{key + ": " + value}</div>)
         })
@@ -280,7 +280,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             if (col.extraInfo && Object.keys(col.extraInfo).length > 0) {
                 return <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', marginTop: '10px', width: '100%' }}>
                     <HorizontalGroup align='center'>
-                        <IconButton variant='secondary' name={(isCollapseExtraInfo) ? 'angle-right' : 'angle-down'} onClick={() => setIsCollapseExtraInfo(!isCollapseExtraInfo)} style={{ marginRight: '0px', paddingRight: '0px' }} />
+                        <IconButton aria-label='t' variant='secondary' name={(isCollapseExtraInfo) ? 'angle-right' : 'angle-down'} onClick={() => setIsCollapseExtraInfo(!isCollapseExtraInfo)} style={{ marginRight: '0px', paddingRight: '0px' }} />
                         <div style={{ color: theme.colors.text.secondary, marginLeft: '0px' }}>{msgs.extraInfo}</div>
                     </HorizontalGroup>
                     {(!isCollapseExtraInfo) ? <div style={{ marginTop: '2px' }}>{processExtraInfo(col.extraInfo)}</div> : <div></div>}

@@ -28,12 +28,12 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
     const handleOnClickAddTag = () => {
         const updated = [...currentTags, Object.assign({}, TagDefault)]
         setCurrentTags(updated)
-        console.log("OnClickAddTag")
+        //console.log("OnClickAddTag")
     }
 
     useEffect(() => {
-        console.log("AAA")
-        console.log(currentTags)
+        //console.log("AAA")
+        //console.log(currentTags)
     }, [currentTags])
     
     const tagsForm = <div>
@@ -73,7 +73,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
             </div>)
         }}
         </Form>
-        <Button type="submit" form="tagsForm" variant='secondary' disabled={disabled}>Add tag</Button> 
+        <Button type="submit" form="tagsForm" variant='secondary' disabled={disabled}>Add tag</Button>
     </div>
     
     const tagsJson = <CodeEditor 
@@ -81,7 +81,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled=false }:Props) 
         value={JSON.stringify(currentTags, undefined, 4)}
         height={200}
         onBlur={(c) => {
-            console.log(c)
+            //console.log(c)
             setCurrentTags(JSON.parse(c))
         }}
         showLineNumbers={true}

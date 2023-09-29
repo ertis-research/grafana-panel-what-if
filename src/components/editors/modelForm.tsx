@@ -1,12 +1,14 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { ICredentials, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Button, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { FormatTags, ICredentials, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
+import { Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
 import { Mode } from 'utils/constants';
 import { css } from '@emotion/css';
+import { getOptionsVariable } from 'utils/datasources/grafana';
+import { getTemplateSrv } from '@grafana/runtime';
 
 interface Props {
     model: IModel,
@@ -19,6 +21,8 @@ interface Props {
 export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFunction, mode, context }) => {
 
     const methodList: ISelect[] = enumToSelect(Method)
+    const OptionsVariable: ISelect[] = getOptionsVariable(getTemplateSrv())
+    const OptionsFormatTags: ISelect[] = enumToSelect(FormatTags)
 
     const [rnd, setRnd] = useState<number>()
     const [currentModel, setCurrentModel] = useState<IModel>(ModelDefault)
@@ -27,11 +31,16 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const [selectedQuery, setSelectedQuery] = useState<SelectableValue<string>>()
     const [selectedExtraInfo, setSelectedExtraInfo] = useState<SelectableValue<string>>()
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<IFormat>>()
+    const [selectedVarTime, setSelectedVarTime] = useState<SelectableValue<string>>()
+    const [selectedVarTags, setSelectedVarTags] = useState<SelectableValue<string>>()
+    const [selectedQuotesListItems, setSelectedQuotesListItems] = useState<SelectableValue<string>>({ label:FormatTags.None, value: FormatTags['None'] })
     const [queryOptions, setQueryOptions] = useState<ISelect[]>([])
     const [formatOptions, setFormatOptions] = useState<ISelect[]>([])
     const [code, setCode] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
     const [scaler, setScaler] = useState("")
+    const [listValues, setListValues] = useState<boolean>(false)
+    const [transposeList, setTransposeList] = useState<boolean>(false)
 
     const updateCurrentState = () => {
         setCurrentModel(model)
@@ -40,8 +49,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setSelectedQuery({ label: model.queryId, value: model.queryId })
         if (model.extraInfo !== undefined) setSelectedExtraInfo({ label: model.extraInfo, value: model.extraInfo })
         if (model.format != undefined) setSelectedFormat({ label: model.format.id, value: model.format })
+        setSelectedVarTags({ label: model.varTags, value: model.varTags })
+        setSelectedVarTime({ label: model.varTime, value: model.varTime })
+        setSelectedQuotesListItems({ label: model.formatTags, value: model.formatTags})
         setCode((model.preprocess) ? model.preprocess : "")
         setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
+        setListValues(model.isListValues)
+        setTransposeList(model.isTransposeList)
     }
 
 
@@ -72,12 +86,18 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             method: selectedMethod?.value,
             queryId: selectedQuery?.value,
             extraInfo: selectedExtraInfo?.value,
+            varTime: selectedVarTime?.value,
+            varTags: selectedVarTags?.value,
+            formatTags: selectedQuotesListItems?.value,
             format: selectedFormat?.value,
             preprocess: code,
-            credentials: credentials
+            credentials: credentials,
+            isListValues: listValues,
+            isTransposeList: transposeList
         }
         if (scaler.trim() != "") newModel.scaler = JSON.parse(scaler)
-        console.log(newModel)
+        //console.log(newModel)
+        console.log("New model", newModel)
         updateFunction(newModel)
         if (mode == Mode.EDIT) {
             setDisabled(true)
@@ -86,7 +106,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             setCode("")
             setScaler("")
         }
-        console.log("SUBMIT ADD")
+        //console.log("SUBMIT ADD")
     }
 
     const handleOnClickEdit = () => {
@@ -96,7 +116,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const handleOnClickCancel = () => {
         updateCurrentState()
         setDisabled(true)
-        console.log("cancel")
+        //console.log("cancel")
     }
 
     const handleOnConfirmDeleteModel = () => {
@@ -104,7 +124,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     }
 
     const checkValueField = (value?: string) => {
-        console.log("valueField", value != undefined && value.trim() != "")
+        //console.log("valueField", value != undefined && value.trim() != "")
         return value != undefined && value.trim() != ""
     }
 
@@ -134,6 +154,10 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             setFormatOptions([])
         }
     }, [context.options.formats])
+
+    const checkVariableIsInvalid = (var1:any, var2:any) : boolean => {
+        return var1 == undefined || (var1 != undefined && var1.value != undefined && var1.value == var2?.value)
+    }
 
     const buttonEdit = () => {
         if (mode == Mode.CREATE) {
@@ -169,36 +193,6 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     <InlineField label="Description" labelWidth={10} disabled={disabled} grow>
                         <Input {...register("description", { required: false })} disabled={disabled} value={currentModel.description} onChange={handleOnChangeModel} />
                     </InlineField>
-                    <InlineField label="Query" labelWidth={10} required disabled={disabled} grow>
-                        <InputControl
-                            render={({ field }) =>
-                                <Select
-                                    value={selectedQuery}
-                                    options={queryOptions}
-                                    onChange={(v) => setSelectedQuery(v)}
-                                    disabled={disabled}
-                                    menuPosition='fixed'
-                                />
-                            }
-                            control={control}
-                            name="query"
-                        />
-                    </InlineField>
-                    <InlineField label="Extra info" labelWidth={10} disabled={disabled} grow>
-                        <InputControl
-                            render={({ field }) =>
-                                <Select
-                                    value={selectedExtraInfo}
-                                    options={queryOptions}
-                                    onChange={(v) => setSelectedExtraInfo(v)}
-                                    disabled={disabled}
-                                    menuPosition='fixed'
-                                />
-                            }
-                            control={control}
-                            name="extraInfo"
-                        />
-                    </InlineField>
                     <InlineField label="Format" labelWidth={10} required disabled={disabled} grow>
                         <InputControl
                             render={({ field }) =>
@@ -214,9 +208,113 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                             name="format"
                         />
                     </InlineField>
-                    <Collapse label="Connection with model" collapsible={false} isOpen={true} className={css({color: useTheme2().colors.text.primary})}>
+                    <InlineField label="Decimals" labelWidth={10} disabled={disabled} grow>
+                        <Input {...register("decimals")} disabled={disabled} value={currentModel.decimals} onChange={handleOnChangeModel} type='number' />
+                    </InlineField>
+                    <Collapse label="Model queries" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
+                        <p style={{ marginBottom:'5px', marginTop:'5px'}}>Import data query</p>
+                        <InlineField label="Query" labelWidth={20} required disabled={disabled} grow>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedQuery}
+                                        options={queryOptions}
+                                        onChange={(v) => setSelectedQuery(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="query"
+                            />
+                        </InlineField>
+                        <InlineField label="Tags column" labelWidth={20} grow disabled={disabled} required>
+                            <Input {...register("columnTag")} disabled={disabled} required value={currentModel.columnTag} onChange={handleOnChangeModel} />
+                        </InlineField>
+                        <InlineField label="Values column" labelWidth={20} grow disabled={disabled} required>
+                            <Input {...register("columnValue")} disabled={disabled} required value={currentModel.columnValue} onChange={handleOnChangeModel} />
+                        </InlineField>
+                        <InlineField label="Returns a list of values" labelWidth={20} disabled={disabled} grow style={{ display: 'flex', alignItems: 'center'}}>
+                            <Checkbox {...register("listValues")} disabled={disabled} value={listValues} onChange={() => setListValues(!listValues)}/>
+                        </InlineField>
+                        <InlineField label="Transpose values table" labelWidth={20} disabled={disabled || !listValues} grow style={{ display: 'flex', alignItems: 'center'}}>
+                            <Checkbox {...register("transposeList")} disabled={disabled || !listValues} value={transposeList} onChange={() => setTransposeList(!transposeList)}/>
+                        </InlineField>
+                        <InlineField label="Fixed number of values" labelWidth={20} disabled={disabled || !listValues} grow>
+                            <Input {...register("numberOfValues")} disabled={disabled || !listValues} value={currentModel.numberOfValues} onChange={handleOnChangeModel} type='number' />
+                        </InlineField>
+                        <p style={{ marginBottom:'5px', marginTop:'15px'}}>Extra info query</p>
+                        <InlineField label="Extra info" labelWidth={20} disabled={disabled} grow>
+                            <InputControl
+                                render={({ field }) => 
+                                    <Select
+                                        value={selectedExtraInfo}
+                                        options={queryOptions}
+                                        onChange={(v) => setSelectedExtraInfo(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="extraInfo"
+                            />
+                        </InlineField>
+                        <InlineField label="Names column" labelWidth={20} grow disabled={disabled}>
+                            <Input {...register("columnNameExtraInfo")} disabled={disabled} required value={currentModel.columnNameExtraInfo} onChange={handleOnChangeModel} />
+                        </InlineField>
+                        <InlineField label="Values column" labelWidth={20} grow disabled={disabled}>
+                            <Input {...register("columnValueExtraInfo")} disabled={disabled} required value={currentModel.columnValueExtraInfo} onChange={handleOnChangeModel} />
+                        </InlineField>
+                        <p style={{ marginBottom:'5px', marginTop:'15px'}}>Variables</p>
+                        <InlineField label="Variable time" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTime, selectedVarTags)} error={"Variables have to be different"}>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedVarTime}
+                                        options={OptionsVariable}
+                                        onChange={(v) => setSelectedVarTime(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="varTime"
+                            />
+                        </InlineField>
+                        <InlineField label="Variable tags" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTags, selectedVarTime)} error={"Variables have to be different"}>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedVarTags}
+                                        options={OptionsVariable}
+                                        onChange={(v) => setSelectedVarTags(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="varTags"
+                            />
+                        </InlineField>
+                        <InlineField label="Quotes for list" labelWidth={20} required disabled={disabled} grow>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedQuotesListItems}
+                                        options={OptionsFormatTags}
+                                        onChange={(v) => setSelectedQuotesListItems(v)}
+                                        disabled={disabled}
+                                        defaultValue={{ label: FormatTags.None, value: FormatTags.None }}
+                                    />
+                                }
+                                control={control}
+                                name="formatTags"
+                            />
+                        </InlineField>
+                    </Collapse>
+                    <Collapse label="Connection with model" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         <InlineFieldRow>
-                            <InlineField label="Method" labelWidth={9} required disabled={disabled}>
+                            <InlineField label="Method" labelWidth={10} required disabled={disabled}>
                                 <InputControl
                                     render={({ field }) =>
                                         <Select
@@ -252,10 +350,10 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             )
         }}
         </Form>
-        <ControlledCollapse label="Model input tags" collapsible isOpen={false} className={css({color: useTheme2().colors.text.primary})}>
+        <ControlledCollapse label="Model input tags" collapsible isOpen={false} className={css({ color: useTheme2().colors.text.primary })}>
             <TagsForm currentTags={currentTags} setCurrentTags={setCurrentTags} disabled={disabled} />
         </ControlledCollapse>
-        <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false} className={css({color: useTheme2().colors.text.primary})}>
+        <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false} className={css({ color: useTheme2().colors.text.primary })}>
             <InlineField label='Scaler' labelWidth={12} disabled={disabled} grow>
                 <div style={{ width: '100%' }}>
                     <CodeEditor

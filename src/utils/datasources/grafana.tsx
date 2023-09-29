@@ -1,7 +1,8 @@
 import { DataFrame, PanelData, TypedVariableModel, dateTime } from "@grafana/data"
 import { LocationService, TemplateSrv } from "@grafana/runtime"
-import { ISelect } from "../types"
+import { IData, ISelect } from "../types"
 import moment from "moment"
+import { getMean } from "utils/utils"
 
 export const checkIfVariableExists = (templateSrv: TemplateSrv, id?: string) => {
     const dashboard_variables: TypedVariableModel[] = templateSrv.getVariables().filter(item => item.type === 'constant')
@@ -41,6 +42,43 @@ const applyType = (value: any) => {
     } else {
         return String(value)
     }
+}
+
+export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: string, isListValues:boolean, hasSpecificNumberOfValues?: number) => {
+    let res: IData[] = []
+    const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId == idQuery)
+    if (serieData) {
+        const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
+        if (fieldTagData && fieldTagData.values.length > 0) {
+            const allValues = serieData.fields.filter((field) => field.name != fieldTag)
+            const arrValues = fieldTagData.values
+            if(arrValues != null && arrValues != undefined) {
+                arrValues.toArray().forEach((d: string, idx: number) => {
+                    let values: number[] = []
+                    allValues.forEach((field) => {
+                        values.push(field.values.get(idx))
+                    })
+                    let mean = getMean(values)
+                    if (isListValues && hasSpecificNumberOfValues != undefined && hasSpecificNumberOfValues > 0) {
+                        values = values.map((v) => (v == null) ? mean : v)
+                        if (values.length < hasSpecificNumberOfValues) {
+                            values = values.concat(Array(values.length-hasSpecificNumberOfValues).fill(null))
+                        } else if (values.length > hasSpecificNumberOfValues) {
+                            values = values.slice(0, hasSpecificNumberOfValues)
+                        }
+                    } 
+                    res.push({
+                        id: d,
+                        raw_values: values,
+                        default_value: mean
+                    })
+                })
+            }
+            
+        }
+    }
+    console.log("Datos cargados", res)
+    return res
 }
 
 export const getExtraInfo = (data: PanelData, idQuery: string, fieldName: string, fieldValue: string) => {

@@ -1,4 +1,4 @@
-import { Button, useTheme2, VerticalGroup } from '@grafana/ui'
+import { Button, useTheme2 } from '@grafana/ui'
 import React, { useContext } from 'react'
 import { Steps } from 'utils/constants'
 import { dataToCSV } from 'utils/datasources/csv'
@@ -26,7 +26,7 @@ export const ExportData: React.FC<Props> = ({model, collections, currentCollecti
 
     const handleOnClickDownloadData = () => {
         if(currentCollection){
-            console.log("CURRENTCOL", currentCollection)
+            //console.log("CURRENTCOL", currentCollection)
             saveAs(dataToCSV(currentCollection), (currentCollection.id + ".csv").replace(/ /g, '_'))
         }
     }
@@ -36,8 +36,8 @@ export const ExportData: React.FC<Props> = ({model, collections, currentCollecti
     return <div style={{backgroundColor:theme.colors.background.secondary, padding:'10px', display: 'block'}}>
         <p style={{color:theme.colors.text.secondary, paddingBottom:'0px', marginBottom: '2px'}}>{context.messages._panel.step} 5</p>
         <h4>{msgs.exportData}</h4>
-        <VerticalGroup justify='center' style={{ margin: '0px', padding: '0px' }}>
-            <Button fullWidth disabled={disabled_data} onClick={handleOnClickDownloadData} title={msgs.tooltipButton} tooltipPlacement='auto'>{text_button}</Button>
-        </VerticalGroup>
+        <div style={{ margin: '0px', padding: '0px', width: '100%', display: 'block', justifyContent: 'center' }}>
+        <Button style={{ whiteSpace: 'normal', width: '100%', wordWrap: 'break-word', wordBreak: 'break-all', textAlign: 'center'}} fullWidth disabled={disabled_data} onClick={handleOnClickDownloadData} title={msgs.tooltipButton} tooltipPlacement='auto'>{text_button}</Button>
+        </div>
     </div>
 }

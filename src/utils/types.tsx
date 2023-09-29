@@ -8,9 +8,9 @@ export enum Language {
 }
 
 export enum FormatTags {
-  DoubleQuotes = 'dq',
-  SingleQuotes = 'sq',
-  None = 'none'
+  None = 'None',
+  dq = 'Double quotes',
+  sq = 'Single quotes'
 }
 
 export enum Method {
@@ -26,7 +26,7 @@ export enum IntervalTypeEnum {
 }
 
 export interface IDataPred {
-  [key: string]: number
+  [key: string]: number[]
 }
 
 export interface ISelect {
@@ -65,6 +65,7 @@ export interface IDataCollection {
 export interface IData {
   id: string,
   default_value?: number,
+  raw_values?: number[],
   new_value?: string,
   set_percentage?: boolean
 }
@@ -73,7 +74,7 @@ export interface IResult {
   id: string,
   data: IDataPred,
   processedData?: IDataPred,
-  result?: number | 'ERROR'
+  result?: number | string,
   correspondsWith?: {
     tag: string,
     intervalValue: number
@@ -100,7 +101,18 @@ export interface IModel {
   preprocess?: string,
   scaler?: IScaler,
   format?: IFormat,
-  extraInfo?: string
+  extraInfo?: string,
+  varTags: string,
+  formatTags: FormatTags,
+  varTime: string,
+  decimals?: number,
+  columnTag: string,
+  columnValue?: string,
+  columnNameExtraInfo: string,
+  columnValueExtraInfo: string,
+  numberOfValues?: number
+  isListValues: boolean
+  isTransposeList: boolean
 }
 
 export interface IFormat {
@@ -124,15 +136,7 @@ export interface ICSVScheme {
 export interface Options {
   language: Language,
   models: IModel[],
-  varTags: string,
-  formatTags: FormatTags,
-  varTime: string,
-  formats: IFormat[],
-  decimals?: number,
-  columnTag: string,
-  columnValue: string,
-  columnNameExtraInfo: string,
-  columnValueExtraInfo: string
+  formats: IFormat[]
 }
 
 export type IInterval = {

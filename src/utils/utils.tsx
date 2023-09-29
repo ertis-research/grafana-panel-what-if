@@ -39,15 +39,15 @@ export const collectionsToSelect = (collections: IDataCollection[]): ISelect[] =
 }
 
 export const enumToSelect = (e: any) => {
-  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value }))
+  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
 }
 
 export const tagsToString = (tags: ITag[], format: FormatTags) => {
   const onlyIds: string[] = tags.map((item: ITag) => item.id)
   switch (format) {
-    case FormatTags.DoubleQuotes:
+    case FormatTags.dq:
       return '"' + onlyIds.join('", "') + '"'
-    case FormatTags.SingleQuotes:
+    case FormatTags.sq:
       return "'" + onlyIds.join("', '") + "'"
     default:
       return onlyIds.join(', ')
@@ -66,7 +66,7 @@ export const disabledByJS = (disabled: boolean, id: string, document: any) => {
       for (let i = 0; i < children.length; i++) {
         const child = children.item(i) as any
         if (child && (child.tagName.toLowerCase() === "input" || child.tagName.toLowerCase() === "button" || child.tagName.toLowerCase() === "textarea")) {
-          console.log("CHILD", child)
+          //console.log("CHILD", child)
           child.disabled = disabled
         }
       }
@@ -155,4 +155,13 @@ export const getValueByKeyAnyDepth = (obj: any, search: string) => {
 
 export const isEmpty = (obj: any) => {
   return Object.keys(obj).length === 0;
+}
+
+export const getMean = (list:number[]) : number => {
+  let newlist = list.filter((e) => e != null)
+  return (newlist.length > 0) ? newlist.reduce((previous, current) => current += previous)/newlist.length : -1 //Throw error
+}
+
+export const transposeMatrix = (matrix:number[][]) : number[][] => {
+  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));  
 }

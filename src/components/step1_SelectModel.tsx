@@ -15,7 +15,7 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     const theme = useTheme2();
     const context = useContext(Context);
 
-    const disabled = (context.actualStep) ? context.actualStep > Steps.step_3 : false
+    const disabled = (context.actualStep) ? context.actualStep > Steps.step_2 : false
 
     const [value, setValue] = useState<SelectableValue<number>>()
     const [modelsOptions, setModelsOptions] = useState<ISelect[]>([])

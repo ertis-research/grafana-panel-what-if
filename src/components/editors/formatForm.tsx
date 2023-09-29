@@ -47,7 +47,7 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
             setCodeInput("")
             setCodeOutput("")
         }
-        console.log("SUBMIT ADD")
+        //console.log("SUBMIT ADD")
     }
 
     const handleOnClickEdit = () => {
@@ -57,7 +57,7 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
     const handleOnClickCancel = () => {
         updateCurrentState()
         setDisabled(true)
-        console.log("cancel")
+        //console.log("cancel")
     }
 
     const handleOnConfirmDeleteFormat = () => {
@@ -116,7 +116,7 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
                     value={codeInput}
                     height={200}
                     onBlur={(c) => {
-                        console.log(c)
+                        //console.log(c)
                         setCodeInput(c)
                     }}
                     showLineNumbers={true}
@@ -132,7 +132,7 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
                     value={codeOutput}
                     height={200}
                     onBlur={(c) => {
-                        console.log(c)
+                        //console.log(c)
                         setCodeOutput(c)
                     }}
                     showLineNumbers={true}

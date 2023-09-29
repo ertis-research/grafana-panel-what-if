@@ -6,9 +6,7 @@ import { Main } from './components/main';
 import './css/bootstrap-grid.css';
 import './css/grid.css';
 import './css/others.css';
-import { Options, FormatTags } from 'utils/types';
-import { getTemplateSrv } from '@grafana/runtime';
-import { getOptionsVariable } from 'utils/datasources/grafana';
+import { Options } from 'utils/types';
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
@@ -29,70 +27,6 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
           },
         ],
       }
-    }).addNumberInput({
-      path: 'decimals',
-      defaultValue: undefined,
-      name: 'Decimals',
-      category: ['General']
-    }).addSelect({
-      path: 'varTags',
-      description: 'Name of the query field that indicates the id to which the data refers.',
-      name: 'Variable tags',
-      defaultValue: undefined,
-      category: ['Queries'],
-      settings: {
-        options: OptionsVariable
-      }
-    }).addSelect({
-      path: 'varTime',
-      description: 'Name of the query field that indicates the id to which the data refers.',
-      name: 'Variable time',
-      defaultValue: undefined,
-      category: ['Queries'],
-      settings: {
-        options: OptionsVariable
-      }
-    }).addRadio({
-      path: 'formatTags',
-      defaultValue: 'dq',
-      name: 'Format for list of tags',
-      category: ['Queries'],
-      settings: {
-        options: [
-          {
-            value: FormatTags.DoubleQuotes,
-            label: 'Double quotes',
-          },
-          {
-            value: FormatTags.SingleQuotes,
-            label: 'Single quotes',
-          },
-          {
-            value: FormatTags.None,
-            label: 'None',
-          }
-        ],
-      }
-    }).addTextInput({
-      path: 'columnTag',
-      defaultValue: "tag",
-      name: 'Name of column containing tags',
-      category: ['Queries']
-    }).addTextInput({
-      path: 'columnValue',
-      defaultValue: "value",
-      name: 'Name of column containing values',
-      category: ['Queries']
-    }).addTextInput({
-      path: 'columnNameExtraInfo',
-      defaultValue: "name",
-      name: 'ExtraInfo - Name of column containing names',
-      category: ['Queries']
-    }).addTextInput({
-      path: 'columnValueExtraInfo',
-      defaultValue: "value",
-      name: 'ExtraInfo - Name of column containing values',
-      category: ['Queries']
     }).addCustomEditor({
       path: 'formats',
       id: 'formats',
@@ -107,5 +41,3 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
       editor: ModelEditor
     })
 })
-
-const OptionsVariable = getOptionsVariable(getTemplateSrv())

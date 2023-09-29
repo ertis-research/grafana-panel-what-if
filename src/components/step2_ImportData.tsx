@@ -1,12 +1,12 @@
-import { Button, DateTimePicker, Select, useTheme2, VerticalGroup } from '@grafana/ui'
+import { Button, DatePickerWithInput, Select, TimeOfDayPicker, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
 import { Context, dateTimeLocalToString, dateTimeToString, dateTimeToTimestamp, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IInterval, IModel } from 'utils/types'
-import { getExtraInfo, saveVariableValue } from 'utils/datasources/grafana'
-import { AppEvents, DataFrame, dateTime, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
+import { getArrayOfData, getExtraInfo, saveVariableValue } from 'utils/datasources/grafana'
+import { AppEvents, dateTime, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa, { ParseError } from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
-import { IntervalDefault } from 'utils/default'
+import { IntervalDefault, ModelDefault } from 'utils/default'
 import { getAppEvents, locationService } from '@grafana/runtime'
 import { CSVtoData, getDateTimeCSV, getIntervalCSV } from 'utils/datasources/csv'
 
@@ -22,15 +22,14 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const theme = useTheme2()
     const context = useContext(Context)
 
-    const fieldTag = context.options.columnTag 
-    const fieldValue = context.options.columnValue 
-    const fieldValueExtraInfo = context.options.columnValueExtraInfo
-    const fieldNameInfo = context.options.columnNameExtraInfo
+    const fieldTag = (model != undefined) ? model.columnTag : ModelDefault.columnTag
+    const fieldValueExtraInfo = (model != undefined) ? model.columnValueExtraInfo : ModelDefault.columnValueExtraInfo
+    const fieldNameInfo = (model != undefined) ? model.columnNameExtraInfo : ModelDefault.columnNameExtraInfo
 
     //const idFileUpload = "fileUpload"
     const idDateTimeSet = "dateTimeSet"
 
-    const [dateTimeInput, setDateTimeInput] = useState<DateTime>()
+    const [dateTimeInput, setDateTimeInput] = useState<DateTime>(dateTime())
     const [mode, setMode] = useState<SelectableValue<number>>(DefaultImportData(context.messages))
     const [selectedGrafanaVariable, setSelectedGrafanaVariable] = useState<SelectableValue<DateTime>>()
     const [fileCSV, setFileCSV] = useState<File>()
@@ -61,24 +60,6 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         if (context.actualStep != undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
     }
 
-    const getArrayOfData = (data: PanelData, idQuery: string) => {
-        let res: IData[] = []
-        const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId == idQuery)
-        if (serieData) {
-            const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
-            const fieldValueData = serieData.fields.find((field) => field.name == fieldValue)
-            if (fieldTagData && fieldValueData) {
-                fieldTagData.values.toArray().forEach((d: string, idx: number) => {
-                    res.push({
-                        id: d,
-                        default_value: fieldValueData.values.get(idx)
-                    })
-                })
-            }
-        }
-        return res
-    }
-
     // Para imitar el bug: añadir varias veces data del mismo tiempo, eliminarlos todos y añadir otro
     const importDataFromDateTime = (dt?: DateTime) => {
         if (dt != undefined && model != undefined) {
@@ -87,7 +68,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             //const indx = collections.findIndex((col: IDataCollection) => col.id.includes(timestamp))
             //if (indx < 0) {
             setHasToSaveNewData(dt)
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dt))
+            saveVariableValue(locationService, model.varTime, dateTimeToString(dt))
             /*} else {
                 var copyColData: IData[] = deepCopy(collections[indx].data)
                 copyColData = copyColData.map((d: IData) => { 
@@ -133,9 +114,27 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             })
         }
     }
-
+/*
     const handleOnChangeDateTime = (newDatetime: DateTime) => {
         setDateTimeInput(newDatetime)
+        console.log(dateTimeInput?.toISOString())
+    }*/
+
+    const handleOnChangeDate = (newDate: string|Date) => {
+        let newDateTime:Date = new Date(newDate)
+        let date:Date = dateTimeInput.toDate()
+        if(dateTimeInput.hour != undefined) newDateTime.setHours(date.getHours())
+        if(dateTimeInput.minute != undefined) newDateTime.setHours(date.getMinutes())
+        setDateTimeInput(dateTime(newDateTime))
+        console.log(dateTimeInput?.toISOString())
+    }
+
+    const handleOnChangeTime = (newTime: DateTime) => {
+        let date:Date = newTime.toDate()
+        let newDateTime = dateTimeInput.toDate()
+        newDateTime.setHours(date.getHours())
+        newDateTime.setMinutes(date.getMinutes())
+        setDateTimeInput(dateTime(newDateTime))
         console.log(dateTimeInput?.toISOString())
     }
 
@@ -152,7 +151,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }
 
     const handleOnClickAddData = () => {
-        console.log("addDATA")
+        //console.log("addDATA")
         switch (mode.value) {
             case ImportDataEnum.EXCEL:
                 importDataFromCSV()
@@ -195,8 +194,13 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
     }, [dateTimeInput])
 
+    /*
     useEffect(() => {
-        console.log("LLEGAN DATA")
+        handleOnChangeDateTime(dateTime())
+    }, [])*/
+
+    useEffect(() => {
+        console.log("Data received")
         if (hasToSaveNewData !== undefined 
             && (hasToSaveNewData === dateTimeInput || (selectedGrafanaVariable && hasToSaveNewData === selectedGrafanaVariable.value)) 
             && model != undefined 
@@ -206,7 +210,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                 console.log("Done")
                 console.log("Data", data)
                 let extraInfo = undefined
-                const arrayData = getArrayOfData(data, model.queryId)
+                const arrayData = getArrayOfData(data, model.queryId, fieldTag, model.isListValues, model.numberOfValues)
                 if(model && model.extraInfo !== undefined) extraInfo = getExtraInfo(data, model.extraInfo, fieldNameInfo, fieldValueExtraInfo)
                 if (arrayData.length > 0) {
                     addCollectionWithName(dateTimeToTimestamp(hasToSaveNewData).toString(), dateTimeLocalToString(hasToSaveNewData), "DateTime", arrayData, hasToSaveNewData, IntervalDefault, extraInfo)
@@ -224,7 +228,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                     payload: [data.error]
                 })
             }
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTime()))
+            saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
             setHasToSaveNewData(undefined)
         }
     }, [data])
@@ -257,12 +261,24 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         />
     */
 
-    const ImportDatetimeSet = <div id={idDateTimeSet} className='fullWidthChildren' style={{ width: '100%' }}>
-        <DateTimePicker
-            onChange={handleOnChangeDateTime}
-            date={dateTimeInput}
-            maxDate={new Date()}
+    const ImportDatetimeSet = <div style={{ width: '100%'}}>
+        <DatePickerWithInput 
+                onChange={handleOnChangeDate}
+                value={dateTimeInput?.toDate()}
+                maxDate={new Date()}
+                disabled={disabled}
+                className='fullWidth'
+                closeOnSelect
         />
+        <div className='timePicker fullWidth' style={{marginTop: '8px'}}>
+            <TimeOfDayPicker
+                onChange={handleOnChangeTime}
+                showSeconds={false}
+                value={dateTimeInput.local()}
+                size='auto'
+                disabled={disabled}
+            />
+        </div>
     </div>
 
     const ImportDatetimeVarGrafana =

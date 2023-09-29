@@ -166,7 +166,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             context.setActualStep(Steps.step_2)
             setSelectCollection(undefined)
             setcollectionsOptions([])
-            saveVariableValue(locationService, context.options.varTime, dateTimeToString(dateTime()))
+            if(model != undefined) saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
         }
         if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
             deleteCollection(collections[currentCollIdx].id)
@@ -201,7 +201,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 ...collections[currentCollIdx],
                 interval: interval
             })
-            if (interval.max != undefined && interval.min != undefined && interval.steps != undefined) {
+            if (interval.max != undefined && interval.min != undefined && interval.steps != undefined && interval.min < interval.max) {
                 setHasInterval(true)
             } else {
                 setHasInterval(false)

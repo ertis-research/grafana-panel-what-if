@@ -8,8 +8,9 @@ import { ExportData } from './step5_ExportData'
 import { Context, getMessagesByLanguage, tagsToString } from 'utils/utils'
 import { IContext, IDataCollection, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
-import { getTemplateSrv, locationService } from '@grafana/runtime'
-import { checkIfVariableExists, saveVariableValue } from 'utils/datasources/grafana'
+import { locationService } from '@grafana/runtime'
+import { saveVariableValue } from 'utils/datasources/grafana'
+import { ModelDefault } from 'utils/default'
 
 
 interface Props extends PanelProps<Options> { }
@@ -69,24 +70,25 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }, [collections])*/
 
   useEffect(() => {
-    console.log(data)
+    //console.log(data)
   }, [data])
 
   useEffect(() => {
-    console.log('currentCollIdx', currentCollIdx)
+    //console.log('currentCollIdx', currentCollIdx)
   }, [currentCollIdx])
 
+  /*
   useEffect(() => {
     if (options.varTags == options.varTime) throw new Error('Variable has to be different')
     checkIfVariableExists(getTemplateSrv(), options.varTags)
     checkIfVariableExists(getTemplateSrv(), options.varTime)
-  }, [options])
+  }, [options])*/
 
   useEffect(() => {
     if (selectedModel != undefined) {
-      saveVariableValue(locationService, options.varTags, tagsToString(selectedModel.tags, options.formatTags))
+      saveVariableValue(locationService, selectedModel.varTags, tagsToString(selectedModel.tags, selectedModel.formatTags))
     } else {
-      saveVariableValue(locationService, options.varTags, "")
+      saveVariableValue(locationService, ModelDefault.varTags, "")
     }
   }, [selectedModel])
 

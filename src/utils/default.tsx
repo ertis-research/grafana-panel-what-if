@@ -17,7 +17,16 @@ export const ModelDefault: IModel = {
     method: Method.POST,
     tags: [],
     format: FormatDefault,
-    preprocess: PreprocessCodeDefault
+    preprocess: PreprocessCodeDefault,
+    varTags: '',
+    varTime: '',
+    formatTags: FormatTags.None,
+    columnTag: "",
+    columnValue: "",
+    columnNameExtraInfo: "",
+    columnValueExtraInfo: "",
+    isListValues: false,
+    isTransposeList: false
 }
 
 export const TagDefault: ITag = {
@@ -33,14 +42,7 @@ export const ContextDefault: IContext = {
     options: {
         language: Language.English,
         models: [],
-        varTags: '',
-        varTime: '',
-        formatTags: FormatTags.DoubleQuotes,
-        formats: [],
-        columnTag: "tag",
-        columnValue: "value",
-        columnNameExtraInfo: "name",
-        columnValueExtraInfo: "value"
+        formats: []
     }
 }
 
