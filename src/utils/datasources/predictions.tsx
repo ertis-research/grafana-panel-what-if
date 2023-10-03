@@ -26,9 +26,9 @@ const predictData = async (model: IModel, dataCollection: IDataCollection) => {
             //console.log("preprocess", finalData)
         }
         if (model.scaler) {
-            console.log('Initial data - scaler', deepCopy(finalData))
+            console.log('Initial data - scaler', JSON.stringify(finalData))
             finalData = await applyScaler(model.scaler, finalData)
-            console.log('Final data - scaler', deepCopy(finalData))
+            console.log('Final data - scaler', JSON.stringify(finalData))
         }
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData: finalData }
@@ -100,7 +100,6 @@ const newDataToObject = (data: IData[], hasInterval: boolean, numberOfElements: 
     var res: IDataPred = {}
     data.forEach((d: IData) => {
         let vals =(d.raw_values) ? d.raw_values : []
-        console.log("A VER")
         if(d.new_value != undefined && !(hasInterval && d.set_percentage)) {
             vals = Array.from({ length: ((numberOfElements != undefined && numberOfElements > 0) ? numberOfElements : 1) }, () => Number(d.new_value))
         }
@@ -160,12 +159,12 @@ export const applyScaler = function (scaler: IScaler, data_dict: IDataPred) : ID
 export const applyPreprocess = async (code: string, data: IDataPred) => {
     if (code != PreprocessCodeDefault) {
         try {
-            console.log('Initial data - preprocess', data)
+            console.log('Initial data - preprocess', JSON.stringify(data))
             //var preprocess = new Function(code) // https://stackoverflow.com/a/9702401/16131308
             const sandbox = { data: data }
             var context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
             data = vm.runInContext(code, context)
-            console.log('Final data - preprocess', data)
+            console.log('Final data - preprocess', JSON.stringify(data))
         } catch (error) {
             //console.log(error)
             console.error("Preprocess failed")

@@ -52,8 +52,8 @@ export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: strin
         if (fieldTagData && fieldTagData.values.length > 0) {
             const allValues = serieData.fields.filter((field) => field.name != fieldTag)
             const arrValues = fieldTagData.values
-            if(arrValues != null && arrValues != undefined) {
-                arrValues.toArray().forEach((d: string, idx: number) => {
+            if(arrValues != null && arrValues != undefined && arrValues.length > 0) {
+                for(let idx = 0; idx < arrValues.length; idx++){
                     let values: number[] = []
                     allValues.forEach((field) => {
                         values.push(field.values.get(idx))
@@ -62,17 +62,17 @@ export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: strin
                     if (isListValues && hasSpecificNumberOfValues != undefined && hasSpecificNumberOfValues > 0) {
                         values = values.map((v) => (v == null) ? mean : v)
                         if (values.length < hasSpecificNumberOfValues) {
-                            values = values.concat(Array(values.length-hasSpecificNumberOfValues).fill(null))
+                            values = values.concat(Array(hasSpecificNumberOfValues-values.length).fill(null))
                         } else if (values.length > hasSpecificNumberOfValues) {
                             values = values.slice(0, hasSpecificNumberOfValues)
                         }
                     } 
                     res.push({
-                        id: d,
+                        id: arrValues.get(idx),
                         raw_values: values,
                         default_value: mean
                     })
-                })
+                }
             }
             
         }

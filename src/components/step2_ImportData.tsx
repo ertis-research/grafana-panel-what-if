@@ -122,9 +122,8 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
     const handleOnChangeDate = (newDate: string|Date) => {
         let newDateTime:Date = new Date(newDate)
-        let date:Date = dateTimeInput.toDate()
-        if(dateTimeInput.hour != undefined) newDateTime.setHours(date.getHours())
-        if(dateTimeInput.minute != undefined) newDateTime.setHours(date.getMinutes())
+        if(dateTimeInput.hour != undefined) newDateTime.setHours(dateTimeInput.hour())
+        if(dateTimeInput.minute != undefined) newDateTime.setMinutes(dateTimeInput.minute())
         setDateTimeInput(dateTime(newDateTime))
         console.log(dateTimeInput?.toISOString())
     }
