@@ -5,6 +5,7 @@
 <div align="center">
   
 ![Grafana 8.5.3](https://img.shields.io/badge/Grafana-8.0.0-orange)
+![Grafana 9.5.1](https://img.shields.io/badge/Grafana-9.0.0-orange)
 ![GitHub watchers](https://img.shields.io/github/watchers/ertis-research/whatif-panel-for-Grafana)
 ![GitHub Repo stars](https://img.shields.io/github/stars/ertis-research/whatif-panel-for-Grafana)
 
