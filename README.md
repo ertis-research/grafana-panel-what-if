@@ -256,8 +256,8 @@ In the general tab, you will find the options that are common to the whole panel
 - **Plugin language:** It is possible to change the language of the elements that make up the panel to English or Spanish. The default value is English. This will not affect the configuration section.
 
 #### Models
-
-**At least one AI/ML model must be configured in order to use the panel.** 
+> **Warning**
+> At least one AI/ML model must be configured in order to use the panel.
 
 In the Models tab, the list of models already configured (if any) and a section with the blue text to add a new one (_Add new model_) are displayed. This will always appear last in the list, after all the configured models. Clicking on any of these elements will display a form whose content will vary depending on whether it is a configured model or the section for adding a new model.
 
