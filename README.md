@@ -103,7 +103,7 @@ Several options are provided for entering model tag data. You can select a **spe
 
 At this point, it is possible to modify the values of the tags whose variation is to be analysed. To accomplish this, there are 3 options available:
 
-- **Modify values directly:** Each tag consists of two fields: the left one shows the value obtained when importing the data, while the right one is initially empty. If the right field is filled in, the prediction will consider this as the new value of the tag. We can modify as many tags as we want in this way and **the prediction will be done jointly**, i.e. assuming the change of all of them at the same time in the same prediction.
+- **Modify values directly:** Each tag consists of two fields: the left one shows the value obtained when importing the data, while the right one is initially empty. If the right field is filled in, the prediction will consider this as the new value of the tag. We can modify as many tags as we want in this way and **the prediction will be done jointly**, i.e. assuming the change of all of them at the same time in the same prediction. In case you are working with a model that receives a list of values, the left field will show the mean of all of them and the new value entered will be considered the new mean. The tool will automatically obtain a new list of values with respect to the new mean according to the weight that each value had in the original mean.
 
 - **Use intervals:** When a [interval](#interval-behaviour) of values has been correctly indicated, the checkbox to the right of the second field of each tag will be enabled. By ticking this box, you indicate your wish to analyse that tag with respect to the set range. It is possible to analyse more than one tag for comparison purposes. During the prediction, the values within the range will be applied, **in isolation**, to each selected tag, keeping the original value of the rest of the selected tags.
 
@@ -162,7 +162,7 @@ To define a range, the minimum (*min*), maximum (*max*) and *steps* fields at th
 
 For example, for an interval with minimum -2 and maximum 2 with steps of 1, the values -2, -1, 0, 1 and 2 shall be considered. If the division between the steps is not exact, counting shall start from the minimum and the maximum extreme shall be included. For example, for an interval with minimum -2 and maximum 3 with steps of 2, the values -2, 0, 2 and 3 shall be considered.
 
-The values of the interval will be applied to the original value by subtracting or adding as absolute values or percentages of it, as defined with the *Type* switch (blue indicates the selected option). In particular:
+The values of the interval will be applied to the original value by subtracting or adding as absolute values or percentages of it, as defined with the *Type* switch (blue indicates the selected option). In case of working with a model that receives a list of values, the mean of these values will be considered as the original value. In particular:
 
 - If the **percentages** (*%*) option is selected, the values shall be considered as percentages of the original value. If the percentage is negative it will be subtracted from the original value, while if it is positive it will be added.
 
@@ -177,7 +177,7 @@ When the interval is well defined, **its indicator will turn from red to green**
 
 The graph appears when predicting the results ([step 4](#step-4-predict-result)) when an interval (min ≥ max) is correctly defined and at least one tag is selected for analysis. 
 
-The X axis of the graph indicates the value subtracted or added to the original value of the tag, while the Y axis corresponds to the value returned by the prediction. The points that make up the lines are the predictions that have been made with the different values of the tag. In addition, each point not only indicates the pair (X, Y) to which it belongs but also the **specific value applied to that tag during the prediction**.
+The X axis of the graph indicates the value subtracted or added to the original value of the tag, while the Y axis corresponds to the value returned by the prediction. The points that make up the lines are the predictions that have been made with the different values of the tag. In addition, each point not only indicates the pair (X, Y) to which it belongs but also the **specific value applied to that tag during the prediction**. In case you are working with lists of values, this value will correspond to the mean of them.
 
 At the bottom, the legend of the graph is shown, indicating the colour of the line corresponding to each selected tag. 
 - If you click *only once on one of the tags*, it will be shown or hidden from the graph. 
@@ -213,7 +213,7 @@ The CSV file may start with two optional comments (preceded by #) which could be
 - The comment starting with **DateTime** indicates the time instant for which this data has been obtained.
 - The comment starting with **Interval** indicates the interval that has been defined in the tool. It will only appear if the interval is completely set (its indicator is green).
  
-After the comments, the first row marks the name of the CSV columns. The first column is ID, whose values will be used as row identifiers. Except for this and the *_RESULT* column, the rest will correspond to all the tags that enter the model, ordered in such a way that first those that have been modified with a fixed value are shown, then those that have been selected for analysis with interval, and then the rest of the tags.
+After the comments, the first row marks the name of the CSV columns. The first column is ID, whose values will be used as row identifiers. Except for this and the *_RESULT* column, the rest will correspond to all the tags that enter the model, ordered in such a way that first those that have been modified with a fixed value are shown, then those that have been selected for analysis with interval, and then the rest of the tags. If the model input is a list of values for each tag, all the values contained in the list will be indicated in their respective field separated by commas.
 
 On the other hand, except for the one identified with *_INTERVAL*, each row will correspond to a different prediction made to the model. The main ones are:
 
@@ -254,7 +254,6 @@ In case the missing data is **corrected** for all affected tags, the prediction 
 In the general tab, you will find the options that are common to the whole panel. Specifically, they are the following:
 
 - **Plugin language:** It is possible to change the language of the elements that make up the panel to English or Spanish. The default value is English. This will not affect the configuration section.
-- **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
 
 #### Models
 
@@ -268,9 +267,8 @@ Clicking on the _Add new model_ section will display a blank form that allows yo
 The basic configuration of the model has the following fields:
 - **ID** (required): Identifier of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
 - **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
-- **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab.
-- **Extra info** (optional): Query that allows to add extra information to the models. This must be configured in its corresponding tab.
 - **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the corresponding section.
+- **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
 
 Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
 - **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
@@ -302,13 +300,13 @@ Each tag can have the following information:
 Before sending the data to the model, it is possible to apply some [pre-processing](https://scikit-learn.org/stable/modules/preprocessing.html#preprocessing-data) to it. In particular, it is supported to apply a JavaScript code block and to apply scaling. **Neither is required and if both are defined, the JavaScript code will be applied first, followed by the scaling**.
 
 The JavaScript code must be included in the _Pre-process_ field and allows you to **perform preprocessing before sending the data to the model**. For example, it can be useful if one of the inputs of the model is the sum of several tags or if you want to modify the order of the list.
-This block will be executed in an sandbox and will receive as input a JSON object called _data_ whose key-value pairs will correspond to the identifier of each tag and its value to send to the model respectively. The output of the code should also be a _data_ object following the same scheme. For example, if the model had 3 tags the _data_ object both as input and output could correspond to:
+This block will be executed in an sandbox and will receive as input a JSON object called _data_ whose key-value pairs will correspond to the identifier of each tag and the list of its values to send to the model respectively. The output of the code should also be a _data_ object following the same scheme. For example, if the model had 3 tags and used 2 values for each tag, the _data_ object both as input and output could correspond to:
 
 ```json
 {
-  "01PHD.LMNN4001.PV": 0.43,
-  "01PHD.LMLC4028.PV": 0.23,
-  "01PHD.LMLC4401.PV": 0.10
+  "01PHD.LMNN4001.PV": [0.43, 0.32],
+  "01PHD.LMLC4028.PV": [0.23, 0.54],
+  "01PHD.LMLC4401.PV": [0.10, 0.90]
 }
 ```
 
@@ -333,6 +331,8 @@ With this data the following formula shall be applied, where _data_ is the list 
   <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/0f078160-817b-4c0f-aa51-5639b088c8cf" />
 </p>
 
+This formula obtains a new list of data by subtracting for each tag in the original list the value of mean at its same position and dividing the result by the value of scale at the same position. This is applied to each of the values that are related to each tag. For example, if we have in the second position of the _mean_ and _scale_ list the values 1 and 2, respectively, and in the second position of the data list the _TAG_ tag with a list of values [7, 7, 9], then in the new data list the values of the _TAG_ tag would be [3, 3, 4].
+
 #### Formats
 
 The IA/ML models will receive the list of values to predict within one schema and send the prediction result within another. These formats may coincide for several models, as they mainly depend on the service where they are hosted.
@@ -356,18 +356,29 @@ An example of a configured format is as follows:
 
 #### Data import queries
 
-The values of the tags of the model can be imported directly from one of the data sources configured in Grafana. To do this, a query must be constructed which, taking into account the list of tags in the model, performs the necessary calculations to obtain the input values at a specific time instant. This must return a table that relates each tag with its value. For example, a possible result would be:
+The values of the tags of the model can be imported directly from one of the data sources configured in Grafana. To do this, a query must be constructed which, taking into account the list of tags in the model, performs the necessary calculations to obtain the input values at a specific time instant. This must return a table that relates each tag with to at least one value. For example, a possible result would be:
 
 This query must be defined within the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration.
 
-In order to use the configured tag list and consider the time instant given by the user in the _Set datetime_ section, the query must include [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/variable-syntax/). These variables must be created in the dashboard configuration (not the panel configuration) and assigned in the corresponding fields in the _Queries_ section of the panel configuration:
+In order to use the configured tag list and consider the time instant given by the user in the _Set datetime_ section, the query must include [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/variable-syntax/). These variables must be created in the dashboard configuration (not the panel configuration) and assigned in the corresponding fields of the _Model queries_ section within the configuration of each model. Different models can have the same variables assigned without any problem, the important thing is that these variables correspond to the variables used by the selected query.
+
 - **Variable tags** (required): Dashboard variable to be replaced by the list of tags of the model. Within the query, this variable must be added where the list of identifiers from which information will be extracted is indicated.
-- **Format for list of tags** (required): Format to be used for the list of tags of the model when it is replaced in the query. This will correspond to the identifiers of the list separated by commas, being able to choose that each one is contained between double, single or no inverted commas.
+- **Quotes for list** (required): Format to be used for the list of tags of the model when it is replaced in the query. This will correspond to the identifiers of the list separated by inverted commas, being able to choose that each one is contained between double, single or none.
 - **Variable time** (required): Table variable to be replaced by the time instant in ISO 8601 UTC (e.g. 2023-03-01T13:46:58Z) selected by the user during the data import ([step 2](#step-2-import-data)) from date and time (_Set datetime_). Within the query, this variable must be added where the time instant at which the data will be extracted is indicated.
 
-On the other hand, in order to extract the data from the table, the name of the columns containing the information must be indicated:
-- **Name of column containing tags** (required): Name of the column containing the tag identifier.
-- **Name of column containing values** (required): Name of the column containing the tag value.
+On the other hand, in order to extract the query data, the name of the column containing the tag identifiers and the related values must be indicated. Each tag can have a single value or a list of them. If it is a list, it can have a defined or undefined number of values. In addition, if the model requires it, the output data can be transposed just before sending it.
+
+- **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab.
+- **Tags column** (required): Name of the column containing the tag identifier.
+- **Returns a list of values** (required): If checked, indicates that the model requires more than one column other than tags. If unchecked, it indicates that only one column is used. If it indicates that only one is required and the query returns more than one column, the first column other than tags will be taken and the rest will be discarded.
+- **Transpose values table** (optional): Allows to transpose the data matrix resulting from preprocessing and scaling just before sending it to the model.
+<p align="center">
+  <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/5487acdc-ce8c-45b1-b410-674aba0817e2"/>
+</p>
+
+- **Fixed number of values** (optional): Indicates the exact number of values that the list of each tag should have.
+  - If the field is empty, it means that the value is undefined, so the values of all columns will be extracted and null values will not be treated.
+  - If the field is filled with a number, the value lists of each tag will be exactly that length. If the number of columns returned by the query is greater than the given number N, the first N columns will be taken and the others will be discarded. If the number is less, as many null values will be added as necessary. In either case, the null values will be subsequently replaced by the average of the non-null values in the list.
 
 With this configuration, the tool will be able to replace the value of the dashboard variables with the appropriate ones and extract the information returned by the data source to be entered as original data in the tag list of the modification section ([step 3](#step-3-modify-data)).
 
@@ -380,8 +391,9 @@ This information must be contained in a query that can use the variables specifi
 > **Note**
 > If the value is an instant of time in ISO 8601 UTC the tool will automatically display it in **YYYYY-MM-DD HH:mm** format in local time.
 
-This query must be defined in the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration. On the other hand, in order to be able to extract the data from the table, the name of the columns containing the information must be indicated:
-- **ExtraInfo - Name of column containing names** (optional): Name of column containing the text that names and identifies the information.
-- **ExtraInfo - Name of column containing values** (optional): Name of the column containing the value of the identified information.
+This query must be defined in the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration, also indicating the name of the columns containing the information:
+- **Extra info** (optional): Query that allows to add extra information to the models. This must be configured in its corresponding tab.
+- **Names column** (optional): Name of column containing the text that names and identifies the information.
+- **Values column** (optional): Name of the column containing the value of the identified information.
  
 With this configuration, the tool will be able to extract the information returned by the data source to introduce it as extra information in a section within the prediction section ([step 4](#step-4-predict-result)).
