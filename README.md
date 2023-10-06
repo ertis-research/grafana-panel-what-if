@@ -46,7 +46,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 
 - [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
 - [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
-- [Grafana](https://grafana.com/) - version 8 (v8.5.3 has been used for development, but higher versions will be tested soon)
+- [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
 
 To compile and install the plugin, it is necessary to download the code from this repository. This can be achieved by cloning it using the following command:
 
