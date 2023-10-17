@@ -95,7 +95,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             isListValues: listValues,
             isTransposeList: transposeList
         }
-        if (scaler.trim() != "") newModel.scaler = JSON.parse(scaler)
+        newModel.scaler = (scaler.trim() != "") ? JSON.parse(scaler) : undefined
         //console.log(newModel)
         console.log("New model", newModel)
         updateFunction(newModel)

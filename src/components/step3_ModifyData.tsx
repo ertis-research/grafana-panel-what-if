@@ -206,6 +206,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             } else {
                 setHasInterval(false)
             }
+        } else {
+            setHasInterval(false)
         }
     }, [interval])
 
@@ -265,7 +267,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const tagField = (tag: ITag) => {
         const currentCol = (currentCollIdx != undefined && collections && currentCollIdx < collections.length) ? collections[currentCollIdx] : CollectionDefault
         const findRes = currentCol.data.find((d) => d.id == tag.id)
-        const data: IData = (findRes) ? findRes : { id: tag.id }
+        const data: IData = (findRes) ? findRes : { id: tag.id, set_percentage: false }
         return <div className='col-6 col-md-6 col-lg-6 col-xl-4'>
             <p className='noSpaceBottom id wrap-hidden' title={tag.id} style={{ color: theme.colors.text.secondary }}>{tag.id}</p>
             <p className="noSpaceBottom description wrap-hidden" title={tag.description} style={{ color: (data.default_value === undefined && data.new_value === undefined && currentCollIdx !== undefined) ? theme.colors.error.text : theme.colors.text.primary }}>{(tag.description) ? tag.description : <br />}</p>

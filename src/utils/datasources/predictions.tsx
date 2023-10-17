@@ -22,13 +22,15 @@ const predictData = async (model: IModel, dataCollection: IDataCollection) => {
     for (const [i, r] of results.entries()) {
         let finalData = deepCopy(r.data)
         if (model.preprocess) {
+            console.log('Initial data - preprocess', deepCopy(finalData))
             finalData = await applyPreprocess(model.preprocess, finalData)
+            console.log('Final data - preprocess', deepCopy(finalData))
             //console.log("preprocess", finalData)
         }
         if (model.scaler) {
-            console.log('Initial data - scaler', JSON.stringify(finalData))
+            console.log('Initial data - scaler', deepCopy(finalData))
             finalData = await applyScaler(model.scaler, finalData)
-            console.log('Final data - scaler', JSON.stringify(finalData))
+            console.log('Final data - scaler', deepCopy(finalData))
         }
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData: finalData }
@@ -56,7 +58,7 @@ const calculatePercentage = (percent: number, total: number) => {
 }
 
 const getListValuesFromNew = (newValue:number, mean:number, rawValues:number[]) : number[] => {
-    let weights = rawValues.map((r:number) => r/mean)       // Obtener PESOS
+    let weights = rawValues.map((r:number) => Math.abs(r)/Math.abs(mean))       // Obtener PESOS
     return weights.map((w:number) => w*newValue)            // Otener nuevos valores a partir del nuevo y los pesos
 }
 
@@ -66,15 +68,12 @@ const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number
         let newData = deepCopy(rawData)                 // Hago una copia del array de valores
         let new_value = -1                              
         if (intervalType == IntervalTypeEnum.percentage) {      // A partir de la media saco cada nuevo valor considerado en el intervalo
-            //const v = calculatePercentage(Math.abs(p), defData)
-            //newData[id] = (p < 0) ? defData - v : defData + v
-            const v = calculatePercentage(p, mean)
-            new_value = mean + ((mean < 0) ? -v : v)
+            const v = calculatePercentage(Math.abs(p), Math.abs(mean))
+            new_value = (p < 0) ? mean - v : mean + v
         } else {
             new_value = mean + p
         }
         newData[id] = getListValuesFromNew(new_value, mean, newData[id])   // A partir del nuevo valor obtenido saco la lista de valores necesarios
-        console.log("NEWDATA", newData)
 
         res.push({
             id: id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
@@ -101,7 +100,12 @@ const newDataToObject = (data: IData[], hasInterval: boolean, numberOfElements: 
     data.forEach((d: IData) => {
         let vals =(d.raw_values) ? d.raw_values : []
         if(d.new_value != undefined && !(hasInterval && d.set_percentage)) {
-            vals = Array.from({ length: ((numberOfElements != undefined && numberOfElements > 0) ? numberOfElements : 1) }, () => Number(d.new_value))
+            //vals = Array.from({ length: ((numberOfElements != undefined && numberOfElements > 0) ? numberOfElements : 1) }, () => Number(d.new_value))
+            if(vals.length > 0){
+                vals = getListValuesFromNew(Number(d.new_value), getMean(vals), vals)
+            } else {
+                vals = Array.from({ length: ((numberOfElements != undefined && numberOfElements > 0) ? numberOfElements : 1) }, () => Number(d.new_value))
+            }
         }
         res[d.id] = vals
         //res[d.id] = (isNew && !(hasInterval && d.set_percentage) && d.new_value != undefined) ? [Number(d.new_value)] : ((d.raw_values) ? d.raw_values : []) // Nunca deberia ser 0
@@ -159,12 +163,10 @@ export const applyScaler = function (scaler: IScaler, data_dict: IDataPred) : ID
 export const applyPreprocess = async (code: string, data: IDataPred) => {
     if (code != PreprocessCodeDefault) {
         try {
-            console.log('Initial data - preprocess', JSON.stringify(data))
             //var preprocess = new Function(code) // https://stackoverflow.com/a/9702401/16131308
             const sandbox = { data: data }
             var context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
             data = vm.runInContext(code, context)
-            console.log('Final data - preprocess', JSON.stringify(data))
         } catch (error) {
             //console.log(error)
             console.error("Preprocess failed")
