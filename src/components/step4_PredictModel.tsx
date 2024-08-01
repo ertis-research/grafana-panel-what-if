@@ -1,11 +1,10 @@
 import { Button, HorizontalGroup, IconButton, Modal, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, getMean, round } from 'utils/utils'
+import { Context, dateTimeLocalToString, getMean, round, groupBy } from 'utils/utils'
 import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
-import { groupBy } from 'utils/utils'
 import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
 import { getAppEvents } from '@grafana/runtime'
 import { AppEvents, isDateTime, PanelData } from '@grafana/data'
@@ -38,18 +37,18 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const disabledModifyAgain = (context.actualStep) ? context.actualStep < Steps.step_4 : false
 
     const validate = () => {
-        let msg: string = ""
+        let msg = ""
         if (model) {
             collections.forEach((col: IDataCollection) => {
-                let error_tags: string[] = col.data.filter((d: IData) => d.default_value == undefined && (d.new_value == undefined || d.new_value.trim() == "")).map((d: IData) => d.id)
-                error_tags = error_tags.concat(model.tags.filter((t: ITag) => !col.data.some((d: IData) => d.id == t.id)).map((t: ITag) => t.id))
+                let error_tags: string[] = col.data.filter((d: IData) => d.default_value === undefined && (d.new_value === undefined || d.new_value.trim() === "")).map((d: IData) => d.id)
+                error_tags = error_tags.concat(model.tags.filter((t: ITag) => !col.data.some((d: IData) => d.id === t.id)).map((t: ITag) => t.id))
                 if (error_tags.length > 0) {
                     msg = msg + "Data missing in " + col.name + ": " + error_tags.join(", ") + "\n"
                 }
             })
         }
 
-        if (msg == "") {
+        if (msg === "") {
             return true
         } else {
             const appEvents = getAppEvents();
@@ -94,7 +93,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     useEffect(() => {
-        if (state == StatePredict.LOADING) {
+        if (state === StatePredict.LOADING) {
             setState(StatePredict.DONE)
         }
     }, [collections])
@@ -126,7 +125,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     const showPlot = (col: IDataCollection) => {
         if (col.results) {
-            const results = col.results.filter((r: IResult) => r.id != idDefault && r.id != idNew && r.correspondsWith != undefined && r.result != 'ERROR' && r.result != undefined)
+            const results = col.results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== 'ERROR' && r.result !== undefined)
             if (results.length < 1) return <div></div>
 
             const tagsGroup: { [tag: string]: IResult[] } = groupBy(results, "tag")
@@ -134,9 +133,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
             const dataArray: any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
                 // No pongo la x global por si alguna falla que no se rompa toda la grafica
-                var values_x: number[] = [], values_y: number[] = [], text: number[] = []
+                let values_x: number[] = [], values_y: number[] = [], text: number[] = []
                 resultsOfTag.forEach((r: IResult) => {
-                    if (r.result != undefined && r.result != 'ERROR'
+                    if (r.result !== undefined && r.result !== 'ERROR'
                         && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined && typeof r.result === 'number') {
                         values_x.push(r.correspondsWith.intervalValue)
                         values_y.push(r.result)
@@ -180,7 +179,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                     zerolinecolor: theme.colors.text.primary,
                     gridcolor: theme.colors.text.primary,
                     color: theme.colors.text.primary,
-                    ticksuffix: (col.interval.type == IntervalTypeEnum.percentage) ? "%" : ""
+                    ticksuffix: (col.interval.type === IntervalTypeEnum.percentage) ? "%" : ""
                 },
                 yaxis: {
                     tickcolor: theme.colors.text.primary,
@@ -201,10 +200,10 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                         height: 900,
                         format: 'png'
                     }).then((img: string) => {
-                        //var image = new Image()
+                        //let image = new Image()
                         //image.src = img
-                        var w = window.open("")
-                        if (w != null) w.document.write('<iframe src="' + img + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+                        let w = window.open("")
+                        if (w !== null) w.document.write('<iframe src="' + img + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
 
                         //w.document.write(image.outerHTML)
                     })
@@ -224,9 +223,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const defaultValue = (col: IDataCollection) => {
-        var res = <div></div>
+        let res = <div></div>
         if (col.results) {
-            const def = col.results.find((r: IResult) => r.id == idDefault)
+            const def = col.results.find((r: IResult) => r.id === idDefault)
             if (def) res = <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%', marginRight: '10px' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.originalValue}</p>
                 <h1 style={{ textAlign: 'center' }}>{(typeof def.result === 'number') ? setDecimals(def.result) : 'ERROR'}</h1>
@@ -236,9 +235,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const newValue = (col: IDataCollection) => {
-        var res = <div></div>
+        let res = <div></div>
         if (col.results) {
-            const nw = col.results.find((r: IResult) => r.id == idNew)
+            const nw = col.results.find((r: IResult) => r.id === idNew)
             if (nw) res = <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.newValue}</p>
                 <h1 style={{ textAlign: 'center' }}>{(typeof nw.result === 'number') ? setDecimals(nw.result) : 'ERROR'}</h1>
@@ -252,7 +251,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         Object.entries(extraInfo).map(([key, value]) => {
             if (isDateTime(value)) {
                 value = dateTimeLocalToString(value)
-            } else if (!isNaN(value) && model != undefined && model.decimals) {
+            } else if (!isNaN(value) && model !== undefined && model.decimals) {
                 value = round(value, model.decimals)
             }
             res.push(<div className='wrap-elipsis' title={key + ": " + value}>{key + ": " + value}</div>)
@@ -275,7 +274,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const divExtraInfo = () => {
-        if (currentCollIdx != undefined && currentCollIdx < collections.length) {
+        if (currentCollIdx !== undefined && currentCollIdx < collections.length) {
             const col: IDataCollection = collections[currentCollIdx]
             if (col.extraInfo && Object.keys(col.extraInfo).length > 0) {
                 return <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', marginTop: '10px', width: '100%' }}>
@@ -290,13 +289,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return <div></div>
     }
 
-    const getButton = (currentCollIdx != undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ?
+    const getButton = (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ?
         <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={onClickModifyAgainHandle}>{msgs.modifyAgain}</Button>
         : <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{msgs.predict}</Button>
 
 
     const showResults = () => {
-        if (currentCollIdx != undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) {
+        if (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) {
             const col: IDataCollection = collections[currentCollIdx]
             return <div style={{ marginTop: '10px', width: '100%' }}>
                 <div id="id-results-base" style={{ display: 'flex' }}>

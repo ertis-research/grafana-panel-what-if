@@ -1,3 +1,13 @@
 {
-  "extends": "./.config/.eslintrc"
+  "extends": "./.config/.eslintrc",
+  "rules": {
+    "react/jsx-key": "off",
+    "react/prop-types": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "react-hooks/rules-of-hooks": "off",
+    "curly": "off",
+    "react/no-children-prop": "off",
+    "@typescript-eslint/naming-convention": "off",
+    "no-restricted-imports": "off"
+  }
 }

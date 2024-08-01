@@ -29,7 +29,7 @@ export const getOptionsVariable = (templateSrv: TemplateSrv): ISelect[] => {
             return {
                 label: item.name,
                 value: item.name,
-                description: (item.description == null) ? undefined : item.description
+                description: (item.description === null) ? undefined : item.description
             }
         })
 }
@@ -44,29 +44,29 @@ const applyType = (value: any) => {
     }
 }
 
-export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: string, isListValues:boolean, hasSpecificNumberOfValues?: number) => {
+export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: string, isListValues: boolean, hasSpecificNumberOfValues?: number) => {
     let res: IData[] = []
-    const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId == idQuery)
+    const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId === idQuery)
     if (serieData) {
-        const fieldTagData = serieData.fields.find((field) => field.name == fieldTag)
+        const fieldTagData = serieData.fields.find((field) => field.name === fieldTag)
         if (fieldTagData && fieldTagData.values.length > 0) {
-            const allValues = serieData.fields.filter((field) => field.name != fieldTag)
+            const allValues = serieData.fields.filter((field) => field.name !== fieldTag)
             const arrValues = fieldTagData.values
-            if(arrValues != null && arrValues != undefined && arrValues.length > 0) {
-                for(let idx = 0; idx < arrValues.length; idx++){
+            if (arrValues !== null && arrValues !== undefined && arrValues.length > 0) {
+                for (let idx = 0; idx < arrValues.length; idx++) {
                     let values: number[] = []
                     allValues.forEach((field) => {
                         values.push(field.values.get(idx))
                     })
                     let mean = getMean(values)
-                    if (isListValues && hasSpecificNumberOfValues != undefined && hasSpecificNumberOfValues > 0) {
-                        values = values.map((v) => (v == null) ? mean : v)
+                    if (isListValues && hasSpecificNumberOfValues !== undefined && hasSpecificNumberOfValues > 0) {
+                        values = values.map((v) => (v === null) ? mean : v)
                         if (values.length < hasSpecificNumberOfValues) {
-                            values = values.concat(Array(hasSpecificNumberOfValues-values.length).fill(null))
+                            values = values.concat(Array(hasSpecificNumberOfValues - values.length).fill(null))
                         } else if (values.length > hasSpecificNumberOfValues) {
                             values = values.slice(0, hasSpecificNumberOfValues)
                         }
-                    } 
+                    }
                     res.push({
                         id: arrValues.get(idx),
                         raw_values: values,
@@ -74,7 +74,7 @@ export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: strin
                     })
                 }
             }
-            
+
         }
     }
     console.log("Datos cargados", res)
@@ -83,10 +83,10 @@ export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: strin
 
 export const getExtraInfo = (data: PanelData, idQuery: string, fieldName: string, fieldValue: string) => {
     let res: { [key: string]: any } = {}
-    const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId == idQuery)
+    const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId === idQuery)
     if (serieData) {
-        const fieldNameData = serieData.fields.find((field) => field.name == fieldName)
-        const fieldValueData = serieData.fields.find((field) => field.name == fieldValue)
+        const fieldNameData = serieData.fields.find((field) => field.name === fieldName)
+        const fieldValueData = serieData.fields.find((field) => field.name === fieldValue)
         if (fieldNameData && fieldValueData) {
             fieldNameData.values.toArray().forEach((name: string, idx: number) => {
                 res = {

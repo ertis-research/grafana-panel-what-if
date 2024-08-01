@@ -1,5 +1,5 @@
 import { AppEvents, SelectableValue, dateTime } from '@grafana/data';
-import { Checkbox, Field, HorizontalGroup, Icon,  Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
+import { Checkbox, Field, HorizontalGroup, Icon, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { Context, defaultIfUndefined, collectionsToSelect, groupBy, dateTimeToString, deepCopy } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
@@ -33,12 +33,12 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     const [selectCollection, setSelectCollection] = useState<SelectableValue<number>>()
     const [collectionsOptions, setcollectionsOptions] = useState<ISelect[]>([])
 
-//    const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
+    //    const [searchValue, setSearchValue] = useState<SelectableValue<string>>()
     const [searchInputValue, setSearchInputValue] = useState<string>("")
 
     const [tags, setTags] = useState<ITag[]>([])
     const [filteredTags, setFilteredTags] = useState<ITag[]>([])
-//    const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
+    //    const [tagsSearch, setTagsSearch] = useState<ISelect[]>([])
 
     const [interval, setInterval] = useState<IInterval>(IntervalDefault)
     const [hasInterval, setHasInterval] = useState<boolean>(false)
@@ -49,7 +49,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // Auxiliar
     // -------------------------------------------------------------------------------------------------------------
 
-    const disabled = (context.actualStep) ? context.actualStep != Steps.step_3 : true
+    const disabled = (context.actualStep) ? context.actualStep !== Steps.step_3 : true
     const disabled_collections = (context.actualStep) ? context.actualStep < Steps.step_3 : true
 
     //const NUMERIC_REGEXP = /[-]{0,1}[\d]*[.]{0,1}[\d]+/g;
@@ -79,7 +79,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         const bp = (b.priority) ? Number(b.priority) : undefined
 
         let res = 1
-        if (ap == bp) {
+        if (ap === bp) {
             res = 0 //Importante igual debil
         } else if (ap !== undefined && bp === undefined) {
             res = -1
@@ -105,8 +105,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     const handleOnChangeInterval = (event: ChangeEvent<HTMLInputElement>) => {
         const name = event.currentTarget.name
-        let value:any = event.target.value
-        value = (value == '') ? undefined : Number(value)
+        let value: any = event.target.value
+        value = (value === '') ? undefined : Number(value)
         setInterval({
             ...interval,
             [name]: (value !== undefined && name === 'steps') ? Math.abs(value) : value
@@ -119,11 +119,11 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     const handleOnChangeTagValue = (event: ChangeEvent<HTMLInputElement>) => {
         //console.log(event.target.value)
-        if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
-            const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id == event.currentTarget.name)
+        if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
+            const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id === event.currentTarget.name)
             const updatedCollectionData = [...collections[currentCollIdx].data]
             if (dataIndex >= 0) {
-                if (event.target.value == '') {
+                if (event.target.value === '') {
                     delete updatedCollectionData[dataIndex].new_value
                 } else {
                     updatedCollectionData[dataIndex].new_value = event.target.value
@@ -142,8 +142,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnChangePercentage = (event: ChangeEvent<HTMLInputElement>) => {
-        if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
-            const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id == event.currentTarget.name)
+        if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
+            const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id === event.currentTarget.name)
             const updatedCollectionData = [...collections[currentCollIdx].data]
             if (dataIndex >= 0) {
                 const old_value = updatedCollectionData[dataIndex].set_percentage
@@ -162,13 +162,13 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnClickDeleteCollection = () => {
-        if (collections == undefined || collections.length - 1 <= 0) {
+        if (collections === undefined || collections.length - 1 <= 0) {
             context.setActualStep(Steps.step_2)
             setSelectCollection(undefined)
             setcollectionsOptions([])
-            if(model != undefined) saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
+            if (model !== undefined) saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
         }
-        if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
+        if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
             deleteCollection(collections[currentCollIdx].id)
             const appEvents = getAppEvents();
             appEvents.publish({
@@ -180,7 +180,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
 
     const handleOnChangeIntervalType = () => {
-        const newType = (interval.type == IntervalTypeEnum.percentage) ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
+        const newType = (interval.type === IntervalTypeEnum.percentage) ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
         setInterval({
             ...interval,
             type: newType
@@ -192,16 +192,16 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
 
     useEffect(() => {
         //console.log("CAMBIO MODEL", model)
-        if (model && model.tags) setTags(deepCopy(model.tags)) 
+        if (model && model.tags) setTags(deepCopy(model.tags))
     }, [model])
 
     useEffect(() => {
-        if (currentCollIdx != undefined && collections && currentCollIdx < collections.length) {
+        if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
             updateCollection({
                 ...collections[currentCollIdx],
                 interval: interval
             })
-            if (interval.max != undefined && interval.min != undefined && interval.steps != undefined && interval.min < interval.max) {
+            if (interval.max !== undefined && interval.min !== undefined && interval.steps !== undefined && interval.min < interval.max) {
                 setHasInterval(true)
             } else {
                 setHasInterval(false)
@@ -221,7 +221,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }, [searchInputValue])
 
     useEffect(() => {
-        const options: ISelect[] = collectionsToSelect((collections != undefined) ? collections : [])
+        const options: ISelect[] = collectionsToSelect((collections !== undefined) ? collections : [])
         setcollectionsOptions(options)
     }, [collections])
 
@@ -241,7 +241,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     useEffect(() => {
         if (selectCollection && selectCollection.value !== undefined && collections) {
             const currentCol = collections[selectCollection.value]
-            if (selectCollection.value != currentCollIdx) {
+            if (selectCollection.value !== currentCollIdx) {
                 //console.log("Establezco selectCollection")
                 setCurrentCollIdx(selectCollection.value)
             }
@@ -265,8 +265,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     const tagField = (tag: ITag) => {
-        const currentCol = (currentCollIdx != undefined && collections && currentCollIdx < collections.length) ? collections[currentCollIdx] : CollectionDefault
-        const findRes = currentCol.data.find((d) => d.id == tag.id)
+        const currentCol = (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) ? collections[currentCollIdx] : CollectionDefault
+        const findRes = currentCol.data.find((d) => d.id === tag.id)
         const data: IData = (findRes) ? findRes : { id: tag.id, set_percentage: false }
         return <div className='col-6 col-md-6 col-lg-6 col-xl-4'>
             <p className='noSpaceBottom id wrap-hidden' title={tag.id} style={{ color: theme.colors.text.secondary }}>{tag.id}</p>
@@ -274,7 +274,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             <Field>
                 <HorizontalGroup>
                     <Input width={8} value={defaultIfUndefined(data.default_value, "")} disabled type='text' />
-                    <Input name={tag.id} required={data.default_value == undefined} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
+                    <Input name={tag.id} required={data.default_value === undefined} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
                     <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval || disabled} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
@@ -341,25 +341,25 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                             <div className='horizontalDiv' style={{ marginBottom: '15px', marginTop: '10px' }} title={msgs.tooltipInterval}>
                                 <span style={{ marginRight: '10px', marginBottom: '3px', padding: '3px 5px', backgroundColor: getColor('bg'), color: getColor('text') }}>{msgs.interval}</span>
                                 <Field label={msgs.min} className='textCenter noSpace' disabled={disabled}>
-                                    <Input name="min" width={9} suffix={interval.type == IntervalTypeEnum.percentage ? "%" : ""}
+                                    <Input name="min" width={9} suffix={interval.type === IntervalTypeEnum.percentage ? "%" : ""}
                                         className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.min, "")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                                 </Field>
                                 <span style={{ marginRight: '10px' }}></span>
                                 <Field label={msgs.max} className='textCenter noSpace' disabled={disabled}>
-                                    <Input name="max" width={9} suffix={interval.type == IntervalTypeEnum.percentage ? "%" : ""}
+                                    <Input name="max" width={9} suffix={interval.type === IntervalTypeEnum.percentage ? "%" : ""}
                                         className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.max, "")} onChange={handleOnChangeInterval} type='number' disabled={disabled} />
                                 </Field>
                                 <span style={{ marginRight: '10px' }}></span>
                                 <Field label={msgs.steps} className='textCenter noSpace' disabled={disabled}>
-                                    <Input name="steps" width={7} className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.steps, "")} onChange={handleOnChangeInterval} type='number' disabled={disabled} min={0}/>
+                                    <Input name="steps" width={7} className='noSpace inputWithoutArrows' value={defaultIfUndefined(interval.steps, "")} onChange={handleOnChangeInterval} type='number' disabled={disabled} min={0} />
                                 </Field>
                                 <span style={{ marginRight: '10px' }}></span>
                                 <Field label={msgs.type} className='textCenter noSpace' disabled={disabled}>
                                     <ButtonGroup>
                                         <ToolbarButton icon="percentage" iconOnly={true} tooltip={msgs.intervalTypeTooltipPercentage} disabled={disabled} onClick={handleOnChangeIntervalType}
-                                            variant={interval.type == IntervalTypeEnum.percentage ? 'primary' : 'default'} />
+                                            variant={interval.type === IntervalTypeEnum.percentage ? 'primary' : 'default'} />
                                         <ToolbarButton tooltip={msgs.intervalTypeTooltipUnits} disabled={disabled} onClick={handleOnChangeIntervalType}
-                                            variant={interval.type == IntervalTypeEnum.units ? 'primary' : 'default'}>Abs.</ToolbarButton>
+                                            variant={interval.type === IntervalTypeEnum.units ? 'primary' : 'default'}>Abs.</ToolbarButton>
                                     </ButtonGroup>
                                 </Field>
                             </div>

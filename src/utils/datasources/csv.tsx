@@ -9,7 +9,7 @@ const compare = (a: IData, b: IData) => {
     if ((a.new_value !== undefined && b.new_value === undefined)
         || (a.set_percentage === true && b.set_percentage !== true && b.new_value === undefined && a.new_value === undefined)) {
         return -1
-    } else if (a.set_percentage == b.set_percentage && (a.new_value === undefined) == (b.new_value === undefined)) {
+    } else if (a.set_percentage === b.set_percentage && (a.new_value === undefined) === (b.new_value === undefined)) {
         return 0
     } else {
         return 1
@@ -44,8 +44,8 @@ export const dataToCSV = (collection: IDataCollection) => {
     //console.log("COLECCION?", collection)
 
     if (collection.results !== undefined) {
-        const def = collection.results.find((r: IResult) => r.id == idDefault)
-        const ne = collection.results.find((r: IResult) => r.id == idNew)
+        const def = collection.results.find((r: IResult) => r.id === idDefault)
+        const ne = collection.results.find((r: IResult) => r.id === idNew)
 
         _int = { _RESULT: "", ..._int }
         _def = {
@@ -66,10 +66,10 @@ export const dataToCSV = (collection: IDataCollection) => {
                     _RESULT: r.result
                 }
 
-                Object.entries(r.data).forEach(([key, value]: [key: string, value: number|number[]]) => {
+                Object.entries(r.data).forEach(([key, value]: [key: string, value: number | number[]]) => {
                     row = {
                         ...row,
-                        [key]: ((r.correspondsWith && r.correspondsWith.tag == key) || value !== _def[key]) ? value : ""
+                        [key]: ((r.correspondsWith && r.correspondsWith.tag === key) || value !== _def[key]) ? value : ""
                     }
                 })
 
@@ -112,16 +112,16 @@ export const dataToCSV = (collection: IDataCollection) => {
 }
 
 export const stringToIntervalMode = (str: string) => {
-    return str.toLowerCase().trim() == "units" ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
+    return str.toLowerCase().trim() === "units" ? IntervalTypeEnum.units : IntervalTypeEnum.percentage
 }
 
 export const intervalModeToString = (intMode: IntervalTypeEnum) => {
-    return intMode == IntervalTypeEnum.units ? "units" : "percentage"
+    return intMode === IntervalTypeEnum.units ? "units" : "percentage"
 }
 
 export const getIntervalCSV = (csv: string[][]): IInterval => {
     const comment: string[] | undefined = csv.find((v: string[]) => v.length > 0 && v.join("").replace(/ /g, '').toUpperCase().startsWith('#INTERVAL:'))
-    if (comment != undefined && comment.length > 0) {
+    if (comment !== undefined && comment.length > 0) {
         const interval: string[] = comment.join("").toUpperCase().replace("#", "").replace("INTERVAL", "").replace(":", "").trim().split(" ")
         if (interval.length >= 3) {
             return {
@@ -137,7 +137,7 @@ export const getIntervalCSV = (csv: string[][]): IInterval => {
 
 export const getDateTimeCSV = (csv: string[][]): DateTime | undefined => {
     const comment: string[] | undefined = csv.find((v: string[]) => v.length > 0 && v.join("").replace(/ /g, '').toUpperCase().startsWith('#DATETIME:'))
-    if (comment != undefined && comment.length > 0) {
+    if (comment !== undefined && comment.length > 0) {
         const dt: string = comment.join("").toUpperCase().replace(/ /g, '').replace("#DATETIME:", "").trim()
         //console.log("getDateTime", dt)
         const timestamp = Date.parse(dt)
@@ -158,27 +158,27 @@ export const CSVtoData = (csv: string[][], model: IModel): IData[] => {
     const fileData: IData[] = []
 
     //const noComments:string[][] = csv.filter((v:string[]) => v.length > 0 && !v.join("").replace(/ /g,'').toUpperCase().startsWith('#'))
-    const ids: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() == "ID"))
-    const def: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() == "DEFAULT_VALUE"))
-    let nw: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() == "NEW_VALUE"))
-    let interval: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() == "_INTERVAL"))
+    const ids: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() === "ID"))
+    const def: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() === "DEFAULT_VALUE"))
+    let nw: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() === "NEW_VALUE"))
+    let interval: string[] | undefined = fixEnd(csv.find((v: string[]) => v.length > 0 && v[0].toUpperCase().trim() === "_INTERVAL"))
 
-    if (ids && def && ids.length == def.length) {
-        if (nw && nw.length != ids.length) nw = undefined
-        if (interval && interval.length != ids.length) interval = undefined
+    if (ids && def && ids.length === def.length) {
+        if (nw && nw.length !== ids.length) nw = undefined
+        if (interval && interval.length !== ids.length) interval = undefined
 
         ids.forEach((d: string, idx: number) => {
-            if (model.tags.some((t: ITag) => t.id == d)) {
-                let raw_values:number[] = []
-                if (def[idx].trim() != "") {
-                    raw_values = def[idx].split(",").map((v:string) => Number(v))
+            if (model.tags.some((t: ITag) => t.id === d)) {
+                let raw_values: number[] = []
+                if (def[idx].trim() !== "") {
+                    raw_values = def[idx].split(",").map((v: string) => Number(v))
                 }
                 fileData.push({
                     id: d,
                     default_value: getMean(raw_values),
                     raw_values: raw_values,
-                    new_value: (nw && nw[idx].trim() != "") ? nw[idx] : undefined,
-                    set_percentage: (interval) ? interval[idx] == "YES" : undefined
+                    new_value: (nw && nw[idx].trim() !== "") ? nw[idx] : undefined,
+                    set_percentage: (interval) ? interval[idx] === "YES" : undefined
                 })
             }
         })

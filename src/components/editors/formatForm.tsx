@@ -6,14 +6,14 @@ import { FormatDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
 
 interface Props {
-    format : IFormat,
-    updateFunction : any,
-    deleteFunction ?: any,
-    mode : Mode,
-    context : StandardEditorContext<any, any>
+    format: IFormat,
+    updateFunction: any,
+    deleteFunction?: any,
+    mode: Mode,
+    context: StandardEditorContext<any, any>
 }
 
-export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFunction, mode, context }) => {
+export const FormatForm: React.FC<Props> = ({ format, updateFunction, deleteFunction, mode, context }) => {
 
     const [currentFormat, setCurrentFormat] = useState<IFormat>(FormatDefault)
     const [codeInput, setCodeInput] = useState<string>("")
@@ -29,20 +29,20 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
     const handleOnChangeFormat = (event: ChangeEvent<HTMLInputElement>) => {
         setCurrentFormat({
             ...currentFormat,
-            [event.currentTarget.name] : event.target.value
+            [event.currentTarget.name]: event.target.value
         })
     }
 
     const handleOnSubmitAddFormat = () => {
         const newFormat = {
             ...currentFormat,
-            output : codeOutput,
-            input : codeInput
+            output: codeOutput,
+            input: codeInput
         }
         updateFunction(newFormat)
-        if(mode == Mode.EDIT) {
+        if (mode === Mode.EDIT) {
             setDisabled(true)
-        } else {    
+        } else {
             setCurrentFormat(FormatDefault)
             setCodeInput("")
             setCodeOutput("")
@@ -61,11 +61,11 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
     }
 
     const handleOnConfirmDeleteFormat = () => {
-        if(deleteFunction) deleteFunction()
+        if (deleteFunction) deleteFunction()
     }
 
     useEffect(() => {
-        if(mode == Mode.EDIT) setDisabled(true)
+        if (mode === Mode.EDIT) setDisabled(true)
     }, [mode])
 
     useEffect(() => {
@@ -76,42 +76,43 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
     }, [currentFormat])
 
     const buttonEdit = () => {
-        if(mode == Mode.CREATE) {
+        if (mode === Mode.CREATE) {
             return <div></div>
         } else {
             return (
-            <div style={{ marginBottom: '15px', marginRight: '10px'}}>
-            <HorizontalGroup justify='flex-end'>
-                <ConfirmButton
-                    closeOnConfirm
-                    confirmText='Delete'
-                    disabled={!disabled}
-                    onConfirm={handleOnConfirmDeleteFormat}
-                    confirmVariant='destructive'
-                >
-                    <Button variant='destructive' icon='trash-alt' disabled={!disabled}/>
-                </ConfirmButton>
-                <Button variant='primary' icon='edit' disabled={!disabled} onClick={handleOnClickEdit}>Edit</Button>
-            </HorizontalGroup>
-            </div>)
+                <div style={{ marginBottom: '15px', marginRight: '10px' }}>
+                    <HorizontalGroup justify='flex-end'>
+                        <ConfirmButton
+                            closeOnConfirm
+                            confirmText='Delete'
+                            disabled={!disabled}
+                            onConfirm={handleOnConfirmDeleteFormat}
+                            confirmVariant='destructive'
+                        >
+                            <Button variant='destructive' icon='trash-alt' disabled={!disabled} />
+                        </ConfirmButton>
+                        <Button variant='primary' icon='edit' disabled={!disabled} onClick={handleOnClickEdit}>Edit</Button>
+                    </HorizontalGroup>
+                </div>)
         }
     }
 
     return <div>
         {buttonEdit()}
-        
-        <Form id="formatForm" onSubmit={handleOnSubmitAddFormat} maxWidth="none">{({register, errors, control}:FormAPI<any>) => {
+
+        <Form id="formatForm" onSubmit={handleOnSubmitAddFormat} maxWidth="none">{({ register, errors, control }: FormAPI<any>) => {
             return (
-            <div>
-                <InlineField label="ID" labelWidth={10} required disabled={disabled}>
-                    <Input {...register("id", { required: true })} value={currentFormat.id} disabled={disabled} onChange={handleOnChangeFormat} required/>
-                </InlineField>
-            </div>
-            )}}
+                <div>
+                    <InlineField label="ID" labelWidth={10} required disabled={disabled}>
+                        <Input {...register("id", { required: true })} value={currentFormat.id} disabled={disabled} onChange={handleOnChangeFormat} required />
+                    </InlineField>
+                </div>
+            )
+        }}
         </Form>
         <InlineField label={"Input"} labelWidth={10} grow  >
-            <div style={{ width: '100%'}}>
-                <CodeEditor 
+            <div style={{ width: '100%' }}>
+                <CodeEditor
                     language='JSON'
                     value={codeInput}
                     height={200}
@@ -126,8 +127,8 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
             </div>
         </InlineField>
         <InlineField label={"Output"} labelWidth={10} grow  >
-            <div style={{ width: '100%'}}>
-                <CodeEditor 
+            <div style={{ width: '100%' }}>
+                <CodeEditor
                     language='JSON'
                     value={codeOutput}
                     height={200}
@@ -142,8 +143,8 @@ export const FormatForm: React.FC<Props>  = ({ format, updateFunction, deleteFun
             </div>
         </InlineField>
         <HorizontalGroup justify='flex-end'>
-            <Button type="button" hidden={(mode==Mode.EDIT) ? disabled : true} variant='primary' disabled={disabled} fill="text" onClick={handleOnClickCancel}>Cancel</Button>
-            <Button type='submit' form='formatForm' hidden={disabled} variant='primary' disabled={disabled} icon={(mode==Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} format</Button>
+            <Button type="button" hidden={(mode === Mode.EDIT) ? disabled : true} variant='primary' disabled={disabled} fill="text" onClick={handleOnClickCancel}>Cancel</Button>
+            <Button type='submit' form='formatForm' hidden={disabled} variant='primary' disabled={disabled} icon={(mode === Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} format</Button>
         </HorizontalGroup>
     </div>
 }

@@ -4,7 +4,9 @@ import { ISelect } from "./types"
 import { ILocalization } from "./localization/scheme"
 import { dateTimeLocalToString } from "./utils"
 
-export const variableInput = '$input'
+export const varInput = '$input'
+export const varEachInput = '$each'
+export const varEachInputEnd = '$end-each'
 export const variableOutput = '$output'
 export const idDefault = 'basic_defaultData'
 export const idNew = 'basic_newValue'

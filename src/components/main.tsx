@@ -6,7 +6,7 @@ import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
 import { Context, getMessagesByLanguage, tagsToString } from 'utils/utils'
-import { IContext, IDataCollection, IModel, Options } from 'utils/types'
+import { IContext, IDataCollection, IFormat, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { locationService } from '@grafana/runtime'
 import { saveVariableValue } from 'utils/datasources/grafana'
@@ -39,7 +39,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }
 
   const deleteCollection = (id: string) => {
-    const idx = collections.findIndex((col) => col.id == id)
+    const idx = collections.findIndex((col) => col.id === id)
     if (idx >= 0) {
       setCurrentCollIdx(undefined)
       const updatedCollections: IDataCollection[] = [...collections]
@@ -50,7 +50,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }
 
   const updateCollection = (updatedCollection: IDataCollection) => {
-    const idx = collections.findIndex((col) => col.id == updatedCollection.id)
+    const idx = collections.findIndex((col) => col.id === updatedCollection.id)
     if (idx >= 0) {
       const updatedCollections = [...collections]
       updatedCollections[idx] = updatedCollection
@@ -85,12 +85,21 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   }, [options])*/
 
   useEffect(() => {
-    if (selectedModel != undefined) {
+    if (selectedModel !== undefined) {
       saveVariableValue(locationService, selectedModel.varTags, tagsToString(selectedModel.tags, selectedModel.formatTags))
     } else {
       saveVariableValue(locationService, ModelDefault.varTags, "")
     }
   }, [selectedModel])
+
+  useEffect(() => {
+    options.models.forEach((model: IModel) => {
+      if(model.format) {
+          model.format = options.formats.find((v: IFormat) => v.id === model.format?.id)
+      }
+  })
+  }, [options.formats])
+  
 
 
   return <Context.Provider value={contextData}>
@@ -104,7 +113,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
             <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data} />
           </div>
           <div className="export-1" style={{ marginBottom: '10px', marginTop: '10px' }}>
-            <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />
+            <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx !== undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />
           </div>
         </div>
         <div className="item-1" id='id-item-1'>
@@ -114,7 +123,7 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
           <PredictModel model={selectedModel} collections={collections} updateCollections={updateAllCollection} currentCollIdx={currentCollIdx} data={data} />
         </div>
         <div className="item-3">
-          <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx != undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />
+          <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx !== undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />
         </div>
       </div>
     </div>

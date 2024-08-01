@@ -1,7 +1,7 @@
 import { messages_en } from "./localization/en";
 import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum } from "./types";
 
-export const PreprocessCodeDefault: string = "console.log('Preprocess')"
+export const PreprocessCodeDefault = "console.log('Preprocess')"
 
 export const FormatDefault: IFormat = {
     id: "",
