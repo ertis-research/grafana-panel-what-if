@@ -1,3 +1,11 @@
+.paginationBlock {
+    width: 100% !important;
+    height: 30px;
+    justify-content: center;
+    display: flex;
+    margin-top: 10px;
+}
+
 .fullWidth {
     width: 100%;
 }

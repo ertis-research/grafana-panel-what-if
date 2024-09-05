@@ -6,7 +6,7 @@ import { ModifyData } from './step3_ModifyData'
 import { PredictModel } from './step4_PredictModel'
 import { ExportData } from './step5_ExportData'
 import { Context, getMessagesByLanguage, tagsToString } from 'utils/utils'
-import { IContext, IDataCollection, IFormat, IModel, Options } from 'utils/types'
+import { IContext, IDataCollection, IExtraCalc, IFormat, IModel, Options } from 'utils/types'
 import { Steps } from 'utils/constants'
 import { locationService } from '@grafana/runtime'
 import { saveVariableValue } from 'utils/datasources/grafana'
@@ -100,7 +100,13 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   })
   }, [options.formats])
   
-
+  useEffect(() => {
+    options.models.forEach((model: IModel) => {
+      if(model.extraCalc) {
+          model.extraCalc = options.extraCalcs.find((v: IExtraCalc) => v.id === model.extraCalc?.id)
+      }
+  })
+  }, [options.extraCalcs])
 
   return <Context.Provider value={contextData}>
     <div className="containerType scrollMain" style={{ width: width, height: height - 10, padding: '10px', paddingBottom: '0px' }} >

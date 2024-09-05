@@ -7,6 +7,7 @@ import './css/bootstrap-grid.css';
 import './css/grid.css';
 import './css/others.css';
 import { Options } from 'utils/types';
+import { ExtraCalcEditor } from 'components/editors/extraCalcEditor';
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
@@ -33,6 +34,12 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
       name: 'Formats',
       category: ['Formats'],
       editor: FormatEditor
+    }).addCustomEditor({
+      path: 'extraCalcs',
+      id: 'extraCalcs',
+      name: 'Extra calculations',
+      category: ['Extra calculations'],
+      editor: ExtraCalcEditor
     }).addCustomEditor({
       path: 'models',
       id: 'models',

@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat } from "./types";
 
 export const PreprocessCodeDefault = "console.log('Preprocess')"
 
@@ -7,6 +7,18 @@ export const FormatDefault: IFormat = {
     id: "",
     input: "",
     output: ""
+}
+
+export const ExtraCalcDefault: IExtraCalc = {
+    id: "",
+    name: "",
+    tag: "",
+    calc: Calc.sum,
+    calcValue: "",
+    until: "",
+    resProcess: "$res",
+    maxIterations: 1000,
+    resFormat: ExtraCalcFormat.raw
 }
 
 export const ModelDefault: IModel = {
@@ -42,7 +54,8 @@ export const ContextDefault: IContext = {
     options: {
         language: Language.English,
         models: [],
-        formats: []
+        formats: [],
+        extraCalcs: []
     }
 }
 

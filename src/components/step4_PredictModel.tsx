@@ -1,4 +1,4 @@
-import { Button, HorizontalGroup, IconButton, Modal, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
+import { Button, HorizontalGroup, IconButton, InlineField, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { Context, dateTimeLocalToString, getMean, round, groupBy } from 'utils/utils'
 import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag } from 'utils/types'
@@ -8,6 +8,7 @@ import Plot from 'react-plotly.js'
 import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
 import { getAppEvents } from '@grafana/runtime'
 import { AppEvents, isDateTime, PanelData } from '@grafana/data'
+import { extraCalcCollection } from 'utils/datasources/extraCalc'
 interface Props {
     model?: IModel,
     collections: IDataCollection[],
@@ -32,6 +33,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const [sizePlot, setSizePlot] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isCollapseExtraInfo, setIsCollapseExtraInfo] = useState(false)
+    const [dynamicFieldValue, setDynamicFieldValue] = useState(0)
+    const [currentPage, setCurrentPage] = useState(1)
 
     const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
     const disabledModifyAgain = (context.actualStep) ? context.actualStep < Steps.step_4 : false
@@ -67,10 +70,30 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 setState(StatePredict.LOADING)
                 predictAllCollections(model, collections).then((res: IDataCollection[]) => {
                     updateCollections(res)
+                    setCurrentPage(1)
                 })
             }
             if (context.setActualStep) {
                 context.setActualStep(Steps.step_5)
+            }
+        }
+    }
+
+    const onClickExtraCalcHandle = () => {
+        if (validate()) {
+            //console.log("COLLECTIONS PREDICT", collections) 
+            if (model && currentCollIdx !== undefined && currentCollIdx < collections.length) {
+                setState(StatePredict.LOADING)
+                let col: IDataCollection = collections[currentCollIdx]
+                delete col.resultsExtraCalc
+                delete col.conclusionExtraCalc
+                console.log("collll", col)
+                extraCalcCollection(model, col, dynamicFieldValue).then((res: IDataCollection) => {
+                    let aux = [...collections]
+                    aux[currentCollIdx] = res
+                    updateCollections(aux)
+                    setCurrentPage(2)
+                })
             }
         }
     }
@@ -80,6 +103,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         collections.forEach((col: IDataCollection) => {
             let newCol = { ...col }
             delete newCol.results
+            delete newCol.resultsExtraCalc
+            delete newCol.conclusionExtraCalc
             newCollections.push(newCol)
         })
         updateCollections(newCollections)
@@ -108,9 +133,10 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         const divResults = document.getElementById('id-results')
         const divResultsBase = document.getElementById('id-results-base')
         const divHeaders = document.getElementById('idResultsHeaders')
+        const divPagination = document.getElementById('id-pagination')
         if (divResults && divHeaders && divResultsBase) {
             setSizePlot({
-                height: context.height - divHeaders.offsetHeight - divResultsBase.offsetHeight - 41.5,//- 47,
+                height: context.height - divHeaders.offsetHeight - divResultsBase.offsetHeight - 41.5 - ((divPagination) ? (divPagination.offsetHeight+9.5) : 0),//- 47,
                 width: (divResults.offsetWidth < context.width) ? divResults.offsetWidth : context.width
             })
             //console.log('width', divResults.offsetWidth)
@@ -119,107 +145,103 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }, [context.width, context.height, state, currentCollIdx, isCollapseExtraInfo])
 
 
-    
+
     // HTML
     // -------------------------------------------------------------------------------------------------------------
 
-    const showPlot = (col: IDataCollection) => {
-        if (col.results) {
-            const results = col.results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== 'ERROR' && r.result !== undefined)
-            if (results.length < 1) return <div></div>
+    const showPlot = (results: IResult[], intervalType: IntervalTypeEnum) => {
+        const filterResults = results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== 'ERROR' && r.result !== undefined)
+        if (filterResults.length < 1) return <div></div>
 
-            const tagsGroup: { [tag: string]: IResult[] } = groupBy(results, "tag")
-            //console.log("tagGroup", tagsGroup)
+        const tagsGroup: { [tag: string]: IResult[] } = groupBy(filterResults, "tag")
+        //console.log("tagGroup", tagsGroup)
 
-            const dataArray: any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
-                // No pongo la x global por si alguna falla que no se rompa toda la grafica
-                let values_x: number[] = [], values_y: number[] = [], text: number[] = []
-                resultsOfTag.forEach((r: IResult) => {
-                    if (r.result !== undefined && r.result !== 'ERROR'
-                        && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined && typeof r.result === 'number') {
-                        values_x.push(r.correspondsWith.intervalValue)
-                        values_y.push(r.result)
-                        text.push(setDecimals(getMean(r.data[r.correspondsWith.tag])))
-                    }
-                })
-
-                values_y = values_y.map((v: number) => setDecimals(v))
-                //console.log("text", text)
-                return {
-                    x: values_x,
-                    y: values_y,
-                    text: text,
-                    type: 'scatter',
-                    name: tag
+        const dataArray: any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
+            // No pongo la x global por si alguna falla que no se rompa toda la grafica
+            let values_x: number[] = [], values_y: number[] = [], text: number[] = []
+            resultsOfTag.forEach((r: IResult) => {
+                if (r.result !== undefined && r.result !== 'ERROR'
+                    && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined && typeof r.result === 'number') {
+                    values_x.push(r.correspondsWith.intervalValue)
+                    values_y.push(r.result)
+                    text.push(setDecimals(getMean(r.data[r.correspondsWith.tag])))
                 }
             })
 
-            //console.log('dataArrayPLOT', dataArray)
+            values_y = values_y.map((v: number) => setDecimals(v))
+            //console.log("text", text)
+            return {
+                x: values_x,
+                y: values_y,
+                text: text,
+                type: 'scatter',
+                name: tag
+            }
+        })
 
-            const layoutObj: Partial<Layout> = {
-                width: sizePlot.width,
-                height: sizePlot.height,
-                showlegend: true,
-                legend: {
-                    orientation: 'h',
-                    font: {
-                        color: theme.colors.text.primary
-                    }
-                },
-                margin: {
-                    t: 30,
-                    b: 80,
-                    l: 80,
-                    r: 50
-                },
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                xaxis: {
-                    tickcolor: theme.colors.text.primary,
-                    zerolinecolor: theme.colors.text.primary,
-                    gridcolor: theme.colors.text.primary,
-                    color: theme.colors.text.primary,
-                    ticksuffix: (col.interval.type === IntervalTypeEnum.percentage) ? "%" : ""
-                },
-                yaxis: {
-                    tickcolor: theme.colors.text.primary,
-                    zerolinecolor: theme.colors.text.primary,
-                    gridcolor: theme.colors.text.primary,
+        //console.log('dataArrayPLOT', dataArray)
+
+        const layoutObj: Partial<Layout> = {
+            width: sizePlot.width,
+            height: sizePlot.height,
+            showlegend: true,
+            legend: {
+                orientation: 'h',
+                font: {
                     color: theme.colors.text.primary
                 }
+            },
+            margin: {
+                t: 30,
+                b: 80,
+                l: 80,
+                r: 50
+            },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: {
+                tickcolor: theme.colors.text.primary,
+                zerolinecolor: theme.colors.text.primary,
+                gridcolor: theme.colors.text.primary,
+                color: theme.colors.text.primary,
+                ticksuffix: (intervalType === IntervalTypeEnum.percentage) ? "%" : ""
+            },
+            yaxis: {
+                tickcolor: theme.colors.text.primary,
+                zerolinecolor: theme.colors.text.primary,
+                gridcolor: theme.colors.text.primary,
+                color: theme.colors.text.primary
             }
-
-            const newButton: ModeBarButtonAny = {
-                title: 'Download plot as png',
-                name: 'Download plot as png',
-                icon: Icons.camera,
-                click: async (gd: PlotlyHTMLElement) => {
-                    //console.log("AAA")
-                    await toImage(gd, {
-                        width: 900,
-                        height: 900,
-                        format: 'png'
-                    }).then((img: string) => {
-                        //let image = new Image()
-                        //image.src = img
-                        let w = window.open("")
-                        if (w !== null) w.document.write('<iframe src="' + img + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
-
-                        //w.document.write(image.outerHTML)
-                    })
-                }
-            }
-
-            const config: Partial<Config> = {
-                //modeBarButtonsToAdd: [btnCapture],
-                modeBarButtonsToRemove: ['toImage'],
-                modeBarButtonsToAdd: [newButton]
-            }
-
-            return <Plot style={{ margin: '0px', padding: '0px' }} layout={layoutObj} data={dataArray} config={config} />
-        } else {
-            return <div></div>
         }
+
+        const newButton: ModeBarButtonAny = {
+            title: 'Download plot as png',
+            name: 'Download plot as png',
+            icon: Icons.camera,
+            click: async (gd: PlotlyHTMLElement) => {
+                //console.log("AAA")
+                await toImage(gd, {
+                    width: 900,
+                    height: 900,
+                    format: 'png'
+                }).then((img: string) => {
+                    //let image = new Image()
+                    //image.src = img
+                    let w = window.open("")
+                    if (w !== null) w.document.write('<iframe src="' + img + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+
+                    //w.document.write(image.outerHTML)
+                })
+            }
+        }
+
+        const config: Partial<Config> = {
+            //modeBarButtonsToAdd: [btnCapture],
+            modeBarButtonsToRemove: ['toImage'],
+            modeBarButtonsToAdd: [newButton]
+        }
+
+        return <Plot style={{ margin: '0px', padding: '0px' }} layout={layoutObj} data={dataArray} config={config} />
     }
 
     const defaultValue = (col: IDataCollection) => {
@@ -289,26 +311,82 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return <div></div>
     }
 
+    const resultExtraCalc = (col: IDataCollection) => {
+        if (col.conclusionExtraCalc !== undefined) {
+            return <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '100%' }}>
+                <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.resultCalc}</p>
+                <h1 style={{ textAlign: 'center' }}>{col.conclusionExtraCalc}</h1>
+            </div>
+        }
+        return <div></div>
+    }
+
+    const divExtraCalc = () => {
+        if (model !== undefined && model.extraCalc !== undefined) {
+            return <div style={{ display: 'flex', width: '100%', marginTop: '10px' }}>
+                {(model.extraCalc.dynamicFieldName !== undefined) ?
+                    <InlineField label={model.extraCalc.dynamicFieldName} style={{ marginRight: '10px' }}>
+                        <Input width={10} value={dynamicFieldValue} type='number' step="any" onChange={(v) => { v.preventDefault(); setDynamicFieldValue(parseFloat(v.currentTarget.value)) }} />
+                    </InlineField> : <div></div>}
+                <Button fullWidth disabled={disabled} onClick={onClickExtraCalcHandle}>{model.extraCalc.name}</Button>
+            </div>
+        }
+        return <div></div>
+    }
+
     const getButton = (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ?
         <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={onClickModifyAgainHandle}>{msgs.modifyAgain}</Button>
         : <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{msgs.predict}</Button>
 
 
-    const showResults = () => {
-        if (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) {
-            const col: IDataCollection = collections[currentCollIdx]
+    const extraCalcResult = (col: IDataCollection) => {
+        if (col.resultsExtraCalc || col.conclusionExtraCalc) {
+            return <div style={{ marginTop: '10px', width: '100%' }}>
+                <div id="id-results-base" style={{ display: 'flex' }}>
+                    {resultExtraCalc(col)}
+                </div>
+                <div id='id-results' style={{ width: '100%', backgroundColor: theme.colors.background.secondary, marginTop: '10px', padding: '0px' }}>
+                    {(col.resultsExtraCalc) ? showPlot(col.resultsExtraCalc, IntervalTypeEnum.units) : <div></div>}
+                </div>
+            </div>
+        } else {
+            return <div></div>
+        }
+    }
+
+    const predictResult = (col: IDataCollection) => {
+        if (col.results) {
             return <div style={{ marginTop: '10px', width: '100%' }}>
                 <div id="id-results-base" style={{ display: 'flex' }}>
                     {defaultValue(col)}
                     {newValue(col)}
                 </div>
                 <div id='id-results' style={{ width: '100%', backgroundColor: theme.colors.background.secondary, marginTop: '10px', padding: '0px' }}>
-                    {showPlot(col)}
+                    {(col.results) ? showPlot(col.results, col.interval.type) : <div></div>}
                 </div>
             </div>
         } else {
             return <div></div>
         }
+    }
+
+    const showResults = () => {
+        if (currentCollIdx !== undefined && currentCollIdx < collections.length) {
+            const col: IDataCollection = collections[currentCollIdx]
+            if (col.results && col.resultsExtraCalc) {
+                return <div style={{ width: '100%', display: 'block' }}>
+                    <div className='paginationBlock' id='id-pagination'>
+                        <Pagination currentPage={currentPage} numberOfPages={2} onNavigate={(num: number) => setCurrentPage(num)} />
+                    </div>
+                    {(currentPage === 1) ? predictResult(col) : extraCalcResult(col)}
+                </div>
+            } else if (col.results) {
+                return predictResult(col)
+            } else if (col.resultsExtraCalc) {
+                return extraCalcResult(col)
+            }
+        }
+        return <div></div>
     }
 
     const viewResults = () => {
@@ -330,6 +408,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 <VerticalGroup justify='center'>
                     {getButton}
                 </VerticalGroup>
+                {divExtraCalc()}
             </div>
             {divExtraInfo()}
         </div>

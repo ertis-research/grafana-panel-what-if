@@ -21,8 +21,8 @@ export const messages_en: ILocalization = {
         _step3: {
             modifyData: "Modify data",
             interval: "Interval",
-            min: "Min",
-            max: "Max",
+            min: "Backward",
+            max: "Forward",
             steps: "Steps",
             type: "Type",
             searchPlaceholder: "Search",
@@ -44,7 +44,8 @@ export const messages_en: ILocalization = {
             newValue: "New value",
             modifyAgain: "Modify data again",
             extraInfo : "Extra information",
-            seeMore : "See more"
+            seeMore : "See more",
+            resultCalc: "Calculation result"
         },
         _step5: {
             exportData: "Export data",

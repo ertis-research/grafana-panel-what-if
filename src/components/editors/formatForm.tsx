@@ -104,7 +104,7 @@ export const FormatForm: React.FC<Props> = ({ format, updateFunction, deleteFunc
             return (
                 <div>
                     <InlineField label="ID" labelWidth={10} required disabled={disabled}>
-                        <Input {...register("id", { required: true })} value={currentFormat.id} disabled={disabled} onChange={handleOnChangeFormat} required />
+                        <Input {...register("id")} value={currentFormat.id} disabled={disabled} onChange={handleOnChangeFormat} required />
                     </InlineField>
                 </div>
             )

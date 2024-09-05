@@ -14,10 +14,7 @@ export const predictAllCollections = async (model: IModel, allData: IDataCollect
     return allData
 }
 
-const predictData = async (model: IModel, dataCollection: IDataCollection) => {
-    console.log("numValues", model.numberOfValues)
-    console.log("dataCollection", dataCollection)
-    let results: IResult[] = prepareData(dataCollection, model.numberOfValues)
+export const predictResults = async (model: IModel, results: IResult[]) => {
     let dataToPredict: IDataPred[] = []
     for (const [i, r] of results.entries()) {
         let finalData = deepCopy(r.data)
@@ -39,6 +36,13 @@ const predictData = async (model: IModel, dataCollection: IDataCollection) => {
     return results.map<IResult>((r: IResult, indx: number) => { return { ...r, result: predictions[indx] } })
 }
 
+const predictData = async (model: IModel, dataCollection: IDataCollection) => {
+    console.log("numValues", model.numberOfValues)
+    console.log("dataCollection", dataCollection)
+    let results: IResult[] = prepareData(dataCollection, model.numberOfValues)
+    return await predictResults(model, results)
+}
+
 const getValuesFromInterval = (interval: IInterval): number[] => {
     if (interval.max === undefined || interval.min === undefined || interval.steps === undefined) return []
 
@@ -57,7 +61,7 @@ const calculatePercentage = (percent: number, total: number) => {
     return (percent / 100) * total
 }
 
-const getListValuesFromNew = (newValue: number, mean: number, rawValues: number[]): number[] => {
+export const getListValuesFromNew = (newValue: number, mean: number, rawValues: number[]): number[] => {
     let weights = rawValues.map((r: number) => Math.abs(r) / Math.abs(mean))       // Obtener PESOS
     return weights.map((w: number) => w * newValue)            // Otener nuevos valores a partir del nuevo y los pesos
 }
@@ -95,7 +99,7 @@ const defaultDataToObject = (data: IData[]): IDataPred => {
 }
 
 
-const newDataToObject = (data: IData[], hasInterval: boolean, numberOfElements = 1): IDataPred => {
+export const newDataToObject = (data: IData[], hasInterval: boolean, numberOfElements = 1): IDataPred => {
     let res: IDataPred = {}
     data.forEach((d: IData) => {
         let vals = (d.raw_values) ? d.raw_values : []

@@ -1,9 +1,9 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { FormatTags, ICredentials, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
+import { FormatTags, ICredentials, IExtraCalc, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
 import { Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
-import { dataFrameToOptions, enumToSelect, formatsToOptions } from 'utils/utils'
+import { dataFrameToOptions, enumToSelect, extraCalcToOptions, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
 import { Mode } from 'utils/constants';
 import { css } from '@emotion/css';
@@ -31,11 +31,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const [selectedQuery, setSelectedQuery] = useState<SelectableValue<string>>()
     const [selectedExtraInfo, setSelectedExtraInfo] = useState<SelectableValue<string>>()
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<IFormat>>()
+    const [selectedExtraCalc, setSelectedExtraCalc] = useState<SelectableValue<IExtraCalc>>()
     const [selectedVarTime, setSelectedVarTime] = useState<SelectableValue<string>>()
     const [selectedVarTags, setSelectedVarTags] = useState<SelectableValue<string>>()
     const [selectedQuotesListItems, setSelectedQuotesListItems] = useState<SelectableValue<string>>({ label: FormatTags.None, value: FormatTags['None'] })
     const [queryOptions, setQueryOptions] = useState<ISelect[]>([])
     const [formatOptions, setFormatOptions] = useState<ISelect[]>([])
+    const [extraCalcOptions, setExtraCalcOptions] = useState<ISelect[]>([])
     const [code, setCode] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
     const [scaler, setScaler] = useState("")
@@ -49,6 +51,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setSelectedQuery({ label: model.queryId, value: model.queryId })
         if (model.extraInfo !== undefined) setSelectedExtraInfo({ label: model.extraInfo, value: model.extraInfo })
         if (model.format !== undefined) setSelectedFormat({ label: model.format.id, value: model.format })
+        if (model.extraCalc !== undefined) setSelectedExtraCalc({ label: model.extraCalc.id, value: model.extraCalc })
         setSelectedVarTags({ label: model.varTags, value: model.varTags })
         setSelectedVarTime({ label: model.varTime, value: model.varTime })
         setSelectedQuotesListItems({ label: model.formatTags, value: model.formatTags })
@@ -90,6 +93,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             varTags: selectedVarTags?.value,
             formatTags: selectedQuotesListItems?.value,
             format: selectedFormat?.value,
+            extraCalc: selectedExtraCalc?.value,
             preprocess: code,
             credentials: credentials,
             isListValues: listValues,
@@ -146,6 +150,14 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     useEffect(() => {
         setQueryOptions(dataFrameToOptions(context.data))
     }, [context.data])
+
+    useEffect(() => {
+        if (context.options.extraCalcs !== undefined) {
+            setExtraCalcOptions(extraCalcToOptions(context.options.extraCalcs))
+        } else {
+            setExtraCalcOptions([])
+        }
+    }, [context.options.formats])
 
     useEffect(() => {
         if (context.options.formats !== undefined) {
@@ -210,6 +222,21 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     </InlineField>
                     <InlineField label="Decimals" labelWidth={10} disabled={disabled} grow>
                         <Input {...register("decimals")} disabled={disabled} value={currentModel.decimals} onChange={handleOnChangeModel} type='number' />
+                    </InlineField>
+                    <InlineField label="Extra calculation" labelWidth={15} disabled={disabled} grow>
+                        <InputControl
+                            render={({ field }) =>
+                                <Select
+                                    value={selectedExtraCalc}
+                                    options={extraCalcOptions}
+                                    onChange={(v) => setSelectedExtraCalc(v)}
+                                    disabled={disabled}
+                                    menuPosition='fixed'
+                                />
+                            }
+                            control={control}
+                            name="extraCalc"
+                        />
                     </InlineField>
                     <Collapse label="Model queries" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         <p style={{ marginBottom: '5px', marginTop: '5px' }}>Import data query</p>

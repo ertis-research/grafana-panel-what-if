@@ -22,9 +22,9 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const theme = useTheme2()
     const context = useContext(Context)
 
-    const fieldTag = (model != undefined) ? model.columnTag : ModelDefault.columnTag
-    const fieldValueExtraInfo = (model != undefined) ? model.columnValueExtraInfo : ModelDefault.columnValueExtraInfo
-    const fieldNameInfo = (model != undefined) ? model.columnNameExtraInfo : ModelDefault.columnNameExtraInfo
+    const fieldTag = (model !== undefined) ? model.columnTag : ModelDefault.columnTag
+    const fieldValueExtraInfo = (model !== undefined) ? model.columnValueExtraInfo : ModelDefault.columnValueExtraInfo
+    const fieldNameInfo = (model !== undefined) ? model.columnNameExtraInfo : ModelDefault.columnNameExtraInfo
 
     //const idFileUpload = "fileUpload"
     const idDateTimeSet = "dateTimeSet"
@@ -37,16 +37,16 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const [disabledButton, setDisabledButton] = useState(true)
     const [hasToSaveNewData, setHasToSaveNewData] = useState<DateTime | undefined>(undefined)
 
-    const addCollectionWithName = (key: string, name: string, from: string, data: IData[], dTime?: DateTime, int?: IInterval, extraInfo?:any) => {
+    const addCollectionWithName = (key: string, name: string, from: string, data: IData[], dTime?: DateTime, int?: IInterval, extraInfo?: any) => {
         let rep = collections.filter((col: IDataCollection) => col.id.includes(key)).length
-        let id = from + ":" + key + ((rep != 0) ? "_" + rep : "")
+        let id = from + ":" + key + ((rep !== 0) ? "_" + rep : "")
         while (collections.some((col: IDataCollection) => col.id === id)) {
             rep = rep + + 1
-            id = from + ":" + key + ((rep != 0) ? "_" + rep : "")
+            id = from + ":" + key + ((rep !== 0) ? "_" + rep : "")
         }
         addCollection({
             id: id,
-            name: "Data from " + from + ": " + name + ((rep != 0) ? " (" + rep + ")" : ""),
+            name: "Data from " + from + ": " + name + ((rep !== 0) ? " (" + rep + ")" : ""),
             dateTime: dTime,
             interval: (int !== undefined) ? int : IntervalDefault,
             data: data,
@@ -57,12 +57,12 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             type: AppEvents.alertSuccess.name,
             payload: [context.messages._panel._step2.alertCollectionAdded]
         })
-        if (context.actualStep != undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
+        if (context.actualStep !== undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
     }
 
     // Para imitar el bug: añadir varias veces data del mismo tiempo, eliminarlos todos y añadir otro
     const importDataFromDateTime = (dt?: DateTime) => {
-        if (dt != undefined && model != undefined) {
+        if (dt !== undefined && model !== undefined) {
             // Lo comentado hace que se dupliquen los datos de la coleccion que tenga la misma key en lugar de pedirlo de nuevo
             //const timestamp = dateTimeToTimestamp(dt).toString()
             //const indx = collections.findIndex((col: IDataCollection) => col.id.includes(timestamp))
@@ -83,7 +83,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
     const importDataFromCSV = () => {
         console.log("EXCEL")
-        if (fileCSV && model != undefined) {
+        if (fileCSV && model !== undefined) {
             Papa.parse(fileCSV, {
                 header: false,
                 skipEmptyLines: 'greedy',
@@ -93,7 +93,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                         const appEvents = getAppEvents();
                         appEvents.publish({
                             type: AppEvents.alertError.name,
-                            payload: [e.type + ": " + e.code, e.message + ((e.row != undefined) ? " (Row: " + e.row + ")" : "")]
+                            payload: [e.type + ": " + e.code, e.message + ((e.row !== undefined) ? " (Row: " + e.row + ")" : "")]
                         })
                     })
                     const dt = getDateTimeCSV(d)
@@ -114,22 +114,22 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             })
         }
     }
-/*
-    const handleOnChangeDateTime = (newDatetime: DateTime) => {
-        setDateTimeInput(newDatetime)
-        console.log(dateTimeInput?.toISOString())
-    }*/
+    /*
+        const handleOnChangeDateTime = (newDatetime: DateTime) => {
+            setDateTimeInput(newDatetime)
+            console.log(dateTimeInput?.toISOString())
+        }*/
 
-    const handleOnChangeDate = (newDate: string|Date) => {
-        let newDateTime:Date = new Date(newDate)
-        if(dateTimeInput.hour != undefined) newDateTime.setHours(dateTimeInput.hour())
-        if(dateTimeInput.minute != undefined) newDateTime.setMinutes(dateTimeInput.minute())
+    const handleOnChangeDate = (newDate: string | Date) => {
+        let newDateTime: Date = new Date(newDate)
+        if (dateTimeInput.hour !== undefined) newDateTime.setHours(dateTimeInput.hour())
+        if (dateTimeInput.minute !== undefined) newDateTime.setMinutes(dateTimeInput.minute())
         setDateTimeInput(dateTime(newDateTime))
         console.log(dateTimeInput?.toISOString())
     }
 
     const handleOnChangeTime = (newTime: DateTime) => {
-        let date:Date = newTime.toDate()
+        let date: Date = newTime.toDate()
         let newDateTime = dateTimeInput.toDate()
         newDateTime.setHours(date.getHours())
         newDateTime.setMinutes(date.getMinutes())
@@ -171,15 +171,15 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
 
     useEffect(() => {
-        let newDisabled: boolean = true
-        let newDisabledButton: boolean = true
+        let newDisabled = true
+        let newDisabledButton = true
 
         if (context.actualStep) {
             newDisabled = context.actualStep !== Steps.step_2 && context.actualStep !== Steps.step_3
             if (!newDisabled) newDisabledButton = !(
-                (mode.value === ImportDataEnum.EXCEL && fileCSV != undefined) || 
-                (mode.value === ImportDataEnum.DATETIME_VARIABLE_GRAFANA && selectedGrafanaVariable && selectedGrafanaVariable.value !== undefined) || 
-                (mode.value === ImportDataEnum.DATETIME_SET && dateTimeInput != undefined))
+                (mode.value === ImportDataEnum.EXCEL && fileCSV !== undefined) ||
+                (mode.value === ImportDataEnum.DATETIME_VARIABLE_GRAFANA && selectedGrafanaVariable && selectedGrafanaVariable.value !== undefined) ||
+                (mode.value === ImportDataEnum.DATETIME_SET && dateTimeInput !== undefined))
         }
         setDisabled(newDisabled)
         setDisabledButton(newDisabledButton)
@@ -200,17 +200,17 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
     useEffect(() => {
         console.log("Data received")
-        if (hasToSaveNewData !== undefined 
-            && (hasToSaveNewData === dateTimeInput || (selectedGrafanaVariable && hasToSaveNewData === selectedGrafanaVariable.value)) 
-            && model != undefined 
-            && (data.state == LoadingState.Done || data.state == LoadingState.Error)) {
+        if (hasToSaveNewData !== undefined
+            && (hasToSaveNewData === dateTimeInput || (selectedGrafanaVariable && hasToSaveNewData === selectedGrafanaVariable.value))
+            && model !== undefined
+            && (data.state === LoadingState.Done || data.state === LoadingState.Error)) {
 
-            if (data.state == LoadingState.Done) {
+            if (data.state === LoadingState.Done) {
                 console.log("Done")
                 console.log("Data", data)
                 let extraInfo = undefined
                 const arrayData = getArrayOfData(data, model.queryId, fieldTag, model.isListValues, model.numberOfValues)
-                if(model && model.extraInfo !== undefined) extraInfo = getExtraInfo(data, model.extraInfo, fieldNameInfo, fieldValueExtraInfo)
+                if (model && model.extraInfo !== undefined) extraInfo = getExtraInfo(data, model.extraInfo, fieldNameInfo, fieldValueExtraInfo)
                 if (arrayData.length > 0) {
                     addCollectionWithName(dateTimeToTimestamp(hasToSaveNewData).toString(), dateTimeLocalToString(hasToSaveNewData), "DateTime", arrayData, hasToSaveNewData, IntervalDefault, extraInfo)
                 } else {
@@ -242,7 +242,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const ImportExcel = <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }} >
         <input type="file" accept='.csv, text/csv' id="selectedFile" hidden style={{ display: 'none' }} onChange={handleOnFileUploadCSV} />
         <Button icon='upload' fullWidth disabled={disabled} onClick={handleButtonFileUpload}>{context.messages._panel._step2.uploadFile}</Button>
-        <div className='wrap-elipsis' title={(fileCSV) ? fileCSV.name : undefined} style={{ marginLeft: '10px' }}>{(fileCSV == undefined) ? context.messages._panel._step2.noFile : fileCSV.name}</div>
+        <div className='wrap-elipsis' title={(fileCSV) ? fileCSV.name : undefined} style={{ marginLeft: '10px' }}>{(fileCSV === undefined) ? context.messages._panel._step2.noFile : fileCSV.name}</div>
     </div>
 
     /*<FileUpload
@@ -260,16 +260,16 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         />
     */
 
-    const ImportDatetimeSet = <div style={{ width: '100%'}}>
-        <DatePickerWithInput 
-                onChange={handleOnChangeDate}
-                value={dateTimeInput?.toDate()}
-                maxDate={new Date()}
-                disabled={disabled}
-                className='fullWidth'
-                closeOnSelect
+    const ImportDatetimeSet = <div style={{ width: '100%' }}>
+        <DatePickerWithInput
+            onChange={handleOnChangeDate}
+            value={dateTimeInput?.toDate()}
+            maxDate={new Date()}
+            disabled={disabled}
+            className='fullWidth'
+            closeOnSelect
         />
-        <div className='timePicker fullWidth' style={{marginTop: '8px'}}>
+        <div className='timePicker fullWidth' style={{ marginTop: '8px' }}>
             <TimeOfDayPicker
                 onChange={handleOnChangeTime}
                 showSeconds={false}

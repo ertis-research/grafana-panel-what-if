@@ -1,7 +1,7 @@
 import { DataFrame, DateTime } from '@grafana/data'
 import { createContext } from 'react'
 import { ContextDefault } from './default'
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, ISelect, ITag, Language } from './types'
+import { FormatTags, IContext, IDataCollection, IExtraCalc, IFormat, IModel, ISelect, ITag, Language } from './types'
 import { ILocalization } from './localization/scheme'
 import { messages_es } from './localization/es'
 import { messages_en } from './localization/en'
@@ -39,7 +39,7 @@ export const collectionsToSelect = (collections: IDataCollection[]): ISelect[] =
 }
 
 export const enumToSelect = (e: any) => {
-  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value}))
+  return Object.entries(e).map(([key, value]) => ({ label: value as string, value: value }))
 }
 
 export const tagsToString = (tags: ITag[], format: FormatTags) => {
@@ -55,7 +55,7 @@ export const tagsToString = (tags: ITag[], format: FormatTags) => {
 }
 
 export const defaultIfUndefined = (obj: any, def: any) => {
-  return (obj == undefined) ? def : obj
+  return (obj === undefined) ? def : obj
 }
 
 export const disabledByJS = (disabled: boolean, id: string, document: any) => {
@@ -92,6 +92,15 @@ export const dataFrameToOptions = (dataFrame: DataFrame[]): ISelect[] => {
     return {
       value: id,
       label: id
+    }
+  })
+}
+
+export const extraCalcToOptions = (extraCalcs: IExtraCalc[]): ISelect[] => {
+  return extraCalcs.map((f: IExtraCalc) => {
+    return {
+      value: f,
+      label: f.id
     }
   })
 }
@@ -141,7 +150,7 @@ export const getMessagesByLanguage = (l: Language): ILocalization => {
 
 export const getValueByKeyAnyDepth = (obj: any, search: string) => {
   let res: any = undefined
-  if(obj != undefined && obj != null) {
+  if (obj !== undefined && obj != null) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length && res === undefined; i++) {
       const key = Object.keys(obj)[i]
@@ -159,11 +168,11 @@ export const isEmpty = (obj: any) => {
   return Object.keys(obj).length === 0;
 }
 
-export const getMean = (list:number[]) : number => {
+export const getMean = (list: number[]): number => {
   let newlist = list.filter((e) => e != null)
-  return (newlist.length > 0) ? newlist.reduce((previous, current) => current += previous)/newlist.length : -1 //Throw error
+  return (newlist.length > 0) ? newlist.reduce((previous, current) => current += previous) / newlist.length : -1 //Throw error
 }
 
-export const transposeMatrix = (matrix:number[][]) : number[][] => {
-  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));  
+export const transposeMatrix = (matrix: number[][]): number[][] => {
+  return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
 }

@@ -7,6 +7,19 @@ export enum Language {
   Spanish = 'es'
 }
 
+export enum Calc {
+  sum = "+",
+  sub = "-",
+  mul = "*",
+  div = "/"
+}
+
+export enum ExtraCalcFormat {
+  raw = "Raw",
+  process = "Number processed",
+  addDays = "Add as days to selected date"
+}
+
 export enum FormatTags {
   None = 'None',
   dq = 'Double quotes',
@@ -55,11 +68,13 @@ export interface ITag {
 export interface IDataCollection {
   id: string,
   name: string,
-  dateTime?: DateTime
+  dateTime?: DateTime,
   data: IData[],
   interval: IInterval,
   results?: IResult[]
-  extraInfo?: { [key: string]: any }
+  extraInfo?: { [key: string]: any },
+  resultsExtraCalc?: IResult[],
+  conclusionExtraCalc?: string
 }
 
 export interface IData {
@@ -101,6 +116,7 @@ export interface IModel {
   preprocess?: string,
   scaler?: IScaler,
   format?: IFormat,
+  extraCalc?: IExtraCalc,
   extraInfo?: string,
   varTags: string,
   formatTags: FormatTags,
@@ -121,6 +137,19 @@ export interface IFormat {
   output: string
 }
 
+export interface IExtraCalc {
+  id: string,
+  name: string,
+  dynamicFieldName?: string,
+  tag: string,
+  calc: Calc,
+  calcValue: string,
+  until: string,
+  resProcess: string,
+  maxIterations: number,
+  resFormat: ExtraCalcFormat
+}
+
 export interface IScaler {
   mean: number[]
   scale: number[]
@@ -136,7 +165,8 @@ export interface ICSVScheme {
 export interface Options {
   language: Language,
   models: IModel[],
-  formats: IFormat[]
+  formats: IFormat[],
+  extraCalcs: IExtraCalc[]
 }
 
 export type IInterval = {
