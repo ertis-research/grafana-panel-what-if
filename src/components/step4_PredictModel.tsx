@@ -1,7 +1,7 @@
-import { Button, HorizontalGroup, IconButton, InlineField, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
-import React, { Fragment, useContext, useEffect, useState } from 'react'
+import { Button, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
+import React, { FormEvent, Fragment, useContext, useEffect, useState } from 'react'
 import { Context, dateTimeLocalToString, getMean, round, groupBy } from 'utils/utils'
-import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag } from 'utils/types'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, DateRes } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
@@ -9,6 +9,7 @@ import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } f
 import { getAppEvents } from '@grafana/runtime'
 import { AppEvents, isDateTime, PanelData } from '@grafana/data'
 import { extraCalcCollection } from 'utils/datasources/extraCalc'
+
 interface Props {
     model?: IModel,
     collections: IDataCollection[],
@@ -33,11 +34,11 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const [sizePlot, setSizePlot] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isCollapseExtraInfo, setIsCollapseExtraInfo] = useState(false)
-    const [dynamicFieldValue, setDynamicFieldValue] = useState(0)
+    const [dynamicFieldValues, setDynamicFieldValues] = useState<number[]>([])
     const [currentPage, setCurrentPage] = useState(1)
 
-    const disabled = (context.actualStep) ? context.actualStep < Steps.step_3 : false
-    const disabledModifyAgain = (context.actualStep) ? context.actualStep < Steps.step_4 : false
+    const disabled = (context.actualStep) ? (context.actualStep < Steps.step_3 || state === StatePredict.LOADING) : false
+    const disabledModifyAgain = (context.actualStep) ? (context.actualStep < Steps.step_4 || state === StatePredict.LOADING) : false
 
     const validate = () => {
         let msg = ""
@@ -63,7 +64,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         }
     }
 
-    const onClickPredictHandle = () => {
+    const handleOnClickPredict = () => {
         if (validate()) {
             //console.log("COLLECTIONS PREDICT", collections)
             if (model) {
@@ -79,7 +80,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         }
     }
 
-    const onClickExtraCalcHandle = () => {
+    const handleOnClickExtraCalc = () => {
         if (validate()) {
             //console.log("COLLECTIONS PREDICT", collections) 
             if (model && currentCollIdx !== undefined && currentCollIdx < collections.length) {
@@ -87,8 +88,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 let col: IDataCollection = collections[currentCollIdx]
                 delete col.resultsExtraCalc
                 delete col.conclusionExtraCalc
-                console.log("collll", col)
-                extraCalcCollection(model, col, dynamicFieldValue).then((res: IDataCollection) => {
+                extraCalcCollection(model, col, dynamicFieldValues).then((res: IDataCollection) => {
                     let aux = [...collections]
                     aux[currentCollIdx] = res
                     updateCollections(aux)
@@ -98,7 +98,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         }
     }
 
-    const onClickModifyAgainHandle = () => {
+    const handleOnClickModifyAgain = () => {
         let newCollections: IDataCollection[] = []
         collections.forEach((col: IDataCollection) => {
             let newCol = { ...col }
@@ -110,6 +110,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         updateCollections(newCollections)
         setState(StatePredict.EMPTY)
         context.setActualStep(Steps.step_3)
+    }
+
+    const handleOnChangeDynField = (e: FormEvent<HTMLInputElement>, idx: number) => {
+        e.preventDefault()
+        let aux = [...dynamicFieldValues]
+        aux[idx] = parseFloat(e.currentTarget.value)
+        setDynamicFieldValues(aux)
     }
 
     const setDecimals = (value: any) => {
@@ -124,6 +131,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }, [collections])
 
     useEffect(() => {
+        if(model && model.extraCalc && model.extraCalc.dynamicFields) {
+            setDynamicFieldValues(Array(model.extraCalc.dynamicFields.length).fill(0))
+        }
+    }, [model])
+    
+
+    useEffect(() => {
     }, [currentCollIdx])
 
     useEffect(() => {
@@ -136,13 +150,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         const divPagination = document.getElementById('id-pagination')
         if (divResults && divHeaders && divResultsBase) {
             setSizePlot({
-                height: context.height - divHeaders.offsetHeight - divResultsBase.offsetHeight - 41.5 - ((divPagination) ? (divPagination.offsetHeight+9.5) : 0),//- 47,
+                height: context.height - divHeaders.offsetHeight - divResultsBase.offsetHeight - 41.5 - ((divPagination) ? (divPagination.offsetHeight + 9.5) : 0),//- 47,
                 width: (divResults.offsetWidth < context.width) ? divResults.offsetWidth : context.width
             })
             //console.log('width', divResults.offsetWidth)
             //console.log('height', divHeaders.offsetHeight + divResultsBase.offsetHeight)
         }
-    }, [context.width, context.height, state, currentCollIdx, isCollapseExtraInfo])
+    }, [context.width, context.height, state, currentCollIdx, isCollapseExtraInfo, currentPage])
 
 
 
@@ -315,28 +329,45 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         if (col.conclusionExtraCalc !== undefined) {
             return <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '100%' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.resultCalc}</p>
-                <h1 style={{ textAlign: 'center' }}>{col.conclusionExtraCalc}</h1>
+                {(col.conclusionExtraCalc instanceof DateRes) ?
+                    <div>
+                        <h3 style={{ textAlign: 'center', marginBottom: '0px' }}>{col.conclusionExtraCalc.dateString}</h3>
+                        <p style={{ textAlign: 'center', marginTop: '5px' }}>Remaining days: {col.conclusionExtraCalc.days}</p>
+                    </div>
+                    : <h1 style={{ textAlign: 'center' }}>{col.conclusionExtraCalc}</h1>
+                }
             </div>
         }
         return <div></div>
     }
 
+    const dynamicFields = (fields: string[]) => {
+        return <div style={{ width: '50%', display: 'block', marginRight: '10px' }}>
+            {fields.map((name: string, idx: number) =>
+                <div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px' }}>
+                    <InlineLabel width={15} transparent>{name}</InlineLabel>
+                    <Input style={{ width: 'calc(100% - 15px)' }} value={dynamicFieldValues[idx]} type='number' step="any" onChange={(e) => handleOnChangeDynField(e, idx)} />
+                </div>
+            )}
+        </div>
+
+    }
+
     const divExtraCalc = () => {
         if (model !== undefined && model.extraCalc !== undefined) {
-            return <div style={{ display: 'flex', width: '100%', marginTop: '10px' }}>
-                {(model.extraCalc.dynamicFieldName !== undefined) ?
-                    <InlineField label={model.extraCalc.dynamicFieldName} style={{ marginRight: '10px' }}>
-                        <Input width={10} value={dynamicFieldValue} type='number' step="any" onChange={(v) => { v.preventDefault(); setDynamicFieldValue(parseFloat(v.currentTarget.value)) }} />
-                    </InlineField> : <div></div>}
-                <Button fullWidth disabled={disabled} onClick={onClickExtraCalcHandle}>{model.extraCalc.name}</Button>
+            return <div style={{ marginTop: '10px', width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+                {(model.extraCalc.dynamicFields !== undefined) ? dynamicFields(model.extraCalc.dynamicFields) : <div></div>}
+                <div style={{ width: (model.extraCalc.dynamicFields !== undefined) ? 'calc(50% - 10px)' : '100%', display: 'flex', justifyItems: 'center' }}>
+                    <Button fullWidth disabled={disabled || dynamicFieldValues.some((v) => isNaN(v))} onClick={handleOnClickExtraCalc}>{model.extraCalc.name}</Button>
+                </div>
             </div>
         }
         return <div></div>
     }
 
     const getButton = (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ?
-        <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={onClickModifyAgainHandle}>{msgs.modifyAgain}</Button>
-        : <Button fullWidth disabled={disabled} onClick={onClickPredictHandle}>{msgs.predict}</Button>
+        <Button fullWidth icon='repeat' variant='destructive' disabled={disabledModifyAgain} onClick={handleOnClickModifyAgain}>{msgs.modifyAgain}</Button>
+        : <Button fullWidth disabled={disabled} onClick={handleOnClickPredict}>{msgs.predict}</Button>
 
 
     const extraCalcResult = (col: IDataCollection) => {

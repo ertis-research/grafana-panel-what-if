@@ -74,7 +74,7 @@ export interface IDataCollection {
   results?: IResult[]
   extraInfo?: { [key: string]: any },
   resultsExtraCalc?: IResult[],
-  conclusionExtraCalc?: string
+  conclusionExtraCalc?: string|DateRes
 }
 
 export interface IData {
@@ -140,7 +140,7 @@ export interface IFormat {
 export interface IExtraCalc {
   id: string,
   name: string,
-  dynamicFieldName?: string,
+  dynamicFields?: string[],
   tag: string,
   calc: Calc,
   calcValue: string,
@@ -148,6 +148,16 @@ export interface IExtraCalc {
   resProcess: string,
   maxIterations: number,
   resFormat: ExtraCalcFormat
+}
+
+export class DateRes {
+  dateString: string;
+  days: number;
+  
+  constructor(dateString: string, days: number) {
+    this.dateString = dateString
+    this.days = days
+  }
 }
 
 export interface IScaler {

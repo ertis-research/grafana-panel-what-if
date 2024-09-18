@@ -1,7 +1,7 @@
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
 import { Calc, ExtraCalcFormat, IExtraCalc, ISelect } from 'utils/types';
-import { Alert, Button, Collapse, ConfirmButton, Form, FormAPI, HorizontalGroup, InlineField, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { Alert, Button, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ExtraCalcDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
 import { enumToSelect } from 'utils/utils';
@@ -14,6 +14,10 @@ interface Props {
     mode: Mode,
     context: StandardEditorContext<any, any>
 }
+/*
+interface IDynField {
+    name: string
+}*/
 
 export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, deleteFunction, mode, context }) => {
 
@@ -23,12 +27,15 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     const [currentCalc, setCurrentCalc] = useState<IExtraCalc>(ExtraCalcDefault)
     const [selectedCalc, setSelectedCalc] = useState<SelectableValue<string>>(calcOptions[0])
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<string>>(formatOptions[0])
+    const [currentDynamicFields, setCurrentDynamicFields] = useState<string[]>([])
+    const [currentDynFieldName, setCurrentDynFieldName] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
 
     const updateCurrentState = () => {
         setCurrentCalc(extraCalc)
-        setSelectedCalc({value: extraCalc.calc, label: extraCalc.calc as string})
-        setSelectedFormat({value: extraCalc.resFormat, label: extraCalc.resFormat as string})
+        setSelectedCalc({ value: extraCalc.calc, label: extraCalc.calc as string })
+        setSelectedFormat({ value: extraCalc.resFormat, label: extraCalc.resFormat as string })
+        if (extraCalc.dynamicFields) setCurrentDynamicFields(extraCalc.dynamicFields)
     }
 
     const handleOnChangeCalc = (event: ChangeEvent<HTMLInputElement>) => {
@@ -38,11 +45,18 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         })
     }
 
+    const handleOnChangeDynFieldName = (event: FormEvent<HTMLInputElement>, idx: number) => {
+        let aux = [...currentDynamicFields]
+        aux[idx] = event.currentTarget.value
+        setCurrentDynamicFields(aux)
+    }
+
     const handleOnSubmitAddFormat = () => {
         updateFunction({
             ...currentCalc,
             calc: selectedCalc.value,
-            resFormat: selectedFormat.value
+            resFormat: selectedFormat.value,
+            dynamicFields: currentDynamicFields
         })
         if (mode === Mode.EDIT) {
             setDisabled(true)
@@ -64,6 +78,17 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
 
     const handleOnConfirmDeleteFormat = () => {
         if (deleteFunction) deleteFunction()
+    }
+
+    const handleOnConfirmDeleteDynField = (idx: number) => {
+        const updatedDynList = [...currentDynamicFields]
+        updatedDynList.splice(idx, 1)
+        setCurrentDynamicFields(updatedDynList)
+    }
+
+    const handleOnAddDynField = () => {
+        setCurrentDynamicFields([...currentDynamicFields, currentDynFieldName])
+        setCurrentDynFieldName("")
     }
 
     useEffect(() => {
@@ -99,30 +124,62 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         }
     }
 
+    const dynamicFieldsList = () => <div>
+        {currentDynamicFields.map((s: string, idx: number) => {
+            return <div style={{ width: '100%', display: 'flex' }}>
+                <b style={{ width: '50px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>dyn{idx + 1}</b>
+                <InlineField label="Name" labelWidth={7} grow disabled={disabled}>
+                    <Input value={s} disabled={disabled} onChange={(e) => handleOnChangeDynFieldName(e, idx)} required />
+                </InlineField>
+                <div style={{ height: '30px', width: '25px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <DeleteButton
+                        disabled={disabled}
+                        onConfirm={() => {
+                            handleOnConfirmDeleteDynField(idx)
+                        }}
+                    />
+                </div>
+            </div>
+        })}
+    </div>
+
+    const dynamicFieldsAdd = () => {
+        return <div style={{ width: '100%', display: 'flex' }}>
+            <b style={{ width: '50px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>dyn{currentDynamicFields.length + 1}</b>
+            <InlineField label="Name" labelWidth={7} grow disabled={disabled}>
+                <Input value={currentDynFieldName} disabled={disabled} onChange={(s) => setCurrentDynFieldName(s.currentTarget.value)} />
+            </InlineField>
+            <div style={{ height: '30px', width: '100px', display: 'flex', alignItems: 'center' }}>
+                <Button fullWidth type="button" onClick={handleOnAddDynField} variant='secondary' disabled={disabled}>Add field</Button>
+            </div>
+        </div>
+    }
+
     return <div>
         {buttonEdit()}
 
-        <Form id="formatForm" onSubmit={handleOnSubmitAddFormat} maxWidth="none">{({ register, errors, control }: FormAPI<any>) => {
+        <Form id="extraForm" onSubmit={handleOnSubmitAddFormat} maxWidth="none">{({ register, errors, control }: FormAPI<any>) => {
             return (
                 <div>
                     <InlineField label="ID" labelWidth={17} required grow disabled={disabled}>
                         <Input {...register("id")} value={currentCalc.id} disabled={disabled} onChange={handleOnChangeCalc} required />
                     </InlineField>
                     <InlineField label="Name" labelWidth={17} required grow disabled={disabled}>
-                        <Input {...register("name")} value={currentCalc.name} disabled={disabled} onChange={handleOnChangeCalc} required/>
+                        <Input {...register("name")} value={currentCalc.name} disabled={disabled} onChange={handleOnChangeCalc} required />
                     </InlineField>
                     <InlineField label="Maximum iterations" labelWidth={17} grow disabled={disabled}>
-                        <Input {...register("maxIterations")} value={currentCalc.maxIterations} disabled={disabled} onChange={handleOnChangeCalc} required/>
+                        <Input {...register("maxIterations")} value={currentCalc.maxIterations} disabled={disabled} onChange={handleOnChangeCalc} required />
                     </InlineField>
-                    <InlineField label="Dynamic field name" labelWidth={17} grow disabled={disabled}>
-                        <Input {...register("dynamicFieldName")} value={currentCalc.dynamicFieldName} disabled={disabled} onChange={handleOnChangeCalc} required/>
-                    </InlineField>
+                    <Collapse label="Dynamic fields" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
+                        {dynamicFieldsList()}
+                        {dynamicFieldsAdd()}
+                    </Collapse>
                     <Collapse label="Recursive calculation" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         <Alert title="Info" severity='info'>
-                            $out = model output<br />$dyn = value of dynamic field<br />$[X] = value of tag X (replace X with the tag desired)
+                            $out = model output<br />$dynX = value of dynamic field X<br />$[X] = value of tag X (replace X with the tag desired)
                         </Alert>
                         <InlineField label="Initial tag" labelWidth={17} grow required disabled={disabled}>
-                            <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required/>
+                            <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required />
                         </InlineField>
                         <InlineField label="Calculation" labelWidth={17} required disabled={disabled}>
                             <InputControl
@@ -165,7 +222,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                                 name="resFormat"
                             />
                         </InlineField>
-                        <InlineField label="Result processing" labelWidth={17} grow hidden={selectedFormat.value === ExtraCalcFormat.raw } required={selectedFormat.value === ExtraCalcFormat.process} disabled={disabled}>
+                        <InlineField label="Result processing" labelWidth={17} grow hidden={selectedFormat.value === ExtraCalcFormat.raw} required={selectedFormat.value === ExtraCalcFormat.process} disabled={disabled}>
                             <Input {...register("resProcess")} value={currentCalc.resProcess} disabled={disabled} onChange={handleOnChangeCalc} required={selectedFormat.value === ExtraCalcFormat.process} />
                         </InlineField>
                     </Collapse>
@@ -175,7 +232,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         </Form>
         <HorizontalGroup justify='flex-end'>
             <Button type="button" hidden={(mode === Mode.EDIT) ? disabled : true} variant='primary' disabled={disabled} fill="text" onClick={handleOnClickCancel}>Cancel</Button>
-            <Button type='submit' form='formatForm' hidden={disabled} variant='primary' disabled={disabled} icon={(mode === Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} calculation</Button>
+            <Button type='submit' form='extraForm' hidden={disabled} variant='primary' disabled={disabled} icon={(mode === Mode.EDIT) ? 'save' : 'plus'}>{mode.valueOf()} calculation</Button>
         </HorizontalGroup>
     </div>
 }
