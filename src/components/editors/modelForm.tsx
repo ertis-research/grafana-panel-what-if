@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
 import { FormatTags, ICredentials, IExtraCalc, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, extraCalcToOptions, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
@@ -29,10 +29,12 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const [currentTags, setCurrentTags] = useState<ITag[]>([])
     const [selectedMethod, setSelectedMethod] = useState<SelectableValue<string>>()
     const [selectedQuery, setSelectedQuery] = useState<SelectableValue<string>>()
+    const [selectedQueryRange, setSelectedQueryRange] = useState<SelectableValue<string>>()
     const [selectedExtraInfo, setSelectedExtraInfo] = useState<SelectableValue<string>>()
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<IFormat>>()
     const [selectedExtraCalc, setSelectedExtraCalc] = useState<SelectableValue<IExtraCalc>>()
     const [selectedVarTime, setSelectedVarTime] = useState<SelectableValue<string>>()
+    const [selectedVarTimeStart, setSelectedVarTimeStart] = useState<SelectableValue<string>>()
     const [selectedVarTags, setSelectedVarTags] = useState<SelectableValue<string>>()
     const [selectedQuotesListItems, setSelectedQuotesListItems] = useState<SelectableValue<string>>({ label: FormatTags.None, value: FormatTags['None'] })
     const [queryOptions, setQueryOptions] = useState<ISelect[]>([])
@@ -49,11 +51,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setCurrentTags(model.tags)
         setSelectedMethod({ label: model.method, value: model.method })
         setSelectedQuery({ label: model.queryId, value: model.queryId })
+        if (model.queryRangeId !== undefined) setSelectedQueryRange({ label: model.queryRangeId, value: model.queryRangeId })
         if (model.extraInfo !== undefined) setSelectedExtraInfo({ label: model.extraInfo, value: model.extraInfo })
         if (model.format !== undefined) setSelectedFormat({ label: model.format.id, value: model.format })
         if (model.extraCalc !== undefined) setSelectedExtraCalc({ label: model.extraCalc.id, value: model.extraCalc })
         setSelectedVarTags({ label: model.varTags, value: model.varTags })
         setSelectedVarTime({ label: model.varTime, value: model.varTime })
+        if (model.varTimeStart !== undefined) setSelectedVarTimeStart({ label: model.varTimeStart, value: model.varTimeStart })
         setSelectedQuotesListItems({ label: model.formatTags, value: model.formatTags })
         setCode((model.preprocess) ? model.preprocess : "")
         setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
@@ -88,8 +92,10 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             tags: currentTags,
             method: selectedMethod?.value,
             queryId: selectedQuery?.value,
+            queryRangeId: selectedQueryRange?.value,
             extraInfo: selectedExtraInfo?.value,
             varTime: selectedVarTime?.value,
+            varTimeStart: selectedVarTimeStart?.value,
             varTags: selectedVarTags?.value,
             formatTags: selectedQuotesListItems?.value,
             format: selectedFormat?.value,
@@ -239,7 +245,54 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                         />
                     </InlineField>
                     <Collapse label="Model queries" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
-                        <p style={{ marginBottom: '5px', marginTop: '5px' }}>Import data query</p>
+                    <p style={{ marginBottom: '5px', marginTop: '5px' }}>Variables</p>
+                        <InlineField label="Time variable" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTime, selectedVarTags)} error={"Variables have to be different"}>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedVarTime}
+                                        options={OptionsVariable}
+                                        onChange={(v) => setSelectedVarTime(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="varTime"
+                            />
+                        </InlineField>
+                        <InlineField label="Tags variable" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTags, selectedVarTime)} error={"Variables have to be different"}>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedVarTags}
+                                        options={OptionsVariable}
+                                        onChange={(v) => setSelectedVarTags(v)}
+                                        disabled={disabled}
+                                        menuPosition='fixed'
+                                    />
+                                }
+                                control={control}
+                                name="varTags"
+                            />
+                        </InlineField>
+                        <InlineField label="Quotes for list" labelWidth={20} required disabled={disabled} grow>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedQuotesListItems}
+                                        options={OptionsFormatTags}
+                                        onChange={(v) => setSelectedQuotesListItems(v)}
+                                        disabled={disabled}
+                                        defaultValue={{ label: FormatTags.None, value: FormatTags.None }}
+                                    />
+                                }
+                                control={control}
+                                name="formatTags"
+                            />
+                        </InlineField>
+                        
+                        <p style={{ marginBottom: '5px', marginTop: '15px' }}>Import data query</p>
                         <InlineField label="Query" labelWidth={20} required disabled={disabled} grow>
                             <InputControl
                                 render={({ field }) =>
@@ -292,50 +345,39 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                         <InlineField label="Values column" labelWidth={20} grow disabled={disabled}>
                             <Input {...register("columnValueExtraInfo")} disabled={disabled} required={selectedExtraInfo && selectedExtraInfo.value !== undefined} value={currentModel.columnValueExtraInfo} onChange={handleOnChangeModel} />
                         </InlineField>
-                        <p style={{ marginBottom: '5px', marginTop: '15px' }}>Variables</p>
-                        <InlineField label="Variable time" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTime, selectedVarTags)} error={"Variables have to be different"}>
+
+                        <p style={{ marginBottom: '5px', marginTop: '15px' }}>Range query</p>
+                        <Alert title="Info" severity='info'>
+                            The <b>stop</b> variable of the range corresponds to the time variable selected above. The configuration of the range query is considered to be the same as the main data import query.
+                        </Alert>
+                        <InlineField label="Query" labelWidth={20} disabled={disabled} grow>
                             <InputControl
                                 render={({ field }) =>
                                     <Select
-                                        value={selectedVarTime}
-                                        options={OptionsVariable}
-                                        onChange={(v) => setSelectedVarTime(v)}
+                                        value={selectedQueryRange}
+                                        options={queryOptions}
+                                        onChange={(v) => setSelectedQueryRange(v)}
                                         disabled={disabled}
                                         menuPosition='fixed'
                                     />
                                 }
                                 control={control}
-                                name="varTime"
+                                name="queryRange"
                             />
                         </InlineField>
-                        <InlineField label="Variable tags" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTags, selectedVarTime)} error={"Variables have to be different"}>
+                        <InlineField label="Start datetime variable" labelWidth={20} disabled={disabled} grow invalid={selectedVarTimeStart !== undefined && (checkVariableIsInvalid(selectedVarTimeStart, selectedVarTags) || checkVariableIsInvalid(selectedVarTimeStart, selectedVarTime))} error={"Variables have to be different"}>
                             <InputControl
                                 render={({ field }) =>
                                     <Select
-                                        value={selectedVarTags}
+                                        value={selectedVarTimeStart}
                                         options={OptionsVariable}
-                                        onChange={(v) => setSelectedVarTags(v)}
+                                        onChange={(v) => setSelectedVarTimeStart(v)}
                                         disabled={disabled}
                                         menuPosition='fixed'
                                     />
                                 }
                                 control={control}
-                                name="varTags"
-                            />
-                        </InlineField>
-                        <InlineField label="Quotes for list" labelWidth={20} required disabled={disabled} grow>
-                            <InputControl
-                                render={({ field }) =>
-                                    <Select
-                                        value={selectedQuotesListItems}
-                                        options={OptionsFormatTags}
-                                        onChange={(v) => setSelectedQuotesListItems(v)}
-                                        disabled={disabled}
-                                        defaultValue={{ label: FormatTags.None, value: FormatTags.None }}
-                                    />
-                                }
-                                control={control}
-                                name="formatTags"
+                                name="varTimeRange"
                             />
                         </InlineField>
                     </Collapse>

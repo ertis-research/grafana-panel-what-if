@@ -14,6 +14,9 @@ export interface IPanel {
         alertCollectionAdded: string
         alertCSVnoData: string
         alertDateTimenoData: string
+        setRangeTime: string
+        startRange: string
+        stopRange: string
     }
     _step3: {
         modifyData: string

@@ -10,13 +10,16 @@ export const messages_es: ILocalization = {
             importData: "Importar datos",
             addData: "Añadir datos",
             setDatetime: "Establecer día y hora",
+            setRangeTime: "Establecer rango de tiempo",
             variablesGrafana: "Tiempo del tablero",
             usingQuery: "Usando consulta",
             uploadFile: "Subir archivo",
             noFile: "Ningún archivo",
             alertCollectionAdded: "Datos añadidos correctamente",
             alertCSVnoData: "No se han podido extraer los datos del CSV. Revisa su formato y los datos introducidos.",
-            alertDateTimenoData: "No se han extraido datos de la fecha seleccionada. Revisa si existen datos durante ese tiempo y si la consulta relacionada es correcta."
+            alertDateTimenoData: "No se han extraido datos de la fecha seleccionada. Revisa si existen datos durante ese tiempo y si la consulta relacionada es correcta.",
+            stopRange: "Parar en",
+            startRange: "Empezar en"
         },
         _step3: {
             modifyData: "Modificar datos",

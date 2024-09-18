@@ -28,7 +28,8 @@ export enum ImportDataEnum {
     EXCEL = 0,
     DATETIME_SET = 1,
     DATETIME_VARIABLE_GRAFANA = 2,
-    DATETIME_QUERY = 3
+    DATETIME_QUERY = 3,
+    DATETIME_RANGE = 4
 }
 
 /*
@@ -72,21 +73,19 @@ export const IntervalModeOptions = (messages:ILocalization) => {
     ]
 }*/
 
-export const ImportDataOptions = (messages: ILocalization) => {
-    return [
-        {
-            label: messages._panel._step2.setDatetime,
-            value: ImportDataEnum.DATETIME_SET,
-        },
-        {
-            label: 'CSV',
-            value: ImportDataEnum.EXCEL
-        },
-        {
-            label: messages._panel._step2.variablesGrafana,
-            value: ImportDataEnum.DATETIME_VARIABLE_GRAFANA
-        }
-    ]
+export const ImportDataOptions = (messages: ILocalization, hasRange = false) => {
+    let res = [{ label: messages._panel._step2.setDatetime, value: ImportDataEnum.DATETIME_SET}]
+
+    if (hasRange) {
+        res.push({ label: messages._panel._step2.setRangeTime, value: ImportDataEnum.DATETIME_RANGE })
+    }
+
+    res.push(
+        { label: 'CSV', value: ImportDataEnum.EXCEL },
+        { label: messages._panel._step2.variablesGrafana, value: ImportDataEnum.DATETIME_VARIABLE_GRAFANA}
+    )
+    
+    return res
 }
 
 export const VariablesGrafanaOptions = (replaceVariables: any): ISelect[] => {

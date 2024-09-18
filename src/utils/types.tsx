@@ -69,6 +69,7 @@ export interface IDataCollection {
   id: string,
   name: string,
   dateTime?: DateTime,
+  dateTimeStart?: DateTime
   data: IData[],
   interval: IInterval,
   results?: IResult[]
@@ -112,6 +113,7 @@ export interface IModel {
   method: Method,
   credentials?: ICredentials
   queryId: string,
+  queryRangeId?: string,
   tags: ITag[],
   preprocess?: string,
   scaler?: IScaler,
@@ -121,6 +123,7 @@ export interface IModel {
   varTags: string,
   formatTags: FormatTags,
   varTime: string,
+  varTimeStart?: string,
   decimals?: number,
   columnTag: string,
   columnValue?: string,

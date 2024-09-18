@@ -10,13 +10,16 @@ export const messages_en: ILocalization = {
             importData: "Import data",
             addData: "Add data",
             setDatetime: "Set datetime",
+            setRangeTime: "Set datetime range",
             variablesGrafana: "Dashboard time",
             usingQuery: "Using query",
             uploadFile: "Upload file",
             noFile: "No file",
             alertCollectionAdded: "Data added successfully",
             alertCSVnoData: "The CSV data could not be extracted. Check its format and the data entered.",
-            alertDateTimenoData: "No data has been extracted for the selected date. Check if data exists during that time and if the related query is correct."
+            alertDateTimenoData: "No data has been extracted for the selected date. Check if data exists during that time and if the related query is correct.",
+            stopRange: "stop",
+            startRange: "start"
         },
         _step3: {
             modifyData: "Modify data",
