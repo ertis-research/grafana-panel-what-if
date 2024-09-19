@@ -11,6 +11,7 @@ export const predictAllCollections = async (model: IModel, allData: IDataCollect
     for (const [i, d] of allData.entries()) {
         allData[i] = { ...d, results: await predictData(model, d) }
     }
+    console.log("Results", allData)
     return allData
 }
 
@@ -19,15 +20,15 @@ export const predictResults = async (model: IModel, results: IResult[]) => {
     for (const [i, r] of results.entries()) {
         let finalData = deepCopy(r.data)
         if (model.preprocess) {
-            console.log('Initial data - preprocess', deepCopy(finalData))
+            //console.log('Initial data - preprocess', deepCopy(finalData))
             finalData = await applyPreprocess(model.preprocess, finalData)
-            console.log('Final data - preprocess', deepCopy(finalData))
+            //console.log('Final data - preprocess', deepCopy(finalData))
             //console.log("preprocess", finalData)
         }
         if (model.scaler) {
-            console.log('Initial data - scaler', deepCopy(finalData))
+            //console.log('Initial data - scaler', deepCopy(finalData))
             finalData = await applyScaler(model.scaler, finalData)
-            console.log('Final data - scaler', deepCopy(finalData))
+            //console.log('Final data - scaler', deepCopy(finalData))
         }
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData: finalData }
@@ -37,8 +38,8 @@ export const predictResults = async (model: IModel, results: IResult[]) => {
 }
 
 const predictData = async (model: IModel, dataCollection: IDataCollection) => {
-    console.log("numValues", model.numberOfValues)
-    console.log("dataCollection", dataCollection)
+    //console.log("numValues", model.numberOfValues)
+    //console.log("dataCollection", dataCollection)
     let results: IResult[] = prepareData(dataCollection, model.numberOfValues)
     return await predictResults(model, results)
 }
@@ -151,7 +152,7 @@ const prepareData = (dataCollection: IDataCollection, numberOfValues?: number): 
         })
     }
 
-    console.log(res)
+    //console.log(res)
     return res
 }
 
@@ -193,7 +194,7 @@ const addFormatInput = (data: IDataPred[], isListValues: boolean, isTransposeLis
         }
         return dataPred
     })
-    console.log("AUX", aux)
+    //console.log("AUX", aux)
     let body = ""
 
     if (format !== undefined) {
@@ -210,11 +211,11 @@ const addFormatInput = (data: IDataPred[], isListValues: boolean, isTransposeLis
                 return eachFormat.replace(varInput, str)
             })
             body = allInputs.join(",")
-            console.log(body)
+            //console.log(body)
             allFormat = format.input.slice(0, startIndex) + " $input " + format.input.slice(endIndex + varEachInputEnd.length)
-            console.log(allFormat)
+            //console.log(allFormat)
         } else {
-            console.log("No hay each")
+            //console.log("No hay each")
             body = JSON.stringify(aux)
             body = body.substring(1, body.length - 1)
         }
@@ -222,7 +223,7 @@ const addFormatInput = (data: IDataPred[], isListValues: boolean, isTransposeLis
     } else {
         body = JSON.stringify(aux)
     }
-    console.log(body)
+    //console.log(body)
     return body
 }
 
@@ -257,7 +258,7 @@ const sendRequest = async (model: IModel, data: IDataPred[]) => {
     let response = await fetch(model.url, requestOptions)
     if (response.ok) {
         let text: string = await response.text()
-        console.log(text)
+        //console.log(text)
         return removeFormatOutput(text, model.format)
     } else {
         console.error(await response.text())

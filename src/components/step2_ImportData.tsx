@@ -149,7 +149,6 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }
 
     const handleOnClickAddData = () => {
-        //console.log("addDATA")
         switch (mode.value) {
             case ImportDataEnum.EXCEL:
                 importDataFromCSV()

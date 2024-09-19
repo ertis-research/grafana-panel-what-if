@@ -18,7 +18,8 @@ export const ExtraCalcDefault: IExtraCalc = {
     until: "",
     resProcess: "$res",
     maxIterations: 1000,
-    resFormat: ExtraCalcFormat.raw
+    resFormat: ExtraCalcFormat.raw,
+    numRequests: 10
 }
 
 export const ModelDefault: IModel = {

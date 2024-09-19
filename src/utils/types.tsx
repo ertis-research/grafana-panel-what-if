@@ -150,7 +150,8 @@ export interface IExtraCalc {
   until: string,
   resProcess: string,
   maxIterations: number,
-  resFormat: ExtraCalcFormat
+  resFormat: ExtraCalcFormat,
+  numRequests: number
 }
 
 export class DateRes {

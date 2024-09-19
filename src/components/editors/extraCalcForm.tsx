@@ -170,6 +170,9 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                     <InlineField label="Maximum iterations" labelWidth={17} grow disabled={disabled}>
                         <Input {...register("maxIterations")} value={currentCalc.maxIterations} disabled={disabled} onChange={handleOnChangeCalc} required />
                     </InlineField>
+                    <InlineField label="Parallel requests" labelWidth={17} grow disabled={disabled}>
+                        <Input {...register("numRequests")} value={currentCalc.numRequests} disabled={disabled} onChange={handleOnChangeCalc} required />
+                    </InlineField>
                     <Collapse label="Dynamic fields" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         {dynamicFieldsList()}
                         {dynamicFieldsAdd()}

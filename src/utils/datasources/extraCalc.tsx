@@ -4,27 +4,23 @@ import vm from 'vm'
 import { getMean } from "utils/utils"
 import { dateTime, DateTime } from "@grafana/data"
 
-const replaceVariables = (text: string, results: IResult[], dyn?: number[]) => {
-    const lastResult = results[results.length - 1]
-
+const replaceVariables = (text: string, data: IDataPred, dyn?: number[], lastResult?: number) => {
     // $out
-    if (lastResult.result) text = text.replace(/\$out/g, lastResult.result as string)
+    if (lastResult) text = text.replace(/\$out/g, lastResult.toString())
 
     // $dyn
     if (dyn !== undefined)
         dyn.forEach((d: number, idx: number) => {
             let searchValue = new RegExp('\\$dyn' + (idx + 1), 'g'); //  /\$dyn/g
-            console.log(searchValue)
             text = text.replace(searchValue, d.toString())
         })
 
 
     // $[X]
     text = text.replace(/\$\[(\w+)\]/g, (match, varName) => {
-        return (lastResult.data.hasOwnProperty(varName) && lastResult.data[varName] !== undefined) ? lastResult.data[varName][0].toString() : match;
+        return (data.hasOwnProperty(varName) && data[varName] !== undefined) ? data[varName][0].toString() : match;
     });
 
-    console.log("text", text)
     return text
 }
 
@@ -67,46 +63,70 @@ const applyFormatToRes = (res: number, format: ExtraCalcFormat, selectedDate?: D
     return res.toString()
 }
 
+const createRequests = (num: number, calcValue: number, data: IDataPred, tag: string, calc: Calc, idNumber: number) => {
+    let res: IResult[] = []
+    for (let i = 0; i < num; i++) {
+        let mean = getMean(data[tag])
+        let newValue = applyCalcValue(mean, calcValue, calc)
+        data = {
+            ...data,
+            [tag]: getListValuesFromNew(newValue, mean, data[tag])
+        }
+        res.push({
+            id: ("extraCalc_" + (idNumber + i)),
+            data: { ...data },
+            correspondsWith: { tag: tag, intervalValue: newValue }
+        })
+    }
+    return res
+}
+
 export const extraCalcCollection = async (model: IModel, col: IDataCollection, dyn?: number[]): Promise<IDataCollection> => {
     if (model.extraCalc && model.tags.some((tag: ITag) => tag.id === model.extraCalc?.tag)) {
+        let res: IResult[] = []
         const tag = model.extraCalc.tag
+
+        // Preparamos los datos iniciales y obtenemos el valor para los calculos
         let data: IDataPred = prepareInitialData(col, model.numberOfValues)
+        const calcValue = executeString(replaceVariables(model.extraCalc.calcValue, data, dyn))
+
+        // Creamos el resultado inicial
         const iniResult: IResult = {
             id: "extraCalc",
             data: { ...data },
             correspondsWith: { tag: tag, intervalValue: getMean(data[tag]) }
         }
-        let results: IResult[] = await predictResults(model, [iniResult])
+        
+        // Generamos el resto de resultados sumando calc de forma recursiva al tag correspondiente y predecimos 
+        let results = [iniResult, ...createRequests((model.extraCalc.numRequests-1), calcValue, data, tag, model.extraCalc.calc, 1)]
+        results = await predictResults(model, results)
 
-        let num_iter = 0
-        let condition = replaceVariables(model.extraCalc.until, results, dyn)
-        const calcValue = executeString(replaceVariables(model.extraCalc.calcValue, results, dyn))
-
-        while (!executeString(condition)) {
-            num_iter += 1
-            const mean = getMean(data[tag])
-            let newValue = applyCalcValue(mean, calcValue, model.extraCalc.calc)
-            data = {
-                ...data,
-                [tag]: getListValuesFromNew(newValue, mean, data[tag])
+        // Comprobamos si se cumple la condicion en alguno
+        const check = (r: IResult) => {
+            if(r.result && model.extraCalc && typeof r.result === 'number') {
+                const condition = replaceVariables(model.extraCalc.until, r.data, dyn, r.result)
+                return executeString(condition)
             }
-            let newRes: IResult[] = await predictResults(model, [{
-                id: ("extraCalc_" + num_iter),
-                data: { ...data },
-                correspondsWith: {
-                    tag: tag,
-                    intervalValue: newValue
-                }
-            }])
-
-            results = [...results, ...newRes]
-            condition = replaceVariables(model.extraCalc.until, results, dyn)
+            return false
         }
-        col.resultsExtraCalc = results
-        col.conclusionExtraCalc = applyFormatToRes(num_iter, model.extraCalc.resFormat, col.dateTime, model.extraCalc.resProcess)
+        let idxFin = results.findIndex(check)
+
+        while (idxFin < 0) { // Probamos hasta que se cumpla alguna condicion
+            data = results[results.length-1].data
+            res = [...res, ...results]
+            results = [...createRequests(model.extraCalc.numRequests, calcValue, data, tag, model.extraCalc.calc, res.length)]
+            results = await predictResults(model, results)
+            idxFin = results.findIndex(check)
+        }
+
+        res = (idxFin + 1 < results.length) ? [...res, ...results.slice(0, (idxFin+1))] : [...res, ...results]
+
+        col.resultsExtraCalc = res
+        col.conclusionExtraCalc = applyFormatToRes(res.length-1, model.extraCalc.resFormat, col.dateTime, model.extraCalc.resProcess)
     } else {
         col.conclusionExtraCalc = "ERROR"
     }
+    console.log("Result col extra calc", col)
     return col
 }
 
