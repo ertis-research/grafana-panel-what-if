@@ -181,7 +181,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             if (!newDisabled) newDisabledButton = !(
                 (mode.value === ImportDataEnum.EXCEL && fileCSV !== undefined) ||
                 (mode.value === ImportDataEnum.DATETIME_VARIABLE_GRAFANA && selectedGrafanaVariable && selectedGrafanaVariable.value !== undefined) ||
-                (mode.value === ImportDataEnum.DATETIME_RANGE && dateTimeInput !== undefined && dateTimeInputStart !== undefined) ||
+                (mode.value === ImportDataEnum.DATETIME_RANGE && dateTimeInput !== undefined && dateTimeInputStart !== undefined && dateTimeInputStart.isBefore(dateTimeInput)) && !dateTimeInputStart.isSame(dateTimeInput) ||
                 (mode.value === ImportDataEnum.DATETIME_SET && dateTimeInput !== undefined))
         }
         setDisabled(newDisabled)
