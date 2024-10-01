@@ -26,7 +26,7 @@ export const messages_en: ILocalization = {
             interval: "Interval",
             min: "Backward",
             max: "Forward",
-            steps: "Steps",
+            steps: "Delta",
             type: "Type",
             searchPlaceholder: "Search",
             units: "Units",
