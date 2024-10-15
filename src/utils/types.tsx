@@ -63,6 +63,7 @@ export interface ITag {
   description?: string,
   category?: string,
   priority?: string
+  readOnly?: boolean
 }
 
 export interface IDataCollection {

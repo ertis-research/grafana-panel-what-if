@@ -44,7 +44,8 @@ export const ModelDefault: IModel = {
 
 export const TagDefault: ITag = {
     id: "",
-    category: "default"
+    category: "default",
+    readOnly: false
 }
 
 export const ContextDefault: IContext = {
@@ -78,60 +79,72 @@ export const sampleData: ITag[] = [
     {
         id: "TAG1",
         description: "ADSADSDSADSA",
-        category: "Categoria 0"
+        category: "Categoria 0",
+        readOnly: false
     },
     {
         id: "TAG2",
         description: "descripcion1",
-        category: "Categoria 1"
+        category: "Categoria 1",
+        readOnly: false
     },
     {
         id: "TAG3",
         description: "ADS",
-        category: "Categoria 1"
+        category: "Categoria 1",
+        readOnly: false
     },
     {
         id: "TAG4",
         description: "descripcion1",
-        category: "Categoria 2"
+        category: "Categoria 2",
+        readOnly: false
     },
     {
         id: "TAG5",
         description: "descripcion1",
-        category: "Categoria 3"
+        category: "Categoria 3",
+        readOnly: false
     },
     {
         id: "TAG6",
         description: "descripcion1",
-        category: "Categoria 3"
+        category: "Categoria 3",
+        readOnly: false
     },
     {
         id: "TAG7",
         description: "descripcion1",
-        category: "Categoria 1"
+        category: "Categoria 1",
+        readOnly: false
     },
     {
         id: "TAG8",
         description: "descripcion1",
-        category: "Categoria 1"
+        category: "Categoria 1",
+        readOnly: false
     },
     {
         id: "TAG9",
         description: "descripcion1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        category: "Categoria 1"
+        category: "Categoria 1",
+        readOnly: false
     },
     {
         id: "TAG10",
-        category: "Categoria 2"
+        category: "Categoria 2",
+        readOnly: false
     },
     {
         id: "TAG11",
         description: "descripcion1",
-        category: "Categoria 3"
+        category: "Categoria 3",
+        readOnly: false
     },
     {
         id: "TAG12",
         description: "descripcion1",
-        category: "Categoria 3"
+        category: "Categoria 3",
+        readOnly: false
     }
 ]

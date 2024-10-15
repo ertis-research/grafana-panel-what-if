@@ -25,6 +25,12 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
         setCurrentTags(updatedTags)
     }
 
+    const handleOnChangeReadOnly = (idx: number) => {
+        const updatedTags: any[] = [...currentTags]
+        updatedTags[idx].readOnly = (updatedTags[idx].readOnly === undefined) ? true : !updatedTags[idx].readOnly
+        setCurrentTags(updatedTags)
+    }
+
     const handleOnClickAddTag = () => {
         const updated = [...currentTags, Object.assign({}, TagDefault)]
         setCurrentTags(updated)
@@ -46,6 +52,9 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
                             <InlineFieldRow style={{ width: '100%' }}>
                                 <InlineField label="ID" labelWidth={10} required disabled={disabled}>
                                     <Input name='id' value={tag.id} width={20} required disabled={disabled} onChange={(e: ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)} />
+                                </InlineField>
+                                <InlineField label="Read only" labelWidth={10} disabled={disabled}>
+                                    <InlineSwitch disabled={disabled} value={tag.readOnly} onChange={() => handleOnChangeReadOnly(idx)} />
                                 </InlineField>
                                 <InlineField label="Category" labelWidth={10} grow disabled={disabled}>
                                     <Input name='category' value={tag.category} disabled={disabled} onChange={(e: ChangeEvent<HTMLInputElement>) => handleOnChangeTag(e, idx)} />

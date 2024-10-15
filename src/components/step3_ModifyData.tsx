@@ -274,8 +274,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             <Field>
                 <HorizontalGroup>
                     <Input width={8} value={defaultIfUndefined(data.default_value, "")} disabled type='text' />
-                    <Input name={tag.id} required={data.default_value === undefined} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
-                    <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval || disabled} onChange={handleOnChangePercentage} />
+                    <Input name={tag.id} required={data.default_value === undefined} value={defaultIfUndefined(data.new_value, "")} disabled={disabled || tag.readOnly || (hasInterval && data.set_percentage)} type='number' lang='en' onChange={handleOnChangeTagValue} />
+                    <Checkbox name={tag.id} value={data.set_percentage} disabled={!hasInterval || disabled || tag.readOnly} onChange={handleOnChangePercentage} />
                 </HorizontalGroup>
             </Field>
         </div>
