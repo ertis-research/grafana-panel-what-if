@@ -20,6 +20,11 @@ export enum ExtraCalcFormat {
   addDays = "Add as days to selected date"
 }
 
+export enum WhenApplyEnum {
+  afterPreprocess = "After preprocessing",
+  beforePreprocess = "Before preprocessing"
+}
+
 export enum FormatTags {
   None = 'None',
   dq = 'Double quotes',
@@ -152,7 +157,13 @@ export interface IExtraCalc {
   resProcess: string,
   maxIterations: number,
   resFormat: ExtraCalcFormat,
-  numRequests: number
+  numRequests: number,
+  whenApply: WhenApplyEnum
+}
+
+export interface PostChangeIDataPred {
+  newData: IDataPred[], 
+  newResults: IResult[]
 }
 
 export class DateRes {

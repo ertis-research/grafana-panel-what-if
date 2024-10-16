@@ -1,5 +1,5 @@
 import { PreprocessCodeDefault } from "../default";
-import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum } from "../types"
+import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum, PostChangeIDataPred } from "../types"
 //import * as dfd from "danfojs"
 import { idDefault, idNew, varEachInput, varEachInputEnd, varInput, variableOutput } from "../constants"
 import vm from 'vm'
@@ -15,7 +15,7 @@ export const predictAllCollections = async (model: IModel, allData: IDataCollect
     return allData
 }
 
-export const predictResults = async (model: IModel, results: IResult[]) => {
+export const prepareToPredict = async (model: IModel, results: IResult[]): Promise<PostChangeIDataPred> => {
     let dataToPredict: IDataPred[] = []
     for (const [i, r] of results.entries()) {
         let finalData = deepCopy(r.data)
@@ -33,15 +33,25 @@ export const predictResults = async (model: IModel, results: IResult[]) => {
         dataToPredict.push(finalData)
         results[i] = { ...r, processedData: finalData }
     }
-    const predictions: any = await sendRequest(model, dataToPredict)
+    return {newData: dataToPredict, newResults: results}
+}
+
+export const predictResults = async (model: IModel, data: IDataPred[], results: IResult[]) => {
+    const predictions: any = await sendRequest(model, data)
     return results.map<IResult>((r: IResult, indx: number) => { return { ...r, result: predictions[indx] } })
+}
+
+export const prepareAndPredictResults = async (model: IModel, results: IResult[]) => {
+    const res = await prepareToPredict(model, results)
+    console.log("prepareResults", res)
+    return await predictResults(model, res.newData, res.newResults)
 }
 
 const predictData = async (model: IModel, dataCollection: IDataCollection) => {
     //console.log("numValues", model.numberOfValues)
     //console.log("dataCollection", dataCollection)
     let results: IResult[] = prepareData(dataCollection, model.numberOfValues)
-    return await predictResults(model, results)
+    return await prepareAndPredictResults(model, results)
 }
 
 const getValuesFromInterval = (interval: IInterval): number[] => {

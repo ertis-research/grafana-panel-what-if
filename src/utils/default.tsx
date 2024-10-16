@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum } from "./types";
 
 export const PreprocessCodeDefault = "console.log('Preprocess')"
 
@@ -19,7 +19,8 @@ export const ExtraCalcDefault: IExtraCalc = {
     resProcess: "$res",
     maxIterations: 1000,
     resFormat: ExtraCalcFormat.raw,
-    numRequests: 10
+    numRequests: 10,
+    whenApply: WhenApplyEnum.afterPreprocess
 }
 
 export const ModelDefault: IModel = {

@@ -1,6 +1,6 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { Calc, ExtraCalcFormat, IExtraCalc, ISelect } from 'utils/types';
+import { Calc, ExtraCalcFormat, IExtraCalc, ISelect, WhenApplyEnum } from 'utils/types';
 import { Alert, Button, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ExtraCalcDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
@@ -23,10 +23,12 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
 
     const calcOptions: ISelect[] = enumToSelect(Calc)
     const formatOptions: ISelect[] = enumToSelect(ExtraCalcFormat)
+    const whenApplyOptions: ISelect[] = enumToSelect(WhenApplyEnum)
 
     const [currentCalc, setCurrentCalc] = useState<IExtraCalc>(ExtraCalcDefault)
     const [selectedCalc, setSelectedCalc] = useState<SelectableValue<string>>(calcOptions[0])
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<string>>(formatOptions[0])
+    const [selectedWhen, setSelectedWhen] = useState<SelectableValue<string>>(whenApplyOptions[0])
     const [currentDynamicFields, setCurrentDynamicFields] = useState<string[]>([])
     const [currentDynFieldName, setCurrentDynFieldName] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
@@ -35,6 +37,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         setCurrentCalc(extraCalc)
         setSelectedCalc({ value: extraCalc.calc, label: extraCalc.calc as string })
         setSelectedFormat({ value: extraCalc.resFormat, label: extraCalc.resFormat as string })
+        setSelectedWhen({ value: extraCalc.whenApply, label: extraCalc.whenApply as string })
         if (extraCalc.dynamicFields) setCurrentDynamicFields(extraCalc.dynamicFields)
     }
 
@@ -56,6 +59,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
             ...currentCalc,
             calc: selectedCalc.value,
             resFormat: selectedFormat.value,
+            whenApply: selectedWhen.value,
             dynamicFields: currentDynamicFields
         })
         if (mode === Mode.EDIT) {
@@ -166,6 +170,21 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                     </InlineField>
                     <InlineField label="Name" labelWidth={17} required grow disabled={disabled}>
                         <Input {...register("name")} value={currentCalc.name} disabled={disabled} onChange={handleOnChangeCalc} required />
+                    </InlineField>
+                    <InlineField label="When to apply" labelWidth={17} grow required disabled={disabled}>
+                            <InputControl
+                                render={({ field }) =>
+                                    <Select
+                                        value={selectedWhen}
+                                        options={whenApplyOptions}
+                                        onChange={(v) => setSelectedWhen(v)}
+                                        disabled={disabled}
+                                        defaultValue={whenApplyOptions[0]}
+                                    />
+                                }
+                                control={control}
+                                name="whenApply"
+                            />
                     </InlineField>
                     <InlineField label="Maximum iterations" labelWidth={17} grow disabled={disabled}>
                         <Input {...register("maxIterations")} value={currentCalc.maxIterations} disabled={disabled} onChange={handleOnChangeCalc} required />
