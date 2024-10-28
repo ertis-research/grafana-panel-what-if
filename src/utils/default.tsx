@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum, IDynamicField, TypeDynamicField } from "./types";
 
 export const PreprocessCodeDefault = "console.log('Preprocess')"
 
@@ -9,6 +9,11 @@ export const FormatDefault: IFormat = {
     output: ""
 }
 
+export const DynamicFieldDefault: IDynamicField = {
+    name: "",
+    type: TypeDynamicField.num
+}
+ 
 export const ExtraCalcDefault: IExtraCalc = {
     id: "",
     name: "",

@@ -176,3 +176,16 @@ export const getMean = (list: number[]): number => {
 export const transposeMatrix = (matrix: number[][]): number[][] => {
   return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));
 }
+
+export const dateToString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses empiezan desde 0
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+export const stringToDate = (str: string) => {
+  const [year, month, day] = str.split("-").map(Number); // Descomponemos y convertimos a números
+  return new Date(year, month - 1, day); // Mes en JavaScript empieza en 0
+}

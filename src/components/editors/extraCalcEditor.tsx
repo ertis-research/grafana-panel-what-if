@@ -6,6 +6,7 @@ import { Mode } from 'utils/constants';
 import { ExtraCalcDefault } from 'utils/default';
 import { css } from '@emotion/css';
 import { ExtraCalcForm } from './extraCalcForm';
+import { deepCopy } from 'utils/utils';
 
 
 interface Props extends StandardEditorProps<IExtraCalc[]> { }
@@ -49,7 +50,7 @@ export const ExtraCalcEditor: React.FC<Props> = ({ value: elements, onChange, co
         <p>This is an <b>optional</b> feature. For now only recursive calculations are allowed.</p>
         {listExtraCalcs}
         <ControlledCollapse label="Add new extra calculation" collapsible isOpen={false} className={css({ color: useTheme2().colors.info.main })}>
-            <ExtraCalcForm extraCalc={ExtraCalcDefault} updateFunction={addElement} mode={Mode.CREATE} context={context} />
+            <ExtraCalcForm extraCalc={deepCopy(ExtraCalcDefault)} updateFunction={addElement} mode={Mode.CREATE} context={context} />
         </ControlledCollapse>
     </div>)
 }

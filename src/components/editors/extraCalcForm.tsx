@@ -1,10 +1,10 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { Calc, ExtraCalcFormat, IExtraCalc, ISelect, WhenApplyEnum } from 'utils/types';
-import { Alert, Button, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
-import { ExtraCalcDefault } from 'utils/default';
+import { Calc, ExtraCalcFormat, IDynamicField, IExtraCalc, ISelect, TypeDynamicField, WhenApplyEnum } from 'utils/types';
+import { Alert, Button, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { DynamicFieldDefault, ExtraCalcDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
-import { enumToSelect } from 'utils/utils';
+import { deepCopy, enumToSelect } from 'utils/utils';
 import { css } from '@emotion/css';
 
 interface Props {
@@ -24,13 +24,13 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     const calcOptions: ISelect[] = enumToSelect(Calc)
     const formatOptions: ISelect[] = enumToSelect(ExtraCalcFormat)
     const whenApplyOptions: ISelect[] = enumToSelect(WhenApplyEnum)
+    const dynFieldTypeOptions: ISelect[] = enumToSelect(TypeDynamicField)
 
     const [currentCalc, setCurrentCalc] = useState<IExtraCalc>(ExtraCalcDefault)
     const [selectedCalc, setSelectedCalc] = useState<SelectableValue<string>>(calcOptions[0])
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<string>>(formatOptions[0])
     const [selectedWhen, setSelectedWhen] = useState<SelectableValue<string>>(whenApplyOptions[0])
-    const [currentDynamicFields, setCurrentDynamicFields] = useState<string[]>([])
-    const [currentDynFieldName, setCurrentDynFieldName] = useState<string>("")
+    const [currentDynamicFields, setCurrentDynamicFields] = useState<IDynamicField[]>([])
     const [disabled, setDisabled] = useState(false)
 
     const updateCurrentState = () => {
@@ -38,7 +38,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         setSelectedCalc({ value: extraCalc.calc, label: extraCalc.calc as string })
         setSelectedFormat({ value: extraCalc.resFormat, label: extraCalc.resFormat as string })
         setSelectedWhen({ value: extraCalc.whenApply, label: extraCalc.whenApply as string })
-        if (extraCalc.dynamicFields) setCurrentDynamicFields(extraCalc.dynamicFields)
+        if (extraCalc.dynamicFieldList) setCurrentDynamicFields(extraCalc.dynamicFieldList)
     }
 
     const handleOnChangeCalc = (event: ChangeEvent<HTMLInputElement>) => {
@@ -49,9 +49,17 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     }
 
     const handleOnChangeDynFieldName = (event: FormEvent<HTMLInputElement>, idx: number) => {
-        let aux = [...currentDynamicFields]
-        aux[idx] = event.currentTarget.value
+        let aux: IDynamicField[] = [...currentDynamicFields]
+        aux[idx].name = event.currentTarget.value
         setCurrentDynamicFields(aux)
+    }
+
+    const handleOnChangeDynFieldType = (v: SelectableValue<TypeDynamicField>, idx: number) => {
+        if (v.value) {
+            let aux: IDynamicField[] = [...currentDynamicFields]
+            aux[idx].type = v.value
+            setCurrentDynamicFields(aux)
+        }
     }
 
     const handleOnSubmitAddFormat = () => {
@@ -60,7 +68,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
             calc: selectedCalc.value,
             resFormat: selectedFormat.value,
             whenApply: selectedWhen.value,
-            dynamicFields: currentDynamicFields
+            dynamicFieldList: currentDynamicFields
         })
         if (mode === Mode.EDIT) {
             setDisabled(true)
@@ -91,8 +99,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     }
 
     const handleOnAddDynField = () => {
-        setCurrentDynamicFields([...currentDynamicFields, currentDynFieldName])
-        setCurrentDynFieldName("")
+        setCurrentDynamicFields([...currentDynamicFields, deepCopy(DynamicFieldDefault)])
     }
 
     useEffect(() => {
@@ -129,35 +136,37 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     }
 
     const dynamicFieldsList = () => <div>
-        {currentDynamicFields.map((s: string, idx: number) => {
+        {currentDynamicFields.map((s: IDynamicField, idx: number) => {
             return <div style={{ width: '100%', display: 'flex' }}>
                 <b style={{ width: '50px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>dyn{idx + 1}</b>
-                <InlineField label="Name" labelWidth={7} grow disabled={disabled}>
-                    <Input value={s} disabled={disabled} onChange={(e) => handleOnChangeDynFieldName(e, idx)} required />
-                </InlineField>
-                <div style={{ height: '30px', width: '25px', display: 'flex', justifyContent: 'flex-end' }}>
-                    <DeleteButton
-                        disabled={disabled}
-                        onConfirm={() => {
-                            handleOnConfirmDeleteDynField(idx)
-                        }}
-                    />
-                </div>
+                <InlineFieldRow style={{ width: '100%' }}>
+                    <InlineField label="Name" labelWidth={7} grow disabled={disabled}>
+                        <Input value={s.name} disabled={disabled} onInput={(e) => handleOnChangeDynFieldName(e, idx)} required />
+                    </InlineField>
+                    <InlineField label="Type" labelWidth={7} grow disabled={disabled}>
+                        <Select
+                            width={20}
+                            value={s.type}
+                            options={dynFieldTypeOptions}
+                            onChange={(v) => handleOnChangeDynFieldType(v, idx)}
+                            disabled={disabled}
+                            defaultValue={dynFieldTypeOptions[0]}
+                        />
+                    </InlineField>
+                    <div style={{ height: '30px', width: '25px', display: 'flex', justifyContent: 'flex-end' }}>
+                        <DeleteButton
+                            disabled={disabled}
+                            onConfirm={() => {
+                                handleOnConfirmDeleteDynField(idx)
+                            }}
+                        />
+                    </div>
+                </InlineFieldRow>
             </div>
         })}
+        <Button fullWidth type="button" onClick={handleOnAddDynField} variant='secondary' disabled={disabled}>Add field</Button>
     </div>
 
-    const dynamicFieldsAdd = () => {
-        return <div style={{ width: '100%', display: 'flex' }}>
-            <b style={{ width: '50px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>dyn{currentDynamicFields.length + 1}</b>
-            <InlineField label="Name" labelWidth={7} grow disabled={disabled}>
-                <Input value={currentDynFieldName} disabled={disabled} onChange={(s) => setCurrentDynFieldName(s.currentTarget.value)} />
-            </InlineField>
-            <div style={{ height: '30px', width: '100px', display: 'flex', alignItems: 'center' }}>
-                <Button fullWidth type="button" onClick={handleOnAddDynField} variant='secondary' disabled={disabled}>Add field</Button>
-            </div>
-        </div>
-    }
 
     return <div>
         {buttonEdit()}
@@ -172,19 +181,19 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                         <Input {...register("name")} value={currentCalc.name} disabled={disabled} onChange={handleOnChangeCalc} required />
                     </InlineField>
                     <InlineField label="When to apply" labelWidth={17} grow required disabled={disabled}>
-                            <InputControl
-                                render={({ field }) =>
-                                    <Select
-                                        value={selectedWhen}
-                                        options={whenApplyOptions}
-                                        onChange={(v) => setSelectedWhen(v)}
-                                        disabled={disabled}
-                                        defaultValue={whenApplyOptions[0]}
-                                    />
-                                }
-                                control={control}
-                                name="whenApply"
-                            />
+                        <InputControl
+                            render={({ field }) =>
+                                <Select
+                                    value={selectedWhen}
+                                    options={whenApplyOptions}
+                                    onChange={(v) => setSelectedWhen(v)}
+                                    disabled={disabled}
+                                    defaultValue={whenApplyOptions[0]}
+                                />
+                            }
+                            control={control}
+                            name="whenApply"
+                        />
                     </InlineField>
                     <InlineField label="Maximum iterations" labelWidth={17} grow disabled={disabled}>
                         <Input {...register("maxIterations")} value={currentCalc.maxIterations} disabled={disabled} onChange={handleOnChangeCalc} required />
@@ -194,11 +203,17 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                     </InlineField>
                     <Collapse label="Dynamic fields" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         {dynamicFieldsList()}
-                        {dynamicFieldsAdd()}
                     </Collapse>
                     <Collapse label="Recursive calculation" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                         <Alert title="Info" severity='info'>
-                            $out = model output<br />$dynX = value of dynamic field X<br />$[X] = value of tag X (replace X with the tag desired)
+                            <b>$out</b> = model output
+                            <br /><b>$[X]</b> = value of tag X (replace X with the tag desired)
+                            <br /><b>$iter</b> = current iteration value
+                            <br /><b>$date</b> = date selected in collection as a string in single quotes formatted as YYYY-MM-DD
+                            <br /><b>$dynX</b> = value of dynamic field X by type:
+                            <br />&nbsp;&nbsp; · Number: number (no quotes)
+                            <br />&nbsp;&nbsp; · Text: string in single quotes
+                            <br />&nbsp;&nbsp; · Date: string in single quotes formatted as YYYY-MM-DD
                         </Alert>
                         <InlineField label="Initial tag" labelWidth={17} grow required disabled={disabled}>
                             <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required />

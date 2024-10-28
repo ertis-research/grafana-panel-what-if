@@ -1,7 +1,7 @@
-import { Button, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
-import React, { FormEvent, Fragment, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, getMean, round, groupBy } from 'utils/utils'
-import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, DateRes } from 'utils/types'
+import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
+import React, { Fragment, useContext, useEffect, useState } from 'react'
+import { Context, dateTimeLocalToString, getMean, round, groupBy, dateToString, stringToDate } from 'utils/utils'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, DateRes, IDynamicField, TypeDynamicField } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
@@ -34,7 +34,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const [sizePlot, setSizePlot] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isCollapseExtraInfo, setIsCollapseExtraInfo] = useState(false)
-    const [dynamicFieldValues, setDynamicFieldValues] = useState<number[]>([])
+    const [dynamicFieldValues, setDynamicFieldValues] = useState<string[]>([])
     const [currentPage, setCurrentPage] = useState(1)
 
     const disabled = (context.actualStep) ? (context.actualStep < Steps.step_3 || state === StatePredict.LOADING) : false
@@ -112,10 +112,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         context.setActualStep(Steps.step_3)
     }
 
-    const handleOnChangeDynField = (e: FormEvent<HTMLInputElement>, idx: number) => {
-        e.preventDefault()
+    const handleOnChangeDynField = (v: string | Date, idx: number) => {
         let aux = [...dynamicFieldValues]
-        aux[idx] = parseFloat(e.currentTarget.value)
+        aux[idx] = (v instanceof Date) ? dateToString(v) : v
         setDynamicFieldValues(aux)
     }
 
@@ -131,8 +130,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }, [collections])
 
     useEffect(() => {
-        if(model && model.extraCalc && model.extraCalc.dynamicFields) {
-            setDynamicFieldValues(Array(model.extraCalc.dynamicFields.length).fill(0))
+        if(model && model.extraCalc && model.extraCalc.dynamicFieldList) {
+            setDynamicFieldValues(Array(model.extraCalc.dynamicFieldList.length).fill(undefined))
         }
     }, [model])
     
@@ -341,13 +340,28 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return <div></div>
     }
 
-    const dynamicFields = (fields: string[]) => {
-        return <div style={{ width: '50%', display: 'block', marginRight: '10px' }}>
-            {fields.map((name: string, idx: number) =>
-                <div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px' }}>
-                    <InlineLabel width={15} transparent>{name}</InlineLabel>
-                    <Input style={{ width: 'calc(100% - 15px)' }} value={dynamicFieldValues[idx]} type='number' step="any" onChange={(e) => handleOnChangeDynField(e, idx)} />
+    const getInputByType = (fieldType: TypeDynamicField, idx: number) => {
+        let val = dynamicFieldValues[idx]
+        switch(fieldType) {
+            case TypeDynamicField.num:
+                return <Input style={{ width: 'calc(100% - 15px)' }} disabled={disabled} value={(!val) ? '' : Number(val)} type='number' step="any" onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx)} />
+            case TypeDynamicField.date:
+                return <div style={{ width: '100%'}}>
+                    <DatePickerWithInput placeholder='' onChange={(d) => handleOnChangeDynField(d, idx)} value={(val === undefined) ? val : stringToDate(val)} disabled={disabled} closeOnSelect />
                 </div>
+            default: // string
+                return <Input style={{ width: 'calc(100% - 15px)' }} value={dynamicFieldValues[idx]} onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx)} />
+        }
+    }
+
+    const dynamicFields = (fields: IDynamicField[]) => {
+        return <div style={{ width: '50%', display: 'block', marginRight: '10px' }}>
+            {fields.map((field: IDynamicField, idx: number) => {
+                return <div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px'}}>
+                    <InlineLabel width={15} transparent>{field.name}</InlineLabel>
+                    {getInputByType(field.type, idx)}
+                </div>
+            }
             )}
         </div>
 
@@ -356,9 +370,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const divExtraCalc = () => {
         if (model !== undefined && model.extraCalc !== undefined) {
             return <div style={{ marginTop: '10px', width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
-                {(model.extraCalc.dynamicFields !== undefined) ? dynamicFields(model.extraCalc.dynamicFields) : <div></div>}
-                <div style={{ width: (model.extraCalc.dynamicFields !== undefined) ? 'calc(50% - 10px)' : '100%', display: 'flex', justifyItems: 'center' }}>
-                    <Button fullWidth disabled={disabled || dynamicFieldValues.some((v) => isNaN(v))} onClick={handleOnClickExtraCalc}>{model.extraCalc.name}</Button>
+                {(model.extraCalc.dynamicFieldList !== undefined) ? dynamicFields(model.extraCalc.dynamicFieldList) : <div></div>}
+                <div style={{ width: (model.extraCalc.dynamicFieldList !== undefined) ? 'calc(50% - 10px)' : '100%', display: 'flex', justifyItems: 'center' }}>
+                    <Button fullWidth disabled={disabled || dynamicFieldValues.some((v) => v === undefined || v.trim() === '')} onClick={handleOnClickExtraCalc}>{model.extraCalc.name}</Button>
                 </div>
             </div>
         }

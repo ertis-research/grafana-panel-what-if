@@ -43,6 +43,12 @@ export enum IntervalTypeEnum {
   units = 1
 }
 
+export enum TypeDynamicField {
+  num = "Number",
+  str = "Text",
+  date = "Date"
+}
+
 export interface IDataPred {
   [key: string]: number[]
 }
@@ -146,10 +152,15 @@ export interface IFormat {
   output: string
 }
 
+export interface IDynamicField {
+  name: string,
+  type: TypeDynamicField
+}
+
 export interface IExtraCalc {
   id: string,
   name: string,
-  dynamicFields?: string[],
+  dynamicFieldList?: IDynamicField[],
   tag: string,
   calc: Calc,
   calcValue: string,

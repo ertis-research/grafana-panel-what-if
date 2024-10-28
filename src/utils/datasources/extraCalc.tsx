@@ -1,26 +1,46 @@
-import { Calc, DateRes, ExtraCalcFormat, IDataCollection, IDataPred, IModel, IResult, ITag, PostChangeIDataPred, WhenApplyEnum } from "utils/types"
+import { Calc, DateRes, ExtraCalcFormat, IDataCollection, IDataPred, IModel, IResult, ITag, PostChangeIDataPred, TypeDynamicField, WhenApplyEnum } from "utils/types"
 import { getListValuesFromNew, newDataToObject, predictResults, prepareAndPredictResults, prepareToPredict } from "./predictions"
 import vm from 'vm'
-import { deepCopy, getMean } from "utils/utils"
+import { dateToString, deepCopy, getMean } from "utils/utils"
 import { dateTime, DateTime } from "@grafana/data"
 
-const replaceVariables = (text: string, data: IDataPred, dyn?: number[], lastResult?: number) => {
+const replaceVariables = (model: IModel, col: IDataCollection, text: string, data: IDataPred, dyn?: string[], lastResult?: number, iter?: number) => {
     // $out
-    if (lastResult) text = text.replace(/\$out/g, lastResult.toString())
+    if (lastResult !== undefined) text = text.replace(/\$out/g, lastResult.toString())
 
     // $dyn
-    if (dyn !== undefined)
-        dyn.forEach((d: number, idx: number) => {
+    if (dyn !== undefined && model.extraCalc && model.extraCalc.dynamicFieldList && model.extraCalc.dynamicFieldList.length === dyn.length) {
+        const dynList = model.extraCalc.dynamicFieldList
+        dyn.forEach((d: string, idx: number) => {
             let searchValue = new RegExp('\\$dyn' + (idx + 1), 'g'); //  /\$dyn/g
-            text = text.replace(searchValue, d.toString())
+            //check type
+            switch(dynList[idx].type){
+                case TypeDynamicField.num:
+                    text = text.replace(searchValue, d)
+                    break
+                default: // text and date are the same
+                    text = text.replace(searchValue, "'" + d + "'")
+                    break
+            }
         })
-
+    }
 
     // $[X]
     text = text.replace(/\$\[(\w+)\]/g, (match, varName) => {
         return (data.hasOwnProperty(varName) && data[varName] !== undefined) ? data[varName][0].toString() : match;
     });
 
+    // $date
+    if(col.dateTime !== undefined) text = text.replace(/\$date/g, "'" + dateToString(col.dateTime.toDate()) + "'")
+
+    // $dateStart
+    //if(col.dateTimeStart !== undefined) text = text.replace(/\$dateStart/g, dateToString(col.dateTimeStart.toDate()))
+
+    // $iter
+    console.log("iter", iter)
+    if(iter !== undefined) text = text.replace(/\$iter/g, iter.toString())
+
+    console.log("res replace", text)
     return text
 }
 
@@ -90,20 +110,20 @@ const createRequests = (iniRes: IResult, num: number, calcValue: number, data: I
     return {newData: allData, newResults: res}
 }
 
-const check = (r: IResult, model: IModel, isAfter: boolean, dyn?: number[]) => {
+const check = (r: IResult, model: IModel, col: IDataCollection, isAfter: boolean, dyn?: string[], iter?: number) => {
     if(r.result && model.extraCalc && typeof r.result === 'number') {
         let condition = ""
         if(isAfter && r.processedData) {
-            condition = replaceVariables(model.extraCalc.until, r.processedData, dyn, r.result)
+            condition = replaceVariables(model, col, model.extraCalc.until, r.processedData, dyn, r.result, iter)
         } else {
-            condition = replaceVariables(model.extraCalc.until, r.data, dyn, r.result)
+            condition = replaceVariables(model, col, model.extraCalc.until, r.data, dyn, r.result, iter)
         }
         return executeString(condition)
     }
     return false
 }
 
-export const extraCalcCollection = async (model: IModel, col: IDataCollection, dyn?: number[]): Promise<IDataCollection> => {
+export const extraCalcCollection = async (model: IModel, col: IDataCollection, dyn?: string[]): Promise<IDataCollection> => {
     if (model.extraCalc && model.tags.some((tag: ITag) => tag.id === model.extraCalc?.tag)) {
         let res: IResult[] = []
         let calcValue = 0
@@ -123,17 +143,17 @@ export const extraCalcCollection = async (model: IModel, col: IDataCollection, d
 
         if(isAfter){
             const prep = await prepareToPredict(model, [iniResult])
-            calcValue = executeString(replaceVariables(model.extraCalc.calcValue, prep.newData[0], dyn))
+            calcValue = executeString(replaceVariables(model, col, model.extraCalc.calcValue, prep.newData[0], dyn, undefined, 0))
             const requests = createRequests(iniResult, (model.extraCalc.numRequests-1), calcValue, prep.newData[0], tag, model.extraCalc.calc, 1, true)
             results = await predictResults(model, [...prep.newData, ...requests.newData], [...prep.newResults, ...requests.newResults])
         } else {
-            calcValue = executeString(replaceVariables(model.extraCalc.calcValue, data, dyn))
+            calcValue = executeString(replaceVariables(model, col, model.extraCalc.calcValue, data, dyn, undefined, 0))
             results = [iniResult, ...createRequests(iniResult, (model.extraCalc.numRequests-1), calcValue, data, tag, model.extraCalc.calc, 1).newResults]
             results = await prepareAndPredictResults(model, results)
         }
 
         // Comprobamos si se cumple la condicion en alguno
-        let idxFin = results.findIndex((r) => check(r, model, isAfter, dyn))
+        let idxFin = results.findIndex((r, idx) => check(r, model, col, isAfter, dyn, idx))
 
         while (idxFin < 0) { // Probamos hasta que se cumpla alguna condicion
             const lastRes = results[results.length-1]
@@ -148,10 +168,10 @@ export const extraCalcCollection = async (model: IModel, col: IDataCollection, d
                 results = [...createRequests(iniResult, model.extraCalc.numRequests, calcValue, data, tag, model.extraCalc.calc, res.length).newResults]
                 results = await prepareAndPredictResults(model, results)
             }
-            idxFin = results.findIndex((r) => check(r, model, isAfter, dyn))
+            idxFin = results.findIndex((r, idx) => check(r, model, col, isAfter, dyn, (res.length + idx)))
         }
 
-        res = (idxFin + 1 < results.length) ? [...res, ...results.slice(0, (idxFin+1))] : [...res, ...results]
+        res = [...res, ...results.slice(0, idxFin)]
 
         col.resultsExtraCalc = res
         col.conclusionExtraCalc = applyFormatToRes(res.length-1, model.extraCalc.resFormat, col.dateTime, model.extraCalc.resProcess)
