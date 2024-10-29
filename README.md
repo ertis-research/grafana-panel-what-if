@@ -305,9 +305,9 @@ This block will be executed in an sandbox and will receive as input a JSON objec
 
 ```json
 {
-  "01PHD.LMNN4001.PV": [0.43, 0.32],
-  "01PHD.LMLC4028.PV": [0.23, 0.54],
-  "01PHD.LMLC4401.PV": [0.10, 0.90]
+  "tag1": [0.43, 0.32],
+  "tag2": [0.23, 0.54],
+  "tag3": [0.10, 0.90]
 }
 ```
 
