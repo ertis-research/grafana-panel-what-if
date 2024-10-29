@@ -49,7 +49,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 - [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
 - [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
 
-To compile and install the plugin, it is necessary to download the code from this repository. This can be achieved by cloning it using the following command:
+To install the plugin, place the compiled code in the Grafana plugins folder. You can download the precompiled plugin from the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest) or, if you prefer, clone the repository using the following command and compile it yourself.
 
 ```bash
 git clone https://github.com/ertis-research/whatif-panel-for-Grafana.git
