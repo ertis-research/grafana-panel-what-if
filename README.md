@@ -17,7 +17,7 @@ The tool enables easy loading of data into the model directly from a data source
 
 Also we have made every effort to design the panel to be abstract and intuitive, while ensuring it is responsive to panel size and consistent with both dark and light modes. We hope you like it!
 
-## :sparkles: Table of Contents
+## :bookmark_tabs: Table of Contents
 
 - [Installation](#wrench-installation)
   - [Requirements](#requirements)
@@ -39,6 +39,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Formats](#formats)
       - [Data import queries](#data-import-queries)
       - [Extra information](#extra-information)
+      - [Extra calculations](#extra-calculations)
 
 ## :wrench: Installation
 
@@ -397,3 +398,12 @@ This query must be defined in the corresponding section (_query_) after selectin
 - **Values column** (optional): Name of the column containing the value of the identified information.
  
 With this configuration, the tool will be able to extract the information returned by the data source to introduce it as extra information in a section within the prediction section ([step 4](#step-4-predict-result)).
+
+#### Extra calculations
+
+This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
+
+##### Recursive calculations
+This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
+
+This part of the documentation is under construction...
