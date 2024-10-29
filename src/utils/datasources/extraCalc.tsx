@@ -1,10 +1,10 @@
-import { Calc, DateRes, ExtraCalcFormat, IDataCollection, IDataPred, IModel, IResult, ITag, PostChangeIDataPred, TypeDynamicField, WhenApplyEnum } from "utils/types"
+import { Calc, ConclusionRes, ExtraCalcFormat, IDataCollection, IDataPred, IModel, IResult, ITag, PostChangeIDataPred, TypeDynamicField, WhenApplyEnum } from "utils/types"
 import { getListValuesFromNew, newDataToObject, predictResults, prepareAndPredictResults, prepareToPredict } from "./predictions"
 import vm from 'vm'
 import { dateToString, deepCopy, getMean } from "utils/utils"
 import { dateTime, DateTime } from "@grafana/data"
 
-const replaceVariables = (model: IModel, col: IDataCollection, text: string, data: IDataPred, dyn?: string[], lastResult?: number, iter?: number) => {
+const replaceVariables = (model: IModel, col: IDataCollection, text: string, data: IDataPred, dyn?: string[], lastResult?: number|string, iter?: number) => {
     // $out
     if (lastResult !== undefined) text = text.replace(/\$out/g, lastResult.toString())
 
@@ -68,19 +68,15 @@ const applyCalcValue = (first: number, second: number, calc: Calc): number => {
     }
 }
 
-const applyFormatToRes = (res: number, format: ExtraCalcFormat, selectedDate?: DateTime, process?: string): string|DateRes => {
-    if (format !== ExtraCalcFormat.raw) {
-        if (process) {
-            const code = process.replace(/\$res/g, res.toString())
-            res = executeString(code) as number
-        }
-        if (format === ExtraCalcFormat.addDays && selectedDate) {
-            let copyDate = dateTime(selectedDate)
-            let dateString = copyDate.add(res, 'days').toDate().toLocaleDateString('en-EN', { year: 'numeric', month: 'long', day: 'numeric' })
-            return new DateRes(dateString, res)
-        }
+const applyFormatToRes = (res: string, format: ExtraCalcFormat, selectedDate?: DateTime): string => {
+    if (format === ExtraCalcFormat.addDays && selectedDate) {
+        console.log('res', res)
+        const num = Number(res)
+        console.log('num', num)
+        let copyDate = dateTime(selectedDate)
+        return copyDate.add(num, 'days').toDate().toLocaleDateString('en-EN', { year: 'numeric', month: 'long', day: 'numeric' })
     }
-    return res.toString()
+    return res
 }
 
 const createRequests = (iniRes: IResult, num: number, calcValue: number, data: IDataPred, tag: string, calc: Calc, idNumber: number, isProcessed = false): PostChangeIDataPred => {
@@ -111,7 +107,7 @@ const createRequests = (iniRes: IResult, num: number, calcValue: number, data: I
 }
 
 const check = (r: IResult, model: IModel, col: IDataCollection, isAfter: boolean, dyn?: string[], iter?: number) => {
-    if(r.result && model.extraCalc && typeof r.result === 'number') {
+    if(r.result && model.extraCalc) {
         let condition = ""
         if(isAfter && r.processedData) {
             condition = replaceVariables(model, col, model.extraCalc.until, r.processedData, dyn, r.result, iter)
@@ -172,11 +168,18 @@ export const extraCalcCollection = async (model: IModel, col: IDataCollection, d
         }
 
         res = [...res, ...results.slice(0, idxFin)]
-
+        if(res.length === 0) res = [results[0]]
         col.resultsExtraCalc = res
-        col.conclusionExtraCalc = applyFormatToRes(res.length-1, model.extraCalc.resFormat, col.dateTime, model.extraCalc.resProcess)
+
+        const finalResult = res[res.length-1]
+        console.log("finalResult", finalResult)
+        const finalDataPred = (isAfter && finalResult.processedData && finalResult.result) ? finalResult.processedData : finalResult.data
+        let processedRes = executeString(replaceVariables(model, col, model.extraCalc.resValue, finalDataPred, dyn, finalResult.result, res.length-1))
+        processedRes = applyFormatToRes(processedRes, model.extraCalc.resFormat, col.dateTime)
+        let subtitleRes = (model.extraCalc.resSubtitle) ? executeString(replaceVariables(model, col, model.extraCalc.resSubtitle, finalDataPred, dyn, finalResult.result, res.length-1)) : ''
+        col.conclusionExtraCalc = new ConclusionRes(processedRes, subtitleRes)
     } else {
-        col.conclusionExtraCalc = "ERROR"
+        col.conclusionExtraCalc = new ConclusionRes("ERROR","")
     }
     console.log("Result col extra calc", col)
     return col

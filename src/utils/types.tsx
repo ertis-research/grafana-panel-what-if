@@ -16,7 +16,6 @@ export enum Calc {
 
 export enum ExtraCalcFormat {
   raw = "Raw",
-  process = "Number processed",
   addDays = "Add as days to selected date"
 }
 
@@ -87,7 +86,7 @@ export interface IDataCollection {
   results?: IResult[]
   extraInfo?: { [key: string]: any },
   resultsExtraCalc?: IResult[],
-  conclusionExtraCalc?: string|DateRes
+  conclusionExtraCalc?: ConclusionRes
 }
 
 export interface IData {
@@ -165,11 +164,12 @@ export interface IExtraCalc {
   calc: Calc,
   calcValue: string,
   until: string,
-  resProcess: string,
+  resValue: string,
   maxIterations: number,
   resFormat: ExtraCalcFormat,
   numRequests: number,
-  whenApply: WhenApplyEnum
+  whenApply: WhenApplyEnum,
+  resSubtitle?: string
 }
 
 export interface PostChangeIDataPred {
@@ -177,14 +177,15 @@ export interface PostChangeIDataPred {
   newResults: IResult[]
 }
 
-export class DateRes {
-  dateString: string;
-  days: number;
+export class ConclusionRes {
+  title: string;
+  subtitle?: string;
   
-  constructor(dateString: string, days: number) {
-    this.dateString = dateString
-    this.days = days
+  constructor(title: string, subtitle: string) {
+    this.title = title
+    this.subtitle = subtitle
   }
+
 }
 
 export interface IScaler {

@@ -21,11 +21,12 @@ export const ExtraCalcDefault: IExtraCalc = {
     calc: Calc.sum,
     calcValue: "",
     until: "",
-    resProcess: "$res",
+    resValue: "$res",
     maxIterations: 1000,
     resFormat: ExtraCalcFormat.raw,
     numRequests: 10,
-    whenApply: WhenApplyEnum.afterPreprocess
+    whenApply: WhenApplyEnum.afterPreprocess,
+    resSubtitle: ''
 }
 
 export const ModelDefault: IModel = {

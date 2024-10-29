@@ -215,53 +215,55 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                             <br />&nbsp;&nbsp; · Text: string in single quotes
                             <br />&nbsp;&nbsp; · Date: string in single quotes formatted as YYYY-MM-DD
                         </Alert>
-                        <InlineField label="Initial tag" labelWidth={17} grow required disabled={disabled}>
-                            <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required />
-                        </InlineField>
-                        <InlineField label="Calculation" labelWidth={17} required disabled={disabled}>
-                            <InputControl
-                                render={({ field }) =>
-                                    <Select
-                                        value={selectedCalc}
-                                        options={calcOptions}
-                                        onChange={(v) => setSelectedCalc(v)}
-                                        disabled={disabled}
-                                        defaultValue={calcOptions[0]}
-                                    />
-                                }
-                                control={control}
-                                name="calc"
-                            />
-                        </InlineField>
-                        <InlineField label="Value to consider" labelWidth={17} grow required disabled={disabled}>
-                            <Input {...register("calcValue")} value={currentCalc.calcValue} disabled={disabled} onChange={handleOnChangeCalc} required />
-                        </InlineField>
-                        <InlineField label="Execute until" labelWidth={17} grow required disabled={disabled}>
-                            <Input {...register("until")} value={currentCalc.until} disabled={disabled} onChange={handleOnChangeCalc} required />
-                        </InlineField>
-                    </Collapse>
-                    <Collapse label="Result processing" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
-                        <Alert title="Info" severity='info'>
-                            $res = number of iterations
-                        </Alert>
-                        <InlineField label="Format" labelWidth={17} grow required disabled={disabled}>
-                            <InputControl
-                                render={({ field }) =>
-                                    <Select
-                                        value={selectedFormat}
-                                        options={formatOptions}
-                                        onChange={(v) => setSelectedFormat(v)}
-                                        disabled={disabled}
-                                        defaultValue={formatOptions[0]}
-                                    />
-                                }
-                                control={control}
-                                name="resFormat"
-                            />
-                        </InlineField>
-                        <InlineField label="Result processing" labelWidth={17} grow hidden={selectedFormat.value === ExtraCalcFormat.raw} required={selectedFormat.value === ExtraCalcFormat.process} disabled={disabled}>
-                            <Input {...register("resProcess")} value={currentCalc.resProcess} disabled={disabled} onChange={handleOnChangeCalc} required={selectedFormat.value === ExtraCalcFormat.process} />
-                        </InlineField>
+                        <Collapse label="Iterations" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
+                            <InlineField label="Initial tag" labelWidth={17} grow required disabled={disabled}>
+                                <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required />
+                            </InlineField>
+                            <InlineField label="Calculation" labelWidth={17} required disabled={disabled}>
+                                <InputControl
+                                    render={({ field }) =>
+                                        <Select
+                                            value={selectedCalc}
+                                            options={calcOptions}
+                                            onChange={(v) => setSelectedCalc(v)}
+                                            disabled={disabled}
+                                            defaultValue={calcOptions[0]}
+                                        />
+                                    }
+                                    control={control}
+                                    name="calc"
+                                />
+                            </InlineField>
+                            <InlineField label="Value to consider" labelWidth={17} grow required disabled={disabled}>
+                                <Input {...register("calcValue")} value={currentCalc.calcValue} disabled={disabled} onChange={handleOnChangeCalc} required />
+                            </InlineField>
+                            <InlineField label="Execute until" labelWidth={17} grow required disabled={disabled}>
+                                <Input {...register("until")} value={currentCalc.until} disabled={disabled} onChange={handleOnChangeCalc} required />
+                            </InlineField>
+                        </Collapse>
+                        <Collapse label="Final result" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
+                            <InlineField label="Value" labelWidth={17} grow required disabled={disabled}>
+                                <Input {...register("resValue")} value={currentCalc.resValue} disabled={disabled} onChange={handleOnChangeCalc} required/>
+                            </InlineField>
+                            <InlineField label="Format" labelWidth={17} grow required disabled={disabled}>
+                                <InputControl
+                                    render={({ field }) =>
+                                        <Select
+                                            value={selectedFormat}
+                                            options={formatOptions}
+                                            onChange={(v) => setSelectedFormat(v)}
+                                            disabled={disabled}
+                                            defaultValue={formatOptions[0]}
+                                        />
+                                    }
+                                    control={control}
+                                    name="resFormat"
+                                />
+                            </InlineField>
+                            <InlineField label="Subtitle" labelWidth={17} grow disabled={disabled}>
+                                <Input {...register("resSubtitle")} value={currentCalc.resSubtitle} disabled={disabled} onChange={handleOnChangeCalc} />
+                            </InlineField>
+                        </Collapse>
                     </Collapse>
                 </div>
             )

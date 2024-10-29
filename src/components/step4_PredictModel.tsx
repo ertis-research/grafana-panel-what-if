@@ -1,7 +1,7 @@
 import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { Context, dateTimeLocalToString, getMean, round, groupBy, dateToString, stringToDate } from 'utils/utils'
-import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, DateRes, IDynamicField, TypeDynamicField } from 'utils/types'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictAllCollections } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
@@ -328,12 +328,12 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         if (col.conclusionExtraCalc !== undefined) {
             return <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '100%' }}>
                 <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.resultCalc}</p>
-                {(col.conclusionExtraCalc instanceof DateRes) ?
+                {(col.conclusionExtraCalc.subtitle !== undefined && col.conclusionExtraCalc.subtitle.trim() !== '') ?
                     <div>
-                        <h3 style={{ textAlign: 'center', marginBottom: '0px' }}>{col.conclusionExtraCalc.dateString}</h3>
-                        <p style={{ textAlign: 'center', marginTop: '5px' }}>Remaining days: {col.conclusionExtraCalc.days}</p>
+                        <h3 style={{ textAlign: 'center', marginBottom: '0px' }}>{col.conclusionExtraCalc.title}</h3>
+                        <p style={{ textAlign: 'center', marginTop: '5px' }}>{col.conclusionExtraCalc.subtitle}</p>
                     </div>
-                    : <h1 style={{ textAlign: 'center' }}>{col.conclusionExtraCalc}</h1>
+                    : <h1 style={{ textAlign: 'center' }}>{col.conclusionExtraCalc.title}</h1>
                 }
             </div>
         }
