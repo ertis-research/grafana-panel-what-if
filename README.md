@@ -17,14 +17,12 @@ The tool enables easy loading of data into the model directly from a data source
 
 Also we have made every effort to design the panel to be abstract and intuitive, while ensuring it is responsive to panel size and consistent with both dark and light modes. We hope you like it!
 
-## :bookmark_tabs: Table of Contents
+## Table of Contents
 
-- [Installation](#wrench-installation)
-  - [Requirements](#requirements)
-  - [Development mode](#development-mode)
-  - [Production mode](#production-mode)
-- [Getting started](#rocket-getting-started)
-- [Documentation](#page_facing_up-documentation)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Documentation](#documentation)
    - [Panel usage](#panel-usage)
       - [Data collections](#data-collections)
       - [Tag filtering and sorting](#tag-filtering-and-sorting)
@@ -40,55 +38,24 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Data import queries](#data-import-queries)
       - [Extra information](#extra-information)
       - [Extra calculations](#extra-calculations)
+- [Build from source](#build-from-source)
+  - [Development mode](#development-mode)
+  - [Production mode](#production-mode)
 
-## :wrench: Installation
-
-### Requirements
+## Requirements
 
 - [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
 - [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
 - [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
 
-To install the plugin, place the compiled code in the Grafana plugins folder. You can download the precompiled plugin from the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest) or, if you prefer, clone the repository using the following command and compile it yourself.
+## Installation
 
-```bash
-git clone https://github.com/ertis-research/whatif-panel-for-Grafana.git
-cd whatif-panel-for-Grafana
-```
-### Development mode
+To install the plugin, download the compiled code from the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest). If you prefer or need to make modifications, you can also built it yourself by following the instructions in the [related section](#build-from-source). You will need to place the compiled code into Grafana's plugins directory, then add its identifier (`ertis-whatif-panel`) to the `allow_loading_unsigned_plugins` list in your Grafana configuration.
 
-To add the plugin in a development environment, you need to include the folder containing the complete code inside the [Grafana designated folder for plugins](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins). Then, the following commands must be executed to install dependencies and build plugin:
-
-```bash
-yarn install
-yarn dev
-```
-
-This will enable the plugin in the instance of Grafana where it has been placed, remaining in watch mode waiting for changes to be saved.
-
-> **Warning**
-> If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
-
-### Production mode
-
-To allow the plugin to run, it needs to be signed following the [guidelines](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/) provided by Grafana. However, there is also the option to explicitly indicate that the plugin can be executed without signature. To do this, its identifier must be included in the [*allow_loading_unsigned_plugins*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins) option of the *grafana.ini* file.
-
-To build the plugin for a production environment, run the following command to install dependencies and build plugin:
-
-```bash
-yarn install
-yarn build
-```
-
-As output, a folder called *dist* will be generated in the root of the project, which will contain the plugin build. **This folder should be placed inside the [plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) of the production environment** (it is recommended to rename it to the plugin identifier). 
-
-Once these steps are completed, the plugin will be available for selection when adding a new panel to a dashboard.
-
-
-## :rocket: Getting started
+## Getting started
 
 > **Note**
-> This explanation is simplified for common users and assumes that the plugin has already been added and correctly [configured](#configuration) with the necessary AI/ML models. For more detailed information, it is recommended to consult the rest of the [documentation](#page_facing_up-documentation) provided.
+> This explanation is simplified for common users and assumes that the plugin has already been added and correctly [configured](#configuration) with the necessary AI/ML models. For more detailed information, it is recommended to consult the rest of the [documentation](#documentation) provided.
 
 The functionality of the plugin is divided into 5 steps:
 
@@ -132,7 +99,7 @@ This step allows you to export the information contained in the panel in order t
 
 The export button will be available from step 3 onwards, where it will be possible to download a [CSV](#csv-scheme) with the interval configuration if active, the original and new value (if any) of each tag and whether or not the tag is marked for interval analysis. After executing step 4, the result for the different predictions will be added to this information.
 
-## :page_facing_up: Documentation
+## Documentation
 
 ### Panel usage
 
@@ -407,3 +374,45 @@ This feature allows for adding complementary calculations to the models within t
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
 
 This part of the documentation is under construction...
+
+## Build from source
+
+If you'd like to build the plugin yourself, start by cloning the repository using the following command:
+
+```bash
+git clone https://github.com/ertis-research/grafana-panel-what-if.git
+cd grafana-panel-what-if
+```
+
+#### Development mode
+
+Running the plugin in development mode is the best approach if you want to modify or add functionalities to the tool. To do this, you will need to have an active local installation of Grafana and place the source code you downloaded into the [Grafana plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins). In the [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), you will need to add the identifier (`ertis-whatif-panel`) to the list of unsigned plugins ([`allow_loading_unsigned_plugins`](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins)). These steps may vary depending on your operating system; refer to the Grafana documentation for more information. Next, in the root folder of the project, execute the following commands:
+
+```bash
+yarn install
+yarn dev
+```
+
+After running these commands, [restart Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/start-restart-grafana/) according to the instructions for your operating system. This way, every time you save a change in the code, it will automatically compile, and upon reloading the page, you will see the changes reflected.
+
+> **Warning**
+> If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
+
+> **Warning**
+> If you notice that the changes are not being reflected correctly, it is likely due to the browser cache. Try clearing your browsing data, re-running the commands, and restarting Grafana. If this doesn’t resolve the issue, you can also try deleting the `.cache` folder within `node_modules`, and then repeat the previous steps.
+
+#### Production mode
+
+To allow the plugin to run, it needs to be signed following the [guidelines](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/) provided by Grafana. However, there is also the option to explicitly indicate that the plugin can be executed without signature. To do this, its identifier must be included in the [`allow_loading_unsigned_plugins`](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins) option of the *grafana.ini* file.
+
+To build the plugin for a production environment, run the following command to install dependencies and build plugin:
+
+```bash
+yarn install
+yarn build
+```
+
+As output, a folder called *dist* will be generated in the root of the project, which will contain the plugin build. **This folder should be placed inside the [plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) of the production environment and renamed with the plugin identifier (`ertis-whatif-plugin`)**
+
+Once these steps are completed, the plugin will be available for selection when adding a new panel to a dashboard.
+
