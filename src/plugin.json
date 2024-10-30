@@ -4,7 +4,7 @@
   "name": "What-If Analysis",
   "id": "ertis-whatif-panel",
   "info": {
-    "keywords": ["panel"],
+    "keywords": ["panel", "machine-learning", "what-if", "data-analysis"],
     "description": "This plugin serves as a powerful tool for conducting What-If queries using AI models. The integration with What-If analysis offers an valuable resource for improving the interpretability of models. With this feature, users can effortlessly assess the predictions of a model and obtain meaningful insights by delving into different hypothetical scenarios.",
     "author": {
       "name": "ERTIS"
