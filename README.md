@@ -44,7 +44,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 
 ## Requirements
 
-- [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
+- [Grafana](https://grafana.com/) - minimum is version 8, but version 9 is recommended (v8.5.3 and v9.5.1 has been used for development)
 
 ## Installation
 
@@ -300,8 +300,9 @@ Clicking on the _Add new model_ section will display a blank form that allows yo
 The basic configuration of the model has the following fields:
 - **ID** (required): Identifier of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
 - **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
-- **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the corresponding section.
+- **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the [corresponding section](#formats).
 - **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
+- **Extra calculation**: Identifier for an additional calculation that can be executed using model data to obtain information that enhances the analysis. Refer to the [corresponding section](#extra-calculations) for more information.
 
 Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
 - **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
@@ -433,10 +434,26 @@ With this configuration, the tool will be able to extract the information return
 
 #### Extra calculations
 
-This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
+This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. All calculations will be configured in the designated section (_Extra Calculations_), which is independent of models and formats. You can assign these calculations to any desired models within their configuration. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
 
 ##### Recursive calculations
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
+
+For creating a new calculation, the form is divided into three sections: basic configuration, dynamic fields and the formulas necessary to perform the calculation and display the results. The basic fields are:
+- **ID** (required): Identifier of the calculation. It will be shown in the extra calculation selector in the model configuration.
+- **Name** (required): A descriptive name for the calculation in plain language, enabling users to easily identify its purpose.
+- **When to apply** (required): Defines when the calculation will be executed. Two options are available:
+  - **After preprocessing**: The values will be considered as they are input into the model, meaning after preprocessing and scaling.
+  - **Before preprocessing**: The values will be considered as displayed/edited by the user, meaning before preprocessing and scaling.
+- **Maximum iterations** (optional): Maximum number of iterations allowed. This limit is implemented to prevent the application from crashing due to infinite queries. Default is 1000.
+- **Parallel requests** (optional): Size of the API request blocks that will be made to enhance the efficiency of the calculation. This number will not impact the final result. It is advisable to find a size that balances the speed of computation with the processing capacity of the model's API. Default is 10.
+
+You can add as many dynamic fields as you find necessary. These fields allow users to manually input data required for the calculation, condition or conclusion. They will appear in the tool's interface next to the button for executing the calculation. The process of adding dynamic fields is similar to adding tags; simply click the _Add field_ button to create a new one. Each field will have the following parameters:
+
+- **Name** (required): Natural language name of the dynamic field that will be displayed to the user. 
+- **Type** (required): 
+
+The identifier for each dynamic field is displayed to the left of its name and starts with "dyn" followed by a number (_dyn1_, for example). This identifier should be used to reference the value entered by the user within the formulas.
 
 This part of the documentation is under construction...
 
