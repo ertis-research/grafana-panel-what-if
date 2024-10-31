@@ -50,7 +50,74 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 
 ## Installation
 
-To install the plugin, download the compiled code from the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest). If you prefer or need to make modifications, you can also built it yourself by following the instructions in the [related section](#build-from-source). You will need to place the compiled code into Grafana's plugins directory, then add its identifier (`ertis-whatif-panel`) to the `allow_loading_unsigned_plugins` list in your Grafana configuration.
+To install the plugin, first place the compiled code in the [Grafana plugins directory](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) which is _/var/lib/grafana/plugins_ by default. Next, add its identifier (`ertis-whatif-panel`) to the `allow_loading_unsigned_plugins`  list in your Grafana configuration file. Finally, restart Grafana to apply the changes. The following steps provide guidance for both local and Helm installations, though it can be installed to any Grafana distribution.
+
+### Local
+
+You must first download the zip file of the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest). If you prefer or need to make modifications, you can also built it yourself by following the instructions in the [related section](#build-from-source). Then access the Grafana folder on your PC. In this folder you have to find the [Grafana configuration file](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana). Follow the [Grafana documentation](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana/#configuration-file-location) to know its location, the name of the file and how to modify it. When you have it, modify the appropriate file by uncommenting and adding the following:
+
+```ini
+[plugins]
+# Enter a comma-separated list of plugin identifiers to identify plugins to load even if they are unsigned. Plugins with modified signatures are never loaded.
+allow_loading_unsigned_plugins = ertis-whatif-panel
+```
+
+In the same file, check the [path to the plugins folder](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana/#plugins). You can modify it if you consider it convenient. Then, go to that folder and unzip the plugin zip file. You should get a folder with the name "ertis-whatif-panel" which must have something like this inside (make sure that there are no intermediate folders).
+
+<p align="center">
+<img
+    src="https://github.com/user-attachments/assets/feda3082-dcda-4917-b6f6-ba146ea07998"
+    alt="Kubectl get services"
+    width="200"
+/>
+</p>
+
+For the changes to take effect, **Grafana must be restarted**. Please refer to [its documentation](https://grafana.com/docs/grafana/v9.5/setup-grafana/start-restart-grafana/) to find out how to do this depending on your operating system.
+
+**The plugin should now be available for adding it to a dashboard.**
+
+### Helm
+
+For this case you need to add an extraInitContainer to your _values.yaml_, where you navigate to the plugins folder, download the zip of the latest release and unzip it.
+Below is what you need to add.
+
+```yaml title=values.yaml
+extraInitContainers:
+- name: install-whatif-plugin
+  image: busybox
+  command:
+    - /bin/sh
+    - -c
+    - |
+      #!/bin/sh
+      set -euo pipefail
+      mkdir -p /grafana-storage/plugins
+      cd /grafana-storage/plugins
+      wget --no-check-certificate -O ertis-whatif-panel.zip https://github.com/ertis-research/grafana-panel-what-if/releases/download/latest/ertis-whatif-panel.zip
+      unzip -o ertis-whatif-panel.zip
+      rm ertis-whatif-panel.zip
+  volumeMounts:
+  - name: storage
+    mountPath: /grafana-storage
+``` 
+
+At the moment the plugin is not signed, so you will have to add the plugin id (`ertis-whatif-panel`) to the list of unsigned plugins, which is also defined inside the values.yaml. This will allow Grafana to show it as an plugin (if not, it will not appear at all). Below is what you need to add to your _values.yaml_:
+
+```yaml title=values.yaml
+grafana.ini:
+  plugins:
+    allow_loading_unsigned_plugins: ertis-whatif-panel
+``` 
+
+Now update the Grafana helm: 
+
+```bash
+helm upgrade <your-release-name> grafana/grafana -f values.yaml
+```
+
+Verify that the Grafana pod is in Running and Ready status.
+
+**The plugin should now be available for adding it to a dashboard.**
 
 ## Getting started
 
