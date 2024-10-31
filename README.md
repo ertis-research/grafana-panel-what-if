@@ -44,8 +44,6 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
-- [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
 - [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
 
 ## Installation
@@ -450,6 +448,11 @@ If you'd like to build the plugin yourself, start by cloning the repository usin
 git clone https://github.com/ertis-research/grafana-panel-what-if.git
 cd grafana-panel-what-if
 ```
+
+Also, you will need to satisfy the following requirements:
+
+- [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
+- [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
 
 #### Development mode
 
