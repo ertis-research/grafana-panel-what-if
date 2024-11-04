@@ -448,12 +448,28 @@ For creating a new calculation, the form is divided into three sections: basic c
 - **Maximum iterations** (optional): Maximum number of iterations allowed. This limit is implemented to prevent the application from crashing due to infinite queries. Default is 1000.
 - **Parallel requests** (optional): Size of the API request blocks that will be made to enhance the efficiency of the calculation. This number will not impact the final result. It is advisable to find a size that balances the speed of computation with the processing capacity of the model's API. Default is 10.
 
-You can add as many dynamic fields as you find necessary. These fields allow users to manually input data required for the calculation, condition or conclusion. They will appear in the tool's interface next to the button for executing the calculation. The process of adding dynamic fields is similar to adding tags; simply click the _Add field_ button to create a new one. Each field will have the following parameters:
+You can add as many dynamic fields as you find necessary. These fields allow users to manually input data required for the calculation, condition or conclusion. They will appear in the tool's interface next to the button for executing the calculation. The process of adding dynamic fields is similar to adding tags; simply click the _Add field_ button to create a new one. You can also delete them using the red button with an "X" on the right side. Each field will have the following parameters:
 
 - **Name** (required): Natural language name of the dynamic field that will be displayed to the user. 
-- **Type** (required): 
+- **Type** (required): Field type. This can be numeric, text, or date. The field displayed in the tool’s interface will correspond to the selected type.
 
-The identifier for each dynamic field is displayed to the left of its name and starts with "dyn" followed by a number (_dyn1_, for example). This identifier should be used to reference the value entered by the user within the formulas.
+The identifier for each dynamic field is displayed to the left of its name and starts with "dyn" followed by a number (_dyn1_, for example). This identifier should be used to reference the value entered by the user within the formulas. During execution, it will be replaced by the field’s value according to the format corresponding to the selected type (details will be provided below).
+
+> **Caution**
+> Deleting dynamic fields is possible; however, keep in mind that if you delete one in the middle, **the identifiers of those following it will shift up**. For example, if you have three dynamic fields and delete dyn2, the third field will become dyn2, and there will no longer be a dyn3.
+
+Next, you need to define the calculation, considering the value to be added, the stopping condition, and the final conclusion. All of this will be determined using _formulas_, which are essentially **JavaScript code that must return a specific data type**. This code will always execute within a sandbox to avoid security issues. In these formulas, variables can be included to use information about the calculation, the collection, or the dynamic fields; these will be replaced by the corresponding values before execution. **You can use all the basic methods and types provided by JavaScript**, but you must do so in a single line. It is not possible to import libraries. I recommend using a [JavaScript playground](https://playcode.io/javascript), replacing its variables with JavaScript variables or static values, to test the functionality of the formula. This allows you to create more complex formulas.
+
+The currently available variables that can be included in the formulas are as follows:
+
+- **$out**: Numeric. It may contain decimals, using a dot as the decimal separator. During calculation, it represents the output of the ML model for each iteration. Once completed, it corresponds to the last valid model output before the stopping condition is met. In both cases, the model’s output is used as-is, without rounding.
+- **$[X]**: Numeric. It may contain decimals, using a dot as the decimal separator. In this case, **_X_ should be replaced by a model tag**. The existence of the tag in the model is not checked, so if it does not exist, it will be undefined. During calculation, this variable will be replaced by the tag value used in the model's input data for each iteration. Once completed, the value will correspond to the tag value for the input data of the last iteration before the stopping condition is met. In both cases, the value will correspond to either the preprocessed or unprocessed data, depending on the setting of the _When to apply_ field configured earlier.
+- **$iter**: Numeric. It is an integer. During calculation, it corresponds to the index of each iteration. Once completed, it represents the number of iterations performed before meeting the stopping condition (excluding the iteration that meets it). In both cases, it starts at 0.
+- **$date**: date selected in collection as a string in single quotes formatted as YYYY-MM-DD
+- **$dynX**: value of dynamic field X by type:
+  - **Number**: number (no quotes)
+  - **Text**: string in single quotes
+  - **Date**: string in single quotes formatted as YYYY-MM-DD
 
 This part of the documentation is under construction...
 
