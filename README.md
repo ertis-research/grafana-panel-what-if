@@ -119,7 +119,7 @@ Verify that the Grafana pod is in Running and Ready status.
 
 ## Getting started
 
-> **Note**
+> [!NOTE]
 > This explanation is simplified for common users and assumes that the plugin has already been added and correctly [configured](#configuration) with the necessary AI/ML models. For more detailed information, it is recommended to consult the rest of the [documentation](#documentation) provided.
 
 The functionality of the plugin is divided into 5 steps:
@@ -289,7 +289,7 @@ In the general tab, you will find the options that are common to the whole panel
 - **Plugin language:** It is possible to change the language of the elements that make up the panel to English or Spanish. The default value is English. This will not affect the configuration section.
 
 #### Models
-> **Warning**
+> [!WARNING]
 > At least one AI/ML model must be configured in order to use the panel.
 
 In the Models tab, the list of models already configured (if any) and a section with the blue text to add a new one (_Add new model_) are displayed. This will always appear last in the list, after all the configured models. Clicking on any of these elements will display a form whose content will vary depending on whether it is a configured model or the section for adding a new model.
@@ -422,7 +422,7 @@ This functionality allows adding some useful information in the prediction secti
 
 This information must be contained in a query that can use the variables specified in the [data import](#data-import-queries) (time and tag list) if necessary. This query should return a table relating a text identifier to a value of any type. It should also be noted that the tool will only display the first two rows, while the remaining rows (if any) can be consulted by clicking on the _See more_ button.
 
-> **Note**
+> [!NOTE]
 > If the value is an instant of time in ISO 8601 UTC the tool will automatically display it in **YYYYY-MM-DD HH:mm** format in local time.
 
 This query must be defined in the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration, also indicating the name of the columns containing the information:
@@ -438,6 +438,9 @@ This feature allows for adding complementary calculations to the models within t
 
 ##### Recursive calculations
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
+
+> [!IMPORTANT]
+> **If the user has manually modified values in the collection, the new dataset will be used to run the calculation. This does not apply to intervals; tags selected for interval analysis will not be taken into account for this function and only their imported values will be considered.**
 
 For creating a new calculation, the form is divided into three sections: basic configuration, dynamic fields and the formulas necessary to perform the calculation and display the results. The basic fields are:
 - **ID** (required): Identifier of the calculation. It will be shown in the extra calculation selector in the model configuration.
@@ -455,10 +458,13 @@ You can add as many dynamic fields as you find necessary. These fields allow use
 
 The identifier for each dynamic field is displayed to the left of its name and starts with "dyn" followed by a number (_dyn1_, for example). This identifier should be used to reference the value entered by the user within the formulas. During execution, it will be replaced by the field’s value according to the format corresponding to the selected type (details will be provided below).
 
-> **Caution**
+> [!CAUTION]
 > Deleting dynamic fields is possible; however, keep in mind that if you delete one in the middle, **the identifiers of those following it will shift up**. For example, if you have three dynamic fields and delete dyn2, the third field will become dyn2, and there will no longer be a dyn3.
 
-Next, you need to define the calculation, considering the value to be added, the stopping condition, and the final conclusion. All of this will be determined using _formulas_, which are essentially **JavaScript code that must return a specific data type**. This code will always execute within a sandbox to avoid security issues. In these formulas, variables can be included to use information about the calculation, the collection, or the dynamic fields; these will be replaced by the corresponding values before execution. **You can use all the basic methods and types provided by JavaScript**, but you must do so in a single line. It is not possible to import libraries. I recommend using a [JavaScript playground](https://playcode.io/javascript), replacing its variables with JavaScript variables or static values, to test the functionality of the formula. This allows you to create more complex formulas.
+Next, you need to define the calculation, considering the value to be added, the stopping condition, and the final conclusion. All of this will be determined using _formulas_, which are essentially **JavaScript code that must return a specific data type**. This code will always execute within a sandbox to avoid security issues. In these formulas, variables can be included to use information about the calculation, the collection, or the dynamic fields; these will be replaced by the corresponding values before execution. **You can use all the basic methods and types provided by JavaScript**, but you must do so in a single line. It is not possible to import libraries. This allows you to create more complex formulas.
+
+> [!TIP]
+> We recommend using a [JavaScript playground](https://playcode.io/javascript) to test the functionality of the formula. You can replace the variables in the formula with JavaScript variables or static values to test it.
 
 The currently available variables that can be included in the formulas are as follows:
 
@@ -466,12 +472,31 @@ The currently available variables that can be included in the formulas are as fo
 - **$[X]**: Numeric. It may contain decimals, using a dot as the decimal separator. In this case, **_X_ should be replaced by a model tag**. The existence of the tag in the model is not checked, so if it does not exist, it will be undefined. During calculation, this variable will be replaced by the tag value used in the model's input data for each iteration. Once completed, the value will correspond to the tag value for the input data of the last iteration before the stopping condition is met. In both cases, the value will correspond to either the preprocessed or unprocessed data, depending on the setting of the _When to apply_ field configured earlier.
 - **$iter**: Numeric. It is an integer. During calculation, it corresponds to the index of each iteration. Once completed, it represents the number of iterations performed before meeting the stopping condition (excluding the iteration that meets it). In both cases, it starts at 0.
 - **$date**: String in single quotes indicating a date in the format YYYY-MM-DD. This represents the date selected by the user to import data into the collection. If a time range was used, the stop date of that range will be considered. Time is disregarded, so no timezone is applied, and the date is used exactly as it appears in the user's local timezone.
-- **$dynX**: value of dynamic field X by type:
-  - **Number**: number (no quotes)
-  - **Text**: string in single quotes
-  - **Date**: string in single quotes formatted as YYYY-MM-DD
+- **$dynX**: This corresponds to the value of dynamic field X (where X is a number) configured in the previous section. If a dynamic field that does not exist is specified, it will be replaced with _undefined_. Its representation will depend on the type selected for the field:
+  - **Number**: Numeric. It may contain decimals, using a dot as the decimal separator. No quotes.
+  - **Text**: String in single quotes.
+  - **Date**: String in single quotes indicating a date in the format YYYY-MM-DD. The time is not specified.
 
-This part of the documentation is under construction...
+Now you have the ability to write the formulas that will define the calculation. This configuration is divided into two parts: one corresponding to the iterations performed during the calculation’s execution, and the other to the representation of the final result within the tool.
+
+_Iterations_
+- **Initial tag**: The name of the tag to which the calculated value will be added recursively until the stopping condition is met. It must correspond to the name of a tag in the associated model. Since this is not verified, if the tag does not exist, its value will be undefined, and the calculation will fail.
+- **Calculation**: Defines how the calculated value will be added to the tag's last value. This can be by adding (+), subtracting (-), multiplying (*), or dividing (/).
+- **Value to consider**: Formula (JavaScript code) that must return a number. This is the formula used to obtain the calculated value that will be added recursively to the tag's initial value. This formula runs on the initial data (preprocessed or unprocessed, as specified) and retains its value throughout the rest of the execution.
+- **Execute until**: Formula (JavaScript code) that must return a boolean. This is the formula used to determine the stopping condition of the calculation. This formula is executed in each iteration after receiving the model's result with the modified data.
+
+_Final result_
+- **Value**: Formula (JavaScript code) that must return a string or a number. This is the formula that presents the main conclusion of the calculation. It will depend on the needs of your calculation; for example, it may show the maximum value reached by the model, the number of iterations or perform some calculation to determine a predicted date. This information will be displayed in the tool's interface after the calculation execution is complete.
+- **Format**: This field allows for formatting the data resulting from the _Value_ formula. Most formats can be applied directly within the formulas, but if a more complex format is required, this field can easily be expanded to include it (by modifying the [plugin's source code](#build-from-source)). For now, the available options are:
+  - **Raw**: Does not apply any format; it leaves the value exactly as it comes from the formula.
+  - **Add as days to selected date**: The result of the _Value_ formula must be a number. This format assumes that the number represents the days that must be added to the date selected to import the data (in the case of an range, it refers to the stop date). This number of days is added to that date, and returns the predicted day as a string, where the day and year are numeric, and the month is long.
+- **Subtitle**:  Formula (JavaScript code) that must return a string. The result of this formula is added as a subtitle below the final conclusion. You can use it to include relevant static information or other calculation results that may be useful.
+
+The following diagram provides a simplified view of the operation of recursive calculation, emphasizing which field is used for each activity.
+
+![diagrama-recursive-calculation](https://github.com/user-attachments/assets/97a78064-779d-4873-b056-dec081ab8838)
+
+With this, the recursive calculation will be fully configured. Add it to the models in which you want to include it and apply the changes so users can utilize it. If you see that the calculation is not working correctly, **you can use the browser console to check the calculation logs**.
 
 ## Build from source
 
@@ -498,10 +523,10 @@ yarn dev
 
 After running these commands, [restart Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/start-restart-grafana/) according to the instructions for your operating system. This way, every time you save a change in the code, it will automatically compile, and upon reloading the page, you will see the changes reflected.
 
-> **Warning**
+> [!WARNING]
 > If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
 
-> **Warning**
+> [!WARNING]
 > If you notice that the changes are not being reflected correctly, it is likely due to the browser cache. Try clearing your browsing data, re-running the commands, and restarting Grafana. If this doesn’t resolve the issue, you can also try deleting the `.cache` folder within `node_modules`, and then repeat the previous steps.
 
 #### Production mode
