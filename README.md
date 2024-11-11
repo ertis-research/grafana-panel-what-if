@@ -29,6 +29,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Interval behaviour](#interval-behaviour)
       - [Understanding the comparative graph](#understanding-the-comparative-graph)
       - [Extra information about models](#extra-information-about-models)
+      - [Extra calculation using models](#extra-calculation-using-models)
       - [CSV import/export](#csv-importexport)
       - [Lack of data](#lack-of-data)
    - [Configuration](#configuration)
@@ -37,7 +38,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Formats](#formats)
       - [Data import queries](#data-import-queries)
       - [Extra information](#extra-information)
-      - [Extra calculations](#extra-calculations)
+      - [Extra calculation](#extra-calculation)
 - [Build from source](#build-from-source)
   - [Development mode](#development-mode)
   - [Production mode](#production-mode)
@@ -229,12 +230,22 @@ You can also interact with the graph through the tools provided by [Plotly](http
 
 #### Extra information about models
 
-Some model information can be added in the tool to support the understanding of the prediction results. If configured, this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
+Some model information can be added in the tool to support the understanding of the prediction results. If [configured](#extra-information), this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
 
 The information displayed will depend on the amount of information received by the query:
 - If the query **does not return any data** or the extra information has not been configured correctly, the extra information section will not appear.
 - If the query **returns one or two pieces of information**, these will be displayed in the section itself.
 - If the query **returns more than two pieces of information**, the first two will be displayed in the section itself, while you will have to click on the *See more* button to see the rest. This will display a dialogue window with all available information. To close it you can use the *X* in the top right corner or click anywhere on the page outside the dialogue window.
+
+#### Extra calculation using models
+
+An extra calculation can be added to use the model and the data collection, providing a useful result for analysis. If [configured](#extra-calculation), a new button will appear below the predict button in [step 4](#step-4-predict-result) and above any extra information, if present. This calculation will include, at a minimum, a button with the assigned name, and may include various fields for parameters that must be filled before executing the calculation. There are three types of fields the calculation may request:
+
+- **Text field**: Allows entry of any text without letter restrictions.
+- **Number field**: Allows entry of any number, whether integer or decimal, using a period as the decimal separator.
+- **Date field**: When clicked, a date picker appears, allowing selection of any date, past or future. Once selected, the date will be displayed in the user’s regional format.
+
+Once the calculation is executed, the result will appear in the same section as the usual What-If result. If the What-If analysis is run either before or after the extra calculation, a tab selection will appear at the top of the results to easily switch between both results. The results section for the additional calculation includes a main conclusion and a subtitle with further relevant information (either dynamic or static). Additionally, a [graph](#understanding-the-comparative-graph) similar to the one in the standard analysis will be displayed, reflecting the model requests made to complete the calculation.
 
 #### CSV import/export
 
@@ -432,11 +443,11 @@ This query must be defined in the corresponding section (_query_) after selectin
  
 With this configuration, the tool will be able to extract the information returned by the data source to introduce it as extra information in a section within the prediction section ([step 4](#step-4-predict-result)).
 
-#### Extra calculations
+#### Extra calculation
 
 This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. All calculations will be configured in the designated section (_Extra Calculations_), which is independent of models and formats. You can assign these calculations to any desired models within their configuration. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
 
-##### Recursive calculations
+##### Recursive calculation
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
 
 > [!IMPORTANT]
@@ -468,12 +479,12 @@ Next, you need to define the calculation, considering the value to be added, the
 
 The currently available variables that can be included in the formulas are as follows:
 
-- **$out**: Numeric. It may contain decimals, using a dot as the decimal separator. During calculation, it represents the output of the ML model for each iteration. Once completed, it corresponds to the last valid model output before the stopping condition is met. In both cases, the model’s output is used as-is, without rounding.
-- **$[X]**: Numeric. It may contain decimals, using a dot as the decimal separator. In this case, **_X_ should be replaced by a model tag**. The existence of the tag in the model is not checked, so if it does not exist, it will be undefined. During calculation, this variable will be replaced by the tag value used in the model's input data for each iteration. Once completed, the value will correspond to the tag value for the input data of the last iteration before the stopping condition is met. In both cases, the value will correspond to either the preprocessed or unprocessed data, depending on the setting of the _When to apply_ field configured earlier.
+- **$out**: Numeric. It may contain decimals, using a period as the decimal separator. During calculation, it represents the output of the ML model for each iteration. Once completed, it corresponds to the last valid model output before the stopping condition is met. In both cases, the model’s output is used as-is, without rounding.
+- **$[X]**: Numeric. It may contain decimals, using a period as the decimal separator. In this case, **_X_ should be replaced by a model tag**. The existence of the tag in the model is not checked, so if it does not exist, it will be undefined. During calculation, this variable will be replaced by the tag value used in the model's input data for each iteration. Once completed, the value will correspond to the tag value for the input data of the last iteration before the stopping condition is met. In both cases, the value will correspond to either the preprocessed or unprocessed data, depending on the setting of the _When to apply_ field configured earlier.
 - **$iter**: Numeric. It is an integer. During calculation, it corresponds to the index of each iteration. Once completed, it represents the number of iterations performed before meeting the stopping condition (excluding the iteration that meets it). In both cases, it starts at 0.
 - **$date**: String in single quotes indicating a date in the format YYYY-MM-DD. This represents the date selected by the user to import data into the collection. If a time range was used, the stop date of that range will be considered. Time is disregarded, so no timezone is applied, and the date is used exactly as it appears in the user's local timezone.
 - **$dynX**: This corresponds to the value of dynamic field X (where X is a number) configured in the previous section. If a dynamic field that does not exist is specified, it will be replaced with _undefined_. Its representation will depend on the type selected for the field:
-  - **Number**: Numeric. It may contain decimals, using a dot as the decimal separator. No quotes.
+  - **Number**: Numeric. It may contain decimals, using a period as the decimal separator. No quotes.
   - **Text**: String in single quotes.
   - **Date**: String in single quotes indicating a date in the format YYYY-MM-DD. The time is not specified.
 
