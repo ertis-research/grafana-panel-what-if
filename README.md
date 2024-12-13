@@ -17,20 +17,19 @@ The tool enables easy loading of data into the model directly from a data source
 
 Also we have made every effort to design the panel to be abstract and intuitive, while ensuring it is responsive to panel size and consistent with both dark and light modes. We hope you like it!
 
-## :bookmark_tabs: Table of Contents
+## Table of Contents
 
-- [Installation](#wrench-installation)
-  - [Requirements](#requirements)
-  - [Development mode](#development-mode)
-  - [Production mode](#production-mode)
-- [Getting started](#rocket-getting-started)
-- [Documentation](#page_facing_up-documentation)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Getting started](#getting-started)
+- [Documentation](#documentation)
    - [Panel usage](#panel-usage)
       - [Data collections](#data-collections)
       - [Tag filtering and sorting](#tag-filtering-and-sorting)
       - [Interval behaviour](#interval-behaviour)
       - [Understanding the comparative graph](#understanding-the-comparative-graph)
       - [Extra information about models](#extra-information-about-models)
+      - [Extra calculation using models](#extra-calculation-using-models)
       - [CSV import/export](#csv-importexport)
       - [Lack of data](#lack-of-data)
    - [Configuration](#configuration)
@@ -39,56 +38,90 @@ Also we have made every effort to design the panel to be abstract and intuitive,
       - [Formats](#formats)
       - [Data import queries](#data-import-queries)
       - [Extra information](#extra-information)
-      - [Extra calculations](#extra-calculations)
+      - [Extra calculation](#extra-calculation)
+- [Build from source](#build-from-source)
+  - [Development mode](#development-mode)
+  - [Production mode](#production-mode)
 
-## :wrench: Installation
+## Requirements
 
-### Requirements
+- [Grafana](https://grafana.com/) - minimum is version 8, but version 9 is recommended (v8.5.3 and v9.5.1 has been used for development)
 
-- [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
-- [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
-- [Grafana](https://grafana.com/) - version 8 (v8.5.3 and v9.5.1 has been used for development)
+## Installation
 
-To install the plugin, place the compiled code in the Grafana plugins folder. You can download the precompiled plugin from the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest) or, if you prefer, clone the repository using the following command and compile it yourself.
+To install the plugin, first place the compiled code in the [Grafana plugins directory](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) which is _/var/lib/grafana/plugins_ by default. Next, add its identifier (`ertis-whatif-panel`) to the `allow_loading_unsigned_plugins`  list in your Grafana configuration file. Finally, restart Grafana to apply the changes. The following steps provide guidance for both local and Helm installations, though it can be installed to any Grafana distribution.
 
-```bash
-git clone https://github.com/ertis-research/whatif-panel-for-Grafana.git
-cd whatif-panel-for-Grafana
-```
-### Development mode
+### Local
 
-To add the plugin in a development environment, you need to include the folder containing the complete code inside the [Grafana designated folder for plugins](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins). Then, the following commands must be executed to install dependencies and build plugin:
+You must first download the zip file of the [latest release](https://github.com/ertis-research/grafana-panel-what-if/releases/tag/latest). If you prefer or need to make modifications, you can also built it yourself by following the instructions in the [related section](#build-from-source). Then access the Grafana folder on your PC. In this folder you have to find the [Grafana configuration file](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana). Follow the [Grafana documentation](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana/#configuration-file-location) to know its location, the name of the file and how to modify it. When you have it, modify the appropriate file by uncommenting and adding the following:
 
-```bash
-yarn install
-yarn dev
+```ini
+[plugins]
+# Enter a comma-separated list of plugin identifiers to identify plugins to load even if they are unsigned. Plugins with modified signatures are never loaded.
+allow_loading_unsigned_plugins = ertis-whatif-panel
 ```
 
-This will enable the plugin in the instance of Grafana where it has been placed, remaining in watch mode waiting for changes to be saved.
+In the same file, check the [path to the plugins folder](https://grafana.com/docs/grafana/v9.5/setup-grafana/configure-grafana/#plugins). You can modify it if you consider it convenient. Then, go to that folder and unzip the plugin zip file. You should get a folder with the name "ertis-whatif-panel" which must have something like this inside (make sure that there are no intermediate folders).
 
-> **Warning**
-> If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
+<p align="center">
+<img
+    src="https://github.com/user-attachments/assets/feda3082-dcda-4917-b6f6-ba146ea07998"
+    alt="Kubectl get services"
+    width="200"
+/>
+</p>
 
-### Production mode
+For the changes to take effect, **Grafana must be restarted**. Please refer to [its documentation](https://grafana.com/docs/grafana/v9.5/setup-grafana/start-restart-grafana/) to find out how to do this depending on your operating system.
 
-To allow the plugin to run, it needs to be signed following the [guidelines](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/) provided by Grafana. However, there is also the option to explicitly indicate that the plugin can be executed without signature. To do this, its identifier must be included in the [*allow_loading_unsigned_plugins*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins) option of the *grafana.ini* file.
+**The plugin should now be available for adding it to a dashboard.**
 
-To build the plugin for a production environment, run the following command to install dependencies and build plugin:
+### Helm
+
+For this case you need to add an extraInitContainer to your _values.yaml_, where you navigate to the plugins folder, download the zip of the latest release and unzip it.
+Below is what you need to add.
+
+```yaml title=values.yaml
+extraInitContainers:
+- name: install-whatif-plugin
+  image: busybox
+  command:
+    - /bin/sh
+    - -c
+    - |
+      #!/bin/sh
+      set -euo pipefail
+      mkdir -p /grafana-storage/plugins
+      cd /grafana-storage/plugins
+      wget --no-check-certificate -O ertis-whatif-panel.zip https://github.com/ertis-research/grafana-panel-what-if/releases/download/latest/ertis-whatif-panel.zip
+      unzip -o ertis-whatif-panel.zip
+      rm ertis-whatif-panel.zip
+  volumeMounts:
+  - name: storage
+    mountPath: /grafana-storage
+``` 
+
+At the moment the plugin is not signed, so you will have to add the plugin id (`ertis-whatif-panel`) to the list of unsigned plugins, which is also defined inside the values.yaml. This will allow Grafana to show it as an plugin (if not, it will not appear at all). Below is what you need to add to your _values.yaml_:
+
+```yaml title=values.yaml
+grafana.ini:
+  plugins:
+    allow_loading_unsigned_plugins: ertis-whatif-panel
+``` 
+
+Now update the Grafana helm: 
 
 ```bash
-yarn install
-yarn build
+helm upgrade <your-release-name> grafana/grafana -f values.yaml
 ```
 
-As output, a folder called *dist* will be generated in the root of the project, which will contain the plugin build. **This folder should be placed inside the [plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) of the production environment** (it is recommended to rename it to the plugin identifier). 
+Verify that the Grafana pod is in Running and Ready status.
 
-Once these steps are completed, the plugin will be available for selection when adding a new panel to a dashboard.
+**The plugin should now be available for adding it to a dashboard.**
 
+## Getting started
 
-## :rocket: Getting started
-
-> **Note**
-> This explanation is simplified for common users and assumes that the plugin has already been added and correctly [configured](#configuration) with the necessary AI/ML models. For more detailed information, it is recommended to consult the rest of the [documentation](#page_facing_up-documentation) provided.
+> [!NOTE]
+> This explanation is simplified for common users and assumes that the plugin has already been added and correctly [configured](#configuration) with the necessary AI/ML models. For more detailed information, it is recommended to consult the rest of the [documentation](#documentation) provided.
 
 The functionality of the plugin is divided into 5 steps:
 
@@ -132,7 +165,7 @@ This step allows you to export the information contained in the panel in order t
 
 The export button will be available from step 3 onwards, where it will be possible to download a [CSV](#csv-scheme) with the interval configuration if active, the original and new value (if any) of each tag and whether or not the tag is marked for interval analysis. After executing step 4, the result for the different predictions will be added to this information.
 
-## :page_facing_up: Documentation
+## Documentation
 
 ### Panel usage
 
@@ -197,12 +230,22 @@ You can also interact with the graph through the tools provided by [Plotly](http
 
 #### Extra information about models
 
-Some model information can be added in the tool to support the understanding of the prediction results. If configured, this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
+Some model information can be added in the tool to support the understanding of the prediction results. If [configured](#extra-information), this data will be displayed under the predict button in [step 4](#step-4-predict-result) and will appear from the data import onwards (it can be consulted while modifying the tag values). This section can be minimised at any time with the arrow to the left of the title.
 
 The information displayed will depend on the amount of information received by the query:
 - If the query **does not return any data** or the extra information has not been configured correctly, the extra information section will not appear.
 - If the query **returns one or two pieces of information**, these will be displayed in the section itself.
 - If the query **returns more than two pieces of information**, the first two will be displayed in the section itself, while you will have to click on the *See more* button to see the rest. This will display a dialogue window with all available information. To close it you can use the *X* in the top right corner or click anywhere on the page outside the dialogue window.
+
+#### Extra calculation using models
+
+An extra calculation can be added to use the model and the data collection, providing a useful result for analysis. If [configured](#extra-calculation), a new button will appear below the predict button in [step 4](#step-4-predict-result) and above any extra information, if present. This calculation will include, at a minimum, a button with the assigned name, and may include various fields for parameters that must be filled before executing the calculation. There are three types of fields the calculation may request:
+
+- **Text field**: Allows entry of any text without letter restrictions.
+- **Number field**: Allows entry of any number, whether integer or decimal, using a period as the decimal separator.
+- **Date field**: When clicked, a date picker appears, allowing selection of any date, past or future. Once selected, the date will be displayed in the user’s regional format.
+
+Once the calculation is executed, the result will appear in the same section as the usual What-If result. If the What-If analysis is run either before or after the extra calculation, a tab selection will appear at the top of the results to easily switch between both results. The results section for the additional calculation includes a main conclusion and a subtitle with further relevant information (either dynamic or static). Additionally, a [graph](#understanding-the-comparative-graph) similar to the one in the standard analysis will be displayed, reflecting the model requests made to complete the calculation.
 
 #### CSV import/export
 
@@ -257,7 +300,7 @@ In the general tab, you will find the options that are common to the whole panel
 - **Plugin language:** It is possible to change the language of the elements that make up the panel to English or Spanish. The default value is English. This will not affect the configuration section.
 
 #### Models
-> **Warning**
+> [!WARNING]
 > At least one AI/ML model must be configured in order to use the panel.
 
 In the Models tab, the list of models already configured (if any) and a section with the blue text to add a new one (_Add new model_) are displayed. This will always appear last in the list, after all the configured models. Clicking on any of these elements will display a form whose content will vary depending on whether it is a configured model or the section for adding a new model.
@@ -268,8 +311,9 @@ Clicking on the _Add new model_ section will display a blank form that allows yo
 The basic configuration of the model has the following fields:
 - **ID** (required): Identifier of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
 - **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
-- **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the corresponding section.
+- **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the [corresponding section](#formats).
 - **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
+- **Extra calculation**: Identifier for an additional calculation that can be executed using model data to obtain information that enhances the analysis. Refer to the [corresponding section](#extra-calculations) for more information.
 
 Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
 - **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
@@ -389,7 +433,7 @@ This functionality allows adding some useful information in the prediction secti
 
 This information must be contained in a query that can use the variables specified in the [data import](#data-import-queries) (time and tag list) if necessary. This query should return a table relating a text identifier to a value of any type. It should also be noted that the tool will only display the first two rows, while the remaining rows (if any) can be consulted by clicking on the _See more_ button.
 
-> **Note**
+> [!NOTE]
 > If the value is an instant of time in ISO 8601 UTC the tool will automatically display it in **YYYYY-MM-DD HH:mm** format in local time.
 
 This query must be defined in the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration, also indicating the name of the columns containing the information:
@@ -399,11 +443,115 @@ This query must be defined in the corresponding section (_query_) after selectin
  
 With this configuration, the tool will be able to extract the information returned by the data source to introduce it as extra information in a section within the prediction section ([step 4](#step-4-predict-result)).
 
-#### Extra calculations
+#### Extra calculation
 
-This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
+This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. All calculations will be configured in the designated section (_Extra Calculations_), which is independent of models and formats. You can assign these calculations to any desired models within their configuration. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
 
-##### Recursive calculations
+##### Recursive calculation
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
 
-This part of the documentation is under construction...
+> [!IMPORTANT]
+> **If the user has manually modified values in the collection, the new dataset will be used to run the calculation. This does not apply to intervals; tags selected for interval analysis will not be taken into account for this function and only their imported values will be considered.**
+
+For creating a new calculation, the form is divided into three sections: basic configuration, dynamic fields and the formulas necessary to perform the calculation and display the results. The basic fields are:
+- **ID** (required): Identifier of the calculation. It will be shown in the extra calculation selector in the model configuration.
+- **Name** (required): A descriptive name for the calculation in plain language, enabling users to easily identify its purpose.
+- **When to apply** (required): Defines when the calculation will be executed. Two options are available:
+  - **After preprocessing**: The values will be considered as they are input into the model, meaning after preprocessing and scaling.
+  - **Before preprocessing**: The values will be considered as displayed/edited by the user, meaning before preprocessing and scaling.
+- **Maximum iterations** (optional): Maximum number of iterations allowed. This limit is implemented to prevent the application from crashing due to infinite queries. Default is 1000.
+- **Parallel requests** (optional): Size of the API request blocks that will be made to enhance the efficiency of the calculation. This number will not impact the final result. It is advisable to find a size that balances the speed of computation with the processing capacity of the model's API. Default is 10.
+
+You can add as many dynamic fields as you find necessary. These fields allow users to manually input data required for the calculation, condition or conclusion. They will appear in the tool's interface next to the button for executing the calculation. The process of adding dynamic fields is similar to adding tags; simply click the _Add field_ button to create a new one. You can also delete them using the red button with an "X" on the right side. Each field will have the following parameters:
+
+- **Name** (required): Natural language name of the dynamic field that will be displayed to the user. 
+- **Type** (required): Field type. This can be numeric, text, or date. The field displayed in the tool’s interface will correspond to the selected type.
+
+The identifier for each dynamic field is displayed to the left of its name and starts with "dyn" followed by a number (_dyn1_, for example). This identifier should be used to reference the value entered by the user within the formulas. During execution, it will be replaced by the field’s value according to the format corresponding to the selected type (details will be provided below).
+
+> [!CAUTION]
+> Deleting dynamic fields is possible; however, keep in mind that if you delete one in the middle, **the identifiers of those following it will shift up**. For example, if you have three dynamic fields and delete dyn2, the third field will become dyn2, and there will no longer be a dyn3.
+
+Next, you need to define the calculation, considering the value to be added, the stopping condition, and the final conclusion. All of this will be determined using _formulas_, which are essentially **JavaScript code that must return a specific data type**. This code will always execute within a sandbox to avoid security issues. In these formulas, variables can be included to use information about the calculation, the collection, or the dynamic fields; these will be replaced by the corresponding values before execution. **You can use all the basic methods and types provided by JavaScript**, but you must do so in a single line. It is not possible to import libraries. This allows you to create more complex formulas.
+
+> [!TIP]
+> We recommend using a [JavaScript playground](https://playcode.io/javascript) to test the functionality of the formula. You can replace the variables in the formula with JavaScript variables or static values to test it.
+
+The currently available variables that can be included in the formulas are as follows:
+
+- **$out**: Numeric. It may contain decimals, using a period as the decimal separator. During calculation, it represents the output of the ML model for each iteration. Once completed, it corresponds to the last valid model output before the stopping condition is met. In both cases, the model’s output is used as-is, without rounding.
+- **$[X]**: Numeric. It may contain decimals, using a period as the decimal separator. In this case, **_X_ should be replaced by a model tag**. The existence of the tag in the model is not checked, so if it does not exist, it will be undefined. During calculation, this variable will be replaced by the tag value used in the model's input data for each iteration. Once completed, the value will correspond to the tag value for the input data of the last iteration before the stopping condition is met. In both cases, the value will correspond to either the preprocessed or unprocessed data, depending on the setting of the _When to apply_ field configured earlier.
+- **$iter**: Numeric. It is an integer. During calculation, it corresponds to the index of each iteration. Once completed, it represents the number of iterations performed before meeting the stopping condition (excluding the iteration that meets it). In both cases, it starts at 0.
+- **$date**: String in single quotes indicating a date in the format YYYY-MM-DD. This represents the date selected by the user to import data into the collection. If a time range was used, the stop date of that range will be considered. Time is disregarded, so no timezone is applied, and the date is used exactly as it appears in the user's local timezone.
+- **$dynX**: This corresponds to the value of dynamic field X (where X is a number) configured in the previous section. If a dynamic field that does not exist is specified, it will be replaced with _undefined_. Its representation will depend on the type selected for the field:
+  - **Number**: Numeric. It may contain decimals, using a period as the decimal separator. No quotes.
+  - **Text**: String in single quotes.
+  - **Date**: String in single quotes indicating a date in the format YYYY-MM-DD. The time is not specified.
+
+Now you have the ability to write the formulas that will define the calculation. This configuration is divided into two parts: one corresponding to the iterations performed during the calculation’s execution, and the other to the representation of the final result within the tool.
+
+_Iterations_
+- **Initial tag**: The name of the tag to which the calculated value will be added recursively until the stopping condition is met. It must correspond to the name of a tag in the associated model. Since this is not verified, if the tag does not exist, its value will be undefined, and the calculation will fail.
+- **Calculation**: Defines how the calculated value will be added to the tag's last value. This can be by adding (+), subtracting (-), multiplying (*), or dividing (/).
+- **Value to consider**: Formula (JavaScript code) that must return a number. This is the formula used to obtain the calculated value that will be added recursively to the tag's initial value. This formula runs on the initial data (preprocessed or unprocessed, as specified) and retains its value throughout the rest of the execution.
+- **Execute until**: Formula (JavaScript code) that must return a boolean. This is the formula used to determine the stopping condition of the calculation. This formula is executed in each iteration after receiving the model's result with the modified data.
+
+_Final result_
+- **Value**: Formula (JavaScript code) that must return a string or a number. This is the formula that presents the main conclusion of the calculation. It will depend on the needs of your calculation; for example, it may show the maximum value reached by the model, the number of iterations or perform some calculation to determine a predicted date. This information will be displayed in the tool's interface after the calculation execution is complete.
+- **Format**: This field allows for formatting the data resulting from the _Value_ formula. Most formats can be applied directly within the formulas, but if a more complex format is required, this field can easily be expanded to include it (by modifying the [plugin's source code](#build-from-source)). For now, the available options are:
+  - **Raw**: Does not apply any format; it leaves the value exactly as it comes from the formula.
+  - **Add as days to selected date**: The result of the _Value_ formula must be a number. This format assumes that the number represents the days that must be added to the date selected to import the data (in the case of an range, it refers to the stop date). This number of days is added to that date, and returns the predicted day as a string, where the day and year are numeric, and the month is long.
+- **Subtitle**:  Formula (JavaScript code) that must return a string. The result of this formula is added as a subtitle below the final conclusion. You can use it to include relevant static information or other calculation results that may be useful.
+
+The following diagram provides a simplified view of the operation of recursive calculation, emphasizing which field is used for each activity.
+
+![diagrama-recursive-calculation](https://github.com/user-attachments/assets/97a78064-779d-4873-b056-dec081ab8838)
+
+With this, the recursive calculation will be fully configured. Add it to the models in which you want to include it and apply the changes so users can utilize it. If you see that the calculation is not working correctly, **you can use the browser console to check the calculation logs**.
+
+## Build from source
+
+If you'd like to build the plugin yourself, start by cloning the repository using the following command:
+
+```bash
+git clone https://github.com/ertis-research/grafana-panel-what-if.git
+cd grafana-panel-what-if
+```
+
+Also, you will need to satisfy the following requirements:
+
+- [Node.js](https://nodejs.org/es) - version 16 or above (v18.13.0 has been used for development)
+- [Yarn](https://yarnpkg.com/) - version 1 (v1.22.11 has been used for development)
+
+#### Development mode
+
+Running the plugin in development mode is the best approach if you want to modify or add functionalities to the tool. To do this, you will need to have an active local installation of Grafana and place the source code you downloaded into the [Grafana plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins). In the [Grafana configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/), you will need to add the identifier (`ertis-whatif-panel`) to the list of unsigned plugins ([`allow_loading_unsigned_plugins`](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins)). These steps may vary depending on your operating system; refer to the Grafana documentation for more information. Next, in the root folder of the project, execute the following commands:
+
+```bash
+yarn install
+yarn dev
+```
+
+After running these commands, [restart Grafana](https://grafana.com/docs/grafana/latest/setup-grafana/start-restart-grafana/) according to the instructions for your operating system. This way, every time you save a change in the code, it will automatically compile, and upon reloading the page, you will see the changes reflected.
+
+> [!WARNING]
+> If the plugin is not available, it is possible that the Grafana instance is not configured correctly for development. This can be verified by checking the *grafana.ini* file and checking that the [*app_mode*](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#app_mode) option is set to *development*.
+
+> [!WARNING]
+> If you notice that the changes are not being reflected correctly, it is likely due to the browser cache. Try clearing your browsing data, re-running the commands, and restarting Grafana. If this doesn’t resolve the issue, you can also try deleting the `.cache` folder within `node_modules`, and then repeat the previous steps.
+
+#### Production mode
+
+To allow the plugin to run, it needs to be signed following the [guidelines](https://grafana.com/docs/grafana/latest/developers/plugins/sign-a-plugin/) provided by Grafana. However, there is also the option to explicitly indicate that the plugin can be executed without signature. To do this, its identifier must be included in the [`allow_loading_unsigned_plugins`](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#allow_loading_unsigned_plugins) option of the *grafana.ini* file.
+
+To build the plugin for a production environment, run the following command to install dependencies and build plugin:
+
+```bash
+yarn install
+yarn build
+```
+
+As output, a folder called *dist* will be generated in the root of the project, which will contain the plugin build. **This folder should be placed inside the [plugins folder](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#plugins) of the production environment and renamed with the plugin identifier (`ertis-whatif-plugin`)**
+
+Once these steps are completed, the plugin will be available for selection when adding a new panel to a dashboard.
+
