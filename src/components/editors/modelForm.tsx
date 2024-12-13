@@ -43,8 +43,6 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const [code, setCode] = useState<string>("")
     const [disabled, setDisabled] = useState(false)
     const [scaler, setScaler] = useState("")
-    const [listValues, setListValues] = useState<boolean>(false)
-    const [transposeList, setTransposeList] = useState<boolean>(false)
 
     const updateCurrentState = () => {
         setCurrentModel(model)
@@ -61,8 +59,6 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setSelectedQuotesListItems({ label: model.formatTags, value: model.formatTags })
         setCode((model.preprocess) ? model.preprocess : "")
         setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
-        setListValues(model.isListValues)
-        setTransposeList(model.isTransposeList)
     }
 
 
@@ -70,6 +66,14 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setCurrentModel({
             ...currentModel,
             [event.currentTarget.name]: event.target.value
+        })
+    }
+
+    const handleOnChangeModelCheckBox = (key: string, ) => {
+        let k = key as keyof IModel
+        setCurrentModel({
+            ...currentModel,
+            [k]: !currentModel[k]
         })
     }
 
@@ -101,9 +105,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             format: selectedFormat?.value,
             extraCalc: selectedExtraCalc?.value,
             preprocess: code,
-            credentials: credentials,
-            isListValues: listValues,
-            isTransposeList: transposeList
+            credentials: credentials
         }
         newModel.scaler = (scaler.trim() !== "") ? JSON.parse(scaler) : undefined
         //console.log(newModel)
@@ -308,6 +310,9 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                                 name="query"
                             />
                         </InlineField>
+                        <InlineField label="Select date only" labelWidth={20} disabled={disabled} grow style={{ display: 'flex', alignItems: 'center' }}>
+                            <Checkbox {...register("onlyDate")} disabled={disabled} value={currentModel.onlyDate} onChange={() => handleOnChangeModelCheckBox('onlyDate')} />
+                        </InlineField>
                         <InlineField label="Tags column" labelWidth={20} grow disabled={disabled} required>
                             <Input {...register("columnTag")} disabled={disabled} required value={currentModel.columnTag} onChange={handleOnChangeModel} />
                         </InlineField>
@@ -315,13 +320,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                             <Input {...register("columnValue")} disabled={disabled} required value={currentModel.columnValue} onChange={handleOnChangeModel} />
                         </InlineField>
                         <InlineField label="Returns a list of values" labelWidth={20} disabled={disabled} grow style={{ display: 'flex', alignItems: 'center' }}>
-                            <Checkbox {...register("listValues")} disabled={disabled} value={listValues} onChange={() => setListValues(!listValues)} />
+                            <Checkbox {...register("listValues")} disabled={disabled} value={currentModel.isListValues} onChange={() => handleOnChangeModelCheckBox('isListValues')} />
                         </InlineField>
-                        <InlineField label="Transpose values table" labelWidth={20} disabled={disabled || !listValues} grow style={{ display: 'flex', alignItems: 'center' }}>
-                            <Checkbox {...register("transposeList")} disabled={disabled || !listValues} value={transposeList} onChange={() => setTransposeList(!transposeList)} />
+                        <InlineField label="Transpose values table" labelWidth={20} disabled={disabled || !currentModel.isListValues} grow style={{ display: 'flex', alignItems: 'center' }}>
+                            <Checkbox {...register("transposeList")} disabled={disabled || !currentModel.isListValues} value={currentModel.isTransposeList} onChange={() => handleOnChangeModelCheckBox('isTransposeList')} />
                         </InlineField>
-                        <InlineField label="Fixed number of values" labelWidth={20} disabled={disabled || !listValues} grow>
-                            <Input {...register("numberOfValues")} disabled={disabled || !listValues} value={currentModel.numberOfValues} onChange={handleOnChangeModel} type='number' />
+                        <InlineField label="Fixed number of values" labelWidth={20} disabled={disabled || !currentModel.isListValues} grow>
+                            <Input {...register("numberOfValues")} disabled={disabled || !currentModel.isListValues} value={currentModel.numberOfValues} onChange={handleOnChangeModel} type='number' />
                         </InlineField>
                         <p style={{ marginBottom: '5px', marginTop: '15px' }}>Extra info query</p>
                         <InlineField label="Extra info" labelWidth={20} disabled={disabled} grow>
@@ -379,6 +384,9 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                                 control={control}
                                 name="varTimeRange"
                             />
+                        </InlineField>
+                        <InlineField label="Select date only" labelWidth={20} disabled={disabled} grow style={{ display: 'flex', alignItems: 'center' }}>
+                            <Checkbox {...register("onlyDateRange")} disabled={disabled} value={currentModel.onlyDateRange} onChange={() => handleOnChangeModelCheckBox('onlyDateRange')} />
                         </InlineField>
                     </Collapse>
                     <Collapse label="Connection with model" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>

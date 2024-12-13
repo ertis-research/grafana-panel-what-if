@@ -124,7 +124,9 @@ export interface IModel {
   method: Method,
   credentials?: ICredentials
   queryId: string,
+  onlyDate?: boolean,
   queryRangeId?: string,
+  onlyDateRange?: boolean,
   tags: ITag[],
   preprocess?: string,
   scaler?: IScaler,

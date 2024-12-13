@@ -1,9 +1,9 @@
 import { Button, DatePickerWithInput, InlineLabel, Select, TimeOfDayPicker, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, dateTimeToString, dateTimeToTimestamp, disabledByJS } from 'utils/utils'
+import { Context, dateTimeLocalToString, dateTimeToString, dateTimeToTimestamp, dateToString, disabledByJS } from 'utils/utils'
 import { IData, IDataCollection, IInterval, IModel } from 'utils/types'
 import { getArrayOfData, getExtraInfo, saveVariableValue } from 'utils/datasources/grafana'
-import { AppEvents, dateTime, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
+import { AppEvents, DataQueryError, dateTime, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa, { ParseError } from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault, ModelDefault } from 'utils/default'
@@ -68,15 +68,16 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const importDataFromDateTime = (dt?: DateTime) => {
         if (dt !== undefined && model !== undefined) {
             setHasToSaveNewData(dt)
-            saveVariableValue(locationService, model.varTime, dateTimeToString(dt))
+            let dateStr = (model.onlyDate) ? dateToString(dt.toDate()) : dateTimeToString(dt)
+            saveVariableValue(locationService, model.varTime, dateStr)
         }
     }
 
     const importDataFromDateTimeRange = (start: DateTime, stop: DateTime) => {
         if (model !== undefined && model.varTimeStart !== undefined) {
-            saveVariableValue(locationService, model.varTimeStart, dateTimeToString(start))
+            saveVariableValue(locationService, model.varTimeStart, ((model.onlyDateRange) ? dateToString(start.toDate()) : dateTimeToString(start)))
             setHasToSaveNewData(stop)
-            saveVariableValue(locationService, model.varTime, dateTimeToString(stop))
+            saveVariableValue(locationService, model.varTime, ((model.onlyDateRange) ? dateToString(stop.toDate()) : dateTimeToString(stop)))
         }
     }
 
@@ -208,19 +209,19 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             && (hasToSaveNewData === dateTimeInput || (selectedGrafanaVariable && hasToSaveNewData === selectedGrafanaVariable.value))
             && model !== undefined
             && (data.state === LoadingState.Done || data.state === LoadingState.Error)) {
-
             if (data.state === LoadingState.Done) {
                 console.log("Done")
                 console.log("Data", data)
                 let extraInfo = undefined
                 let arrayData: IData[] = []
-                let name = dateTimeLocalToString(hasToSaveNewData)
+                let name = ((model.onlyDate && mode.value === ImportDataEnum.DATETIME_SET) 
+                    || (model.onlyDateRange && mode.value === ImportDataEnum.DATETIME_RANGE)) ? dateToString(hasToSaveNewData.toDate()) : dateTimeLocalToString(hasToSaveNewData)
                 let text = "DateTime"
                 let key = dateTimeToTimestamp(hasToSaveNewData).toString()
                 let dtStart: DateTime | undefined = undefined
                 if(mode.value === ImportDataEnum.DATETIME_RANGE && model.queryRangeId) {
                     arrayData = getArrayOfData(data, model.queryRangeId, fieldTag, model.isListValues, model.numberOfValues)
-                    name =  dateTimeLocalToString(dateTimeInputStart) + " to " + name
+                    name = ((model.onlyDateRange) ? dateToString(dateTimeInputStart.toDate()) : dateTimeLocalToString(dateTimeInputStart)) + " to " + name
                     text = text + " range"
                     dtStart = dateTimeInputStart
                     key = dateTimeToTimestamp(dateTimeInputStart).toString() + "+" + key
@@ -239,13 +240,16 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                     })
                 }
             } else {
+                console.log("ERROR")
+                console.log("Data", data)
                 const appEvents = getAppEvents();
+                const msgsError = data.errors?.map((v: DataQueryError) => v.message)
                 appEvents.publish({
                     type: AppEvents.alertError.name,
-                    payload: [data.error]
+                    payload: msgsError
                 })
             }
-            saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
+            saveVariableValue(locationService, model.varTime, dateToString(new Date()))
             setHasToSaveNewData(undefined)
         }
     }, [data])
@@ -272,7 +276,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             className='fullWidth'
             closeOnSelect
         />
-        <div className='timePicker fullWidth' style={{ marginTop: '8px' }}>
+        <div className='timePicker fullWidth' style={{ marginTop: '8px' }} hidden={model?.onlyDate || disabled}>
             <TimeOfDayPicker
                 onChange={(d) => handleOnChangeTime(d, dateTimeInput, setDateTimeInput)}
                 showSeconds={false}
@@ -287,14 +291,14 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         <div style={{ width: '50%' }}>
             <InlineLabel transparent style={{ justifyContent: 'center' }}>{context.messages._panel._step2.startRange}</InlineLabel>
             <DatePickerWithInput onChange={(d) => handleOnChangeDate(d, dateTimeInputStart, setDateTimeInputStart)} value={dateTimeInputStart?.toDate()} maxDate={new Date()} disabled={disabled} className='fullWidth' closeOnSelect />
-            <div className='timePicker fullWidth' style={{ marginTop: '8px' }}>
+            <div className='timePicker fullWidth' style={{ marginTop: '8px' }} hidden={model?.onlyDateRange || disabled}>
                 <TimeOfDayPicker onChange={(d) => handleOnChangeTime(d, dateTimeInputStart, setDateTimeInputStart)} showSeconds={false} value={dateTimeInputStart.local()} size='auto' disabled={disabled} />
             </div>
         </div>
         <div style={{ width: '50%' }}>
             <InlineLabel transparent style={{ justifyContent: 'center' }}>{context.messages._panel._step2.stopRange}</InlineLabel>
             <DatePickerWithInput onChange={(d) => handleOnChangeDate(d, dateTimeInput, setDateTimeInput)} value={dateTimeInput?.toDate()} maxDate={new Date()} disabled={disabled} className='fullWidth' closeOnSelect />
-            <div className='timePicker fullWidth' style={{ marginTop: '8px' }}>
+            <div className='timePicker fullWidth' style={{ marginTop: '8px' }} hidden={model?.onlyDateRange || disabled}>
                 <TimeOfDayPicker onChange={(d) => handleOnChangeTime(d, dateTimeInput, setDateTimeInput)} showSeconds={false} value={dateTimeInput.local()} size='auto' disabled={disabled} />
             </div>
         </div>

@@ -1,7 +1,7 @@
-import { AppEvents, SelectableValue, dateTime } from '@grafana/data';
+import { AppEvents, SelectableValue } from '@grafana/data';
 import { Checkbox, Field, HorizontalGroup, Icon, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
-import { Context, defaultIfUndefined, collectionsToSelect, groupBy, dateTimeToString, deepCopy } from '../utils/utils'
+import { Context, defaultIfUndefined, collectionsToSelect, groupBy, deepCopy, dateToString } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
 import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
@@ -166,7 +166,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
             context.setActualStep(Steps.step_2)
             setSelectCollection(undefined)
             setcollectionsOptions([])
-            if (model !== undefined) saveVariableValue(locationService, model.varTime, dateTimeToString(dateTime()))
+            if (model !== undefined) saveVariableValue(locationService, model.varTime, dateToString(new Date()))
         }
         if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
             deleteCollection(collections[currentCollIdx].id)
