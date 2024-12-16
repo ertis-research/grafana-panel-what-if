@@ -313,7 +313,7 @@ The basic configuration of the model has the following fields:
 - **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
 - **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the [corresponding section](#formats).
 - **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
-- **Extra calculation**: Identifier for an additional calculation that can be executed using model data to obtain information that enhances the analysis. Refer to the [corresponding section](#extra-calculations) for more information.
+- **Extra calculation**: Identifier for an additional calculation that can be executed using model data to obtain information that enhances the analysis. Refer to the [corresponding section](#extra-calculation) for more information.
 
 Next, you will be able to configure the model queries, which will allow you to add data directly from Grafana. Check their configuration in the [corresponding section](#data-import-queries).
 
