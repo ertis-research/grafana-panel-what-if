@@ -315,11 +315,17 @@ The basic configuration of the model has the following fields:
 - **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
 - **Extra calculation**: Identifier for an additional calculation that can be executed using model data to obtain information that enhances the analysis. Refer to the [corresponding section](#extra-calculations) for more information.
 
+Next, you will be able to configure the model queries, which will allow you to add data directly from Grafana. Check their configuration in the [corresponding section](#data-import-queries).
+
 Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
 - **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
 - **URL** (required): URL address where the model expects to receive the input data.
 - **Username** (optional): Username for basic authentication.
 - **Password** (optional): Password for basic authentication.
+
+You must then configure the [list of tags](#list-of-tags) for the model. 
+
+Optionally, you can preprocess the data before invoking the model, by applying scaling and/or executing JavaScript code. For more details, see the [corresponding section](#pre-processing-and-scaling-of-input-data).
 
 ##### Delete and edit models
 For an already configured model, the form will be displayed filled with the model data. The fields will be disabled to prevent unwanted editing.
@@ -414,7 +420,9 @@ In order to use the configured tag list and consider the time instant given by t
 On the other hand, in order to extract the query data, the name of the column containing the tag identifiers and the related values must be indicated. Each tag can have a single value or a list of them. If it is a list, it can have a defined or undefined number of values. In addition, if the model requires it, the output data can be transposed just before sending it.
 
 - **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab.
+- **Select date only** (optional): If enabled, the time field will be hidden during data import in Step 2. Only the date will be selectable, and the previously configured time variable will automatically be filled in ISO format without the time component (e.g., 2023-03-01).
 - **Tags column** (required): Name of the column containing the tag identifier.
+- **Values column** (required): Name of the column containing the values.
 - **Returns a list of values** (required): If checked, indicates that the model requires more than one column other than tags. If unchecked, it indicates that only one column is used. If it indicates that only one is required and the query returns more than one column, the first column other than tags will be taken and the rest will be discarded.
 - **Transpose values table** (optional): Allows to transpose the data matrix resulting from preprocessing and scaling just before sending it to the model.
 <p align="center">
@@ -424,6 +432,11 @@ On the other hand, in order to extract the query data, the name of the column co
 - **Fixed number of values** (optional): Indicates the exact number of values that the list of each tag should have.
   - If the field is empty, it means that the value is undefined, so the values of all columns will be extracted and null values will not be treated.
   - If the field is filled with a number, the value lists of each tag will be exactly that length. If the number of columns returned by the query is greater than the given number N, the first N columns will be taken and the others will be discarded. If the number is less, as many null values will be added as necessary. In either case, the null values will be subsequently replaced by the average of the non-null values in the list.
+
+Optionally, we can enable data import using a time range. This does not replace the import from an datetime instant. To configure this, the following fields in the _Range Query_ section must be completed::
+- **Query** (required): Query that allows importing the values of the tags used by the model. This must be configured in its corresponding tab. For this case, it is desirable to allow data to be extracted from a range. 
+- **Start datetime variable** (required): Table variable to be replaced by the time instant in ISO 8601 UTC (e.g. 2023-03-01T13:46:58Z) selected by the user during the data import ([step 2](#step-2-import-data)) from date and time (_Set datetime_). Within the query, this variable must be added as the start datetime to extract the data. The variable previously configured as _variable time_ should be used as the stop datetime.
+- **Select date only** (optional): If enabled, the time field will be hidden during data import in Step 2. Only the date will be selectable, and the previously configured variables (_start datetime_ and _time variable_) will automatically be filled in ISO format without the time component (e.g., 2023-03-01).
 
 With this configuration, the tool will be able to replace the value of the dashboard variables with the appropriate ones and extract the information returned by the data source to be entered as original data in the tag list of the modification section ([step 3](#step-3-modify-data)).
 
