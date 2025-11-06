@@ -204,6 +204,7 @@ export interface ICSVScheme {
 
 export interface Options {
   language: Language,
+  activeQuery: string,
   models: IModel[],
   formats: IFormat[],
   extraCalcs: IExtraCalc[]

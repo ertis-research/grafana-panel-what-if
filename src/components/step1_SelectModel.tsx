@@ -34,9 +34,6 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
         }
     }, [value])
 
-    useEffect(() => {
-    }, [models])
-
     // HTML
     // -------------------------------------------------------------------------------------------------------------
 

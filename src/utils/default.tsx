@@ -64,6 +64,7 @@ export const ContextDefault: IContext = {
     messages: messages_en,
     options: {
         language: Language.English,
+        activeQuery: "",
         models: [],
         formats: [],
         extraCalcs: []

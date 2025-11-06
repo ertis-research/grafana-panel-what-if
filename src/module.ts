@@ -1,5 +1,5 @@
 import { FormatEditor } from './components/editors/formatEditor';
-import { Language } from './utils/types';
+import { ISelect, Language } from './utils/types';
 import { ModelEditor } from './components/editors/modelEditor';
 import { PanelPlugin } from '@grafana/data';
 import { Main } from './components/main';
@@ -8,6 +8,10 @@ import './css/grid.css';
 import './css/others.css';
 import { Options } from 'utils/types';
 import { ExtraCalcEditor } from 'components/editors/extraCalcEditor';
+import { getOptionsVariable } from 'utils/datasources/grafana';
+import { getTemplateSrv } from '@grafana/runtime';
+
+const OptionsVariable: ISelect[] = getOptionsVariable(getTemplateSrv())
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
@@ -27,6 +31,13 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
             label: 'Spanish',
           },
         ],
+      }
+    }).addSelect({
+      path: 'activeQuery',
+      name: 'Active query variable',
+      category: ['General'],
+      settings: {
+        options: OptionsVariable
       }
     }).addCustomEditor({
       path: 'formats',

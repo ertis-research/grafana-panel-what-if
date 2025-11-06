@@ -1,9 +1,9 @@
 import { Button, DatePickerWithInput, InlineLabel, Select, TimeOfDayPicker, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { FormEvent, useContext, useEffect, useState } from 'react'
-import { Context, dateTimeLocalToString, dateTimeToString, dateTimeToTimestamp, dateToString, disabledByJS } from 'utils/utils'
+import { Context, dateTimeLocalToString, dateTimeToString, dateTimeToTimestamp, dateToString, disabledByJS, futureDate } from 'utils/utils'
 import { IData, IDataCollection, IInterval, IModel } from 'utils/types'
 import { getArrayOfData, getExtraInfo, saveVariableValue } from 'utils/datasources/grafana'
-import { AppEvents, DataQueryError, dateTime, DateTime, LoadingState, PanelData, SelectableValue } from '@grafana/data'
+import { AppEvents, DataQueryError, dateTime, DateTime, EventBus, LoadingState, PanelData, SelectableValue } from '@grafana/data'
 import Papa, { ParseError } from 'papaparse'
 import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesGrafanaOptions } from 'utils/constants'
 import { IntervalDefault, ModelDefault } from 'utils/default'
@@ -14,7 +14,8 @@ interface Props {
     model?: IModel,
     collections: IDataCollection[],
     addCollection: (newCollection: IDataCollection) => void,
-    data: PanelData
+    data: PanelData,
+    eventBus: EventBus
 }
 
 export const ImportData: React.FC<Props> = ({ model, collections, addCollection, data }) => {
@@ -249,13 +250,19 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                     payload: msgsError
                 })
             }
-            saveVariableValue(locationService, model.varTime, dateToString(new Date()))
+            saveVariableValue(locationService, model.varTime, futureDate())
             setHasToSaveNewData(undefined)
         }
     }, [data])
 
     useEffect(() => {
     }, [collections])
+
+    useEffect(() => {
+        if(model !== undefined) {
+            saveVariableValue(locationService, model.varTime, futureDate())
+        }
+    }, [])
 
 
     // HTML

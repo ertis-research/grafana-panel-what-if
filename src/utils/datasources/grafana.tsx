@@ -5,7 +5,7 @@ import moment from "moment"
 import { getMean } from "utils/utils"
 
 export const checkIfVariableExists = (templateSrv: TemplateSrv, id?: string) => {
-    const dashboard_variables: TypedVariableModel[] = templateSrv.getVariables().filter(item => item.type === 'constant')
+    const dashboard_variables: TypedVariableModel[] = templateSrv.getVariables().filter(item => item.type === 'constant' || item.type === 'textbox' || item.type === 'custom')
     if (id === undefined || !dashboard_variables.find((v: TypedVariableModel) => v.name === id)) {
         throw new Error('It is necessary to assign a constant variable')
     }
@@ -23,7 +23,7 @@ export const getVariableValue = (replaceVariables: any, id: string) => {
 
 export const getOptionsVariable = (templateSrv: TemplateSrv): ISelect[] => {
     return templateSrv.getVariables()
-        .filter((item: TypedVariableModel) => item.type === 'constant')
+        .filter((item: TypedVariableModel) => item.type === 'constant' || item.type === 'textbox' || item.type === 'custom')
         .map((item: TypedVariableModel) => {
             return {
                 label: item.name,
@@ -97,3 +97,5 @@ export const getExtraInfo = (data: PanelData, idQuery: string, fieldName: string
     }
     return res
 }
+
+

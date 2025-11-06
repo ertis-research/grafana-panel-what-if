@@ -185,6 +185,12 @@ export const dateToString = (date: Date) => {
   return `${year}-${month}-${day}`;
 }
 
+export const futureDate = () => {
+  const dt = new Date(); // fecha actual
+  dt.setFullYear(dt.getFullYear() + 100);
+  return dateToString(dt)
+}
+
 export const stringToDate = (str: string) => {
   const [year, month, day] = str.split("-").map(Number); // Descomponemos y convertimos a números
   return new Date(year, month - 1, day); // Mes en JavaScript empieza en 0

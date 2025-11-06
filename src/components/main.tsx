@@ -15,7 +15,7 @@ import { ModelDefault } from 'utils/default'
 
 interface Props extends PanelProps<Options> { }
 
-export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables, onOptionsChange }) => {
+export const Main: React.FC<Props> = ({ options, data, width, height, replaceVariables, onOptionsChange, eventBus }) => {
 
   const [actualStep, setActualStep] = useState<Steps>(Steps.step_1)
   const [selectedModel, setSelectedModel] = useState<IModel>()
@@ -87,8 +87,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   useEffect(() => {
     if (selectedModel !== undefined) {
       saveVariableValue(locationService, selectedModel.varTags, tagsToString(selectedModel.tags, selectedModel.formatTags))
+      if(options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, selectedModel.queryId)
     } else {
       saveVariableValue(locationService, ModelDefault.varTags, "")
+      if(options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, "")
     }
   }, [selectedModel])
 
@@ -113,10 +115,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       <div className="main-grid" style={{ height: '100%', paddingBottom: '0px' }}>
         <div className="item-0">
           <div style={{ marginBottom: '10px' }}>
-            <SelectModel models={options.models} setModel={setSelectedModel} />
+            <SelectModel models={options.models} setModel={setSelectedModel}/>
           </div>
           <div style={{ marginBottom: '0px' }}>
-            <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data} />
+            <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data} eventBus={eventBus}/>
           </div>
           <div className="export-1" style={{ marginBottom: '10px', marginTop: '10px' }}>
             <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx !== undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />
