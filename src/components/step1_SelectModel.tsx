@@ -21,6 +21,7 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     const [modelsOptions, setModelsOptions] = useState<ISelect[]>([])
 
     useEffect(() => {
+        console.log('SelectModel: useEffect[models] triggered. Processing new models list.');
         setModelsOptions(modelsToSelect(models))
     }, [models])
 

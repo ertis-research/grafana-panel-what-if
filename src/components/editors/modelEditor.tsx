@@ -43,7 +43,8 @@ export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, contex
                     mode={Mode.EDIT}
                     updateFunction={(m: IModel) => updateElement(idx, m)}
                     deleteFunction={() => deleteElement(idx)}
-                    context={context} />
+                    context={context}
+                    addElement={addElement} />
             </ControlledCollapse>
         </div>
     })

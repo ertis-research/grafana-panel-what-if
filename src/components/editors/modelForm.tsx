@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
-import { SelectableValue, StandardEditorContext } from "@grafana/data";
+import { AppEvents, SelectableValue, StandardEditorContext } from "@grafana/data";
 import { FormatTags, ICredentials, IExtraCalc, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
 import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
@@ -8,17 +8,18 @@ import { TagsForm } from './tagsForm';
 import { Mode } from 'utils/constants';
 import { css } from '@emotion/css';
 import { getOptionsVariable } from 'utils/datasources/grafana';
-import { getTemplateSrv } from '@grafana/runtime';
+import { getAppEvents, getTemplateSrv } from '@grafana/runtime';
 
 interface Props {
     model: IModel,
     updateFunction: any,
     deleteFunction?: any,
     mode: Mode,
-    context: StandardEditorContext<any, any>
+    context: StandardEditorContext<any, any>,
+    addElement?: (newModel: any) => void
 }
 
-export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFunction, mode, context }) => {
+export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFunction, mode, context, addElement }) => {
 
     const methodList: ISelect[] = enumToSelect(Method)
     const OptionsVariable: ISelect[] = getOptionsVariable(getTemplateSrv())
@@ -88,13 +89,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         })
     }
 
-    const handleOnSubmitAddModel = () => {
+    const prepareFinalModel = () => {
         const cred = currentModel.credentials
         const credentials = (cred && cred.password.trim() !== '' && cred.username.trim() !== '') ? cred : undefined
         const newModel = {
             ...currentModel,
             tags: currentTags,
-            method: selectedMethod?.value,
+            method: selectedMethod?.value ?? Method.GET,
             queryId: selectedQuery?.value,
             queryRangeId: selectedQueryRange?.value,
             extraInfo: selectedExtraInfo?.value,
@@ -108,6 +109,11 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             credentials: credentials
         }
         newModel.scaler = (scaler.trim() !== "") ? JSON.parse(scaler) : undefined
+        return newModel
+    }
+
+    const handleOnSubmitAddModel = () => {
+        let newModel = prepareFinalModel()
         //console.log(newModel)
         console.log("New model", newModel)
         updateFunction(newModel)
@@ -123,6 +129,19 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
 
     const handleOnClickEdit = () => {
         setDisabled(!disabled)
+    }
+
+    const handleOnClickCopy = () => {
+        if(addElement !== undefined){
+            let model = prepareFinalModel()
+            model.id = model.id + "_copy"
+            addElement({...model})
+            const appEvents = getAppEvents();
+            appEvents.publish({
+                type: AppEvents.alertSuccess.name,
+                payload: ["Model has been successfully copied."]
+            })
+        } 
     }
 
     const handleOnClickCancel = () => {
@@ -195,6 +214,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                         >
                             <Button variant='destructive' icon='trash-alt' disabled={!disabled} />
                         </ConfirmButton>
+                        <Button variant='secondary' icon='copy' disabled={!disabled} onClick={handleOnClickCopy}>Copy</Button>
                         <Button variant='primary' icon='edit' disabled={!disabled} onClick={handleOnClickEdit}>Edit</Button>
                     </HorizontalGroup>
                 </div>)

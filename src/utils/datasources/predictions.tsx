@@ -5,7 +5,7 @@ import { idDefault, idNew, varEachInput, varEachInputEnd, varInput, variableOutp
 import vm from 'vm'
 import { decimalCount, deepCopy, getMean, round, transposeMatrix } from "../utils"
 import { Buffer } from 'buffer'
-
+import log from "utils/logger";
 
 export const predictAllCollections = async (model: IModel, allData: IDataCollection[]) => {
     for (const [i, d] of allData.entries()) {
@@ -195,45 +195,64 @@ const objectWithFirstElement = (list: number[][]): number[] => {
 }
 
 const addFormatInput = (data: IDataPred[], isListValues: boolean, isTransposeList: boolean, format?: IFormat): string => {
+    log.debug("Starting addFormatInput execution");
+    log.debug("Received data:", data);
+    log.debug("Flags -> isListValues:", isListValues, "isTransposeList:", isTransposeList);
+    
     const aux = data.map((d: IDataPred) => {
         let dataPred: any = Object.values(d)
         if (!isListValues) {
+            log.debug("Applying objectWithFirstElement transformation");
             dataPred = objectWithFirstElement(dataPred)
         } else if (isTransposeList) {
+            log.debug("Applying transposeMatrix transformation");
             dataPred = transposeMatrix(dataPred)
         }
         return dataPred
     })
-    //console.log("AUX", aux)
+    log.debug("Intermediate data (aux) prepared:", aux);
+
     let body = ""
 
     if (format !== undefined) {
+        log.debug("Format detected:", format);
         let allFormat = format.input
 
         const startIndex = format.input.indexOf(varEachInput)
         const endIndex = format.input.indexOf(varEachInputEnd)
         
         if(startIndex !== -1 && endIndex !== -1){
+            log.debug("Detected loop format structure between indices:", startIndex, "and", endIndex);
+            
             const eachFormat = format.input.slice(startIndex + varEachInput.length, endIndex).trim();
+            log.debug("Extracted 'each' format template:", eachFormat);
+            
             let allInputs = aux.map((v: any) => { 
                 let str = JSON.stringify(v)
                 str = str.substring(1, str.length - 1)
                 return eachFormat.replace(varInput, str)
             })
+
             body = allInputs.join(",")
-            //console.log(body)
+            log.debug("Generated formatted body from 'each' block:", body);
+
             allFormat = format.input.slice(0, startIndex) + " $input " + format.input.slice(endIndex + varEachInputEnd.length)
-            //console.log(allFormat)
+            log.debug("Reconstructed full format template:", allFormat);
         } else {
-            //console.log("No hay each")
+            log.warn("No 'each' block detected in format; using direct serialization");
             body = JSON.stringify(aux)
             body = body.substring(1, body.length - 1)
         }
         body = allFormat.replace(varInput, body)
+        log.info("Successfully generated formatted input body");
     } else {
+        log.warn("No format provided; returning raw JSON body");
         body = JSON.stringify(aux)
     }
-    //console.log(body)
+
+    log.debug("Final body output:", body);
+    log.info("addFormatInput completed successfully");
+
     return body
 }
 
