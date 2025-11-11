@@ -11,6 +11,7 @@ import { Steps } from 'utils/constants'
 import { locationService } from '@grafana/runtime'
 import { saveVariableValue } from 'utils/datasources/grafana'
 import { ModelDefault } from 'utils/default'
+import { setLogLevel } from 'utils/logger'
 
 
 interface Props extends PanelProps<Options> { }
@@ -62,13 +63,6 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
     setCollections([...allCollections])
   }
 
-  /*useEffect(() => {
-    if(currentCollIdx){
-      const idx = collections.findIndex((col) => col.id == collections[currentCollIdx].id)
-      setCurrentCollIdx(idx)
-    }
-  }, [collections])*/
-
   useEffect(() => {
     //console.log(data)
   }, [data])
@@ -76,13 +70,6 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   useEffect(() => {
     //console.log('currentCollIdx', currentCollIdx)
   }, [currentCollIdx])
-
-  /*
-  useEffect(() => {
-    if (options.varTags == options.varTime) throw new Error('Variable has to be different')
-    checkIfVariableExists(getTemplateSrv(), options.varTags)
-    checkIfVariableExists(getTemplateSrv(), options.varTime)
-  }, [options])*/
 
   useEffect(() => {
     if (selectedModel !== undefined) {
@@ -109,6 +96,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       }
   })
   }, [options.extraCalcs])
+
+  useEffect(() => {
+    setLogLevel(options.logLevel)
+  }, [options.logLevel])
 
   return <Context.Provider value={contextData}>
     <div className="containerType scrollMain" style={{ width: width, height: height - 10, padding: '10px', paddingBottom: '0px' }} >

@@ -1,71 +1,93 @@
 import { PreprocessCodeDefault } from "../default";
 import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum, PostChangeIDataPred } from "../types"
 //import * as dfd from "danfojs"
-import { idDefault, idNew, varEachInput, varEachInputEnd, varInput, variableOutput } from "../constants"
+import { idDefault, idNew, varEachInput, varEachInputEnd, varEachTag, varEachTagEnd, varInput, varTag, variableOutput } from "../constants"
 import vm from 'vm'
 import { decimalCount, deepCopy, getMean, round, transposeMatrix } from "../utils"
 import { Buffer } from 'buffer'
 import log from "utils/logger";
 
+
+/* -------------------------------------------------- */
+/* PREDICTION WORKFLOW FUNCTIONS */
+/* -------------------------------------------------- */
+
 export const predictAllCollections = async (model: IModel, allData: IDataCollection[]) => {
+    log.info("[predictAllCollections] Starting prediction for all collections");
     for (const [i, d] of allData.entries()) {
+        log.debug(`[predictAllCollections] Predicting collection index ${i}`);
         allData[i] = { ...d, results: await predictData(model, d) }
     }
-    console.log("Results", allData)
+    log.info("[predictAllCollections] All collections predicted successfully");
+    log.debug("[predictAllCollections] Final results:", allData);
     return allData
 }
 
-export const prepareToPredict = async (model: IModel, results: IResult[]): Promise<PostChangeIDataPred> => {
-    let dataToPredict: IDataPred[] = []
-    for (const [i, r] of results.entries()) {
-        let finalData = deepCopy(r.data)
-        if (model.preprocess) {
-            //console.log('Initial data - preprocess', deepCopy(finalData))
-            finalData = await applyPreprocess(model.preprocess, finalData)
-            //console.log('Final data - preprocess', deepCopy(finalData))
-            //console.log("preprocess", finalData)
-        }
-        if (model.scaler) {
-            //console.log('Initial data - scaler', deepCopy(finalData))
-            finalData = await applyScaler(model.scaler, finalData)
-            //console.log('Final data - scaler', deepCopy(finalData))
-        }
-        dataToPredict.push(finalData)
-        results[i] = { ...r, processedData: finalData }
-    }
-    return {newData: dataToPredict, newResults: results}
-}
-
-export const predictResults = async (model: IModel, data: IDataPred[], results: IResult[]) => {
-    const predictions: any = await sendRequest(model, data)
-    return results.map<IResult>((r: IResult, indx: number) => { return { ...r, result: predictions[indx] } })
-}
-
-export const prepareAndPredictResults = async (model: IModel, results: IResult[]) => {
-    const res = await prepareToPredict(model, results)
-    console.log("prepareResults", res)
-    return await predictResults(model, res.newData, res.newResults)
-}
-
 const predictData = async (model: IModel, dataCollection: IDataCollection) => {
-    //console.log("numValues", model.numberOfValues)
-    //console.log("dataCollection", dataCollection)
+    log.info("[predictData] Starting data prediction for collection:", dataCollection.id);
     let results: IResult[] = prepareData(dataCollection, model.numberOfValues)
     return await prepareAndPredictResults(model, results)
 }
 
+export const prepareAndPredictResults = async (model: IModel, results: IResult[]) => {
+    log.info("[prepareAndPredictResults] Starting full prepare + predict pipeline");
+    const res = await prepareToPredict(model, results)
+    log.debug("[prepareAndPredictResults] Prepared data:", res);
+    const finalResults = await predictResults(model, res.newData, res.newResults)
+    log.info("[prepareAndPredictResults] Pipeline completed successfully");
+    return finalResults
+}
+
+export const predictResults = async (model: IModel, data: IDataPred[], results: IResult[]) => {
+    log.info("[predictResults] Sending prediction request to model endpoint");
+    const predictions: any = await sendRequest(model, data)
+    log.info("[predictResults] Predictions received successfully");
+    return results.map<IResult>((r: IResult, indx: number) => { return { ...r, result: predictions[indx] } })
+}
+
+export const prepareToPredict = async (model: IModel, results: IResult[]): Promise<PostChangeIDataPred> => {
+    log.info("[prepareToPredict] Preparing data for prediction");
+    let dataToPredict: IDataPred[] = []
+    for (const [i, r] of results.entries()) {
+        log.debug(`[prepareToPredict] Processing result index ${i}`);
+        log.debug(`[prepareToPredict] Original data snapshot:`, deepCopy(r.data));
+        let finalData = deepCopy(r.data)
+        if (model.preprocess) {
+            log.debug("[prepareToPredict] Applying preprocess script");
+            finalData = await applyPreprocess(model.preprocess, finalData)
+            log.debug("[prepareToPredict] Data after preprocess:", deepCopy(finalData));
+        }
+        if (model.scaler) {
+            log.debug("[prepareToPredict] Applying scaler transformation");
+            finalData = applyScaler(model.scaler, finalData)
+            log.debug("[prepareToPredict] Data after scaling:", deepCopy(finalData));
+        }
+        dataToPredict.push(finalData)
+        results[i] = { ...r, processedData: finalData }
+    }
+    log.info("[prepareToPredict] Data preparation complete");
+    return { newData: dataToPredict, newResults: results }
+}
+
+
+
+/* -------------------------------------------------- */
+/* DATA TRANSFORMATION HELPERS */
+/* -------------------------------------------------- */
+
 const getValuesFromInterval = (interval: IInterval): number[] => {
-    if (interval.max === undefined || interval.min === undefined || interval.steps === undefined) return []
+    log.debug("[getValuesFromInterval] Calculating values from interval:", interval);
+    if (interval.max === undefined || interval.min === undefined || interval.steps === undefined) {
+        log.warn("[getValuesFromInterval] Incomplete interval definition, returning empty array")
+        return []
+    }
 
     const min_interval = Number(interval.min), max_interval = Number(interval.max), step_interval = Number(interval.steps)
     const dec = decimalCount(step_interval)
 
-    //const porcentages_min:number[] = Array.from({ length: Math.ceil(min_interval / step_interval)}, (_, i:number) => { let num = 0 - ((i+1) * step_interval); return (num < -min_interval) ? -min_interval : num})
-    //const porcentages_max:number[] = Array.from({ length: Math.ceil(max_interval / step_interval)}, (_, i:number) => { let num = (i+1) * step_interval; return (num > max_interval) ? max_interval : num})
-
-    //return porcentages_min.concat(porcentages_max).sort((a,b)=>a-b)
-    return Array.from({ length: Math.ceil((max_interval - min_interval) / step_interval) + 1 }, (_, i: number) => { let num = round((i * step_interval) + min_interval, dec); return (num > max_interval) ? max_interval : num })
-
+    const values = Array.from({ length: Math.ceil((max_interval - min_interval) / step_interval) + 1 }, (_, i: number) => { let num = round((i * step_interval) + min_interval, dec); return (num > max_interval) ? max_interval : num })
+    log.debug("[getValuesFromInterval] Generated interval values:", values);
+    return values;
 }
 
 const calculatePercentage = (percent: number, total: number) => {
@@ -78,6 +100,7 @@ export const getListValuesFromNew = (newValue: number, mean: number, rawValues: 
 }
 
 const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number[], id: string, intervalType: IntervalTypeEnum) => {
+    log.debug("[addResultsFromValues] Adding results for variable:", id);
     const mean: number = getMean(rawData[id])           // Cojo la media de todos los valores
     values.forEach((p: number) => {
         let newData = deepCopy(rawData)                 // Hago una copia del array de valores
@@ -99,11 +122,12 @@ const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number
             }
         })
     })
-
+    log.debug("[addResultsFromValues] Generated", res.length, "results for variable:", id);
     return res
 }
 
 const defaultDataToObject = (data: IData[]): IDataPred => {
+    log.debug("[defaultDataToObject] Converting default IData array to object");
     let res: IDataPred = {}
     data.forEach((d: IData) => { res[d.id] = (d.raw_values) ? d.raw_values : [] }) // nunca deberia ser []
     return res
@@ -111,6 +135,7 @@ const defaultDataToObject = (data: IData[]): IDataPred => {
 
 
 export const newDataToObject = (data: IData[], hasInterval: boolean, numberOfElements = 1): IDataPred => {
+    log.debug("[newDataToObject] Converting new IData array to object");
     let res: IDataPred = {}
     data.forEach((d: IData) => {
         let vals = (d.raw_values) ? d.raw_values : []
@@ -125,10 +150,13 @@ export const newDataToObject = (data: IData[], hasInterval: boolean, numberOfEle
         res[d.id] = vals
         //res[d.id] = (isNew && !(hasInterval && d.set_percentage) && d.new_value != undefined) ? [Number(d.new_value)] : ((d.raw_values) ? d.raw_values : []) // Nunca deberia ser 0
     })
+    log.debug("[newDataToObject] Conversion completed:", res);
     return res
 }
 
 const prepareData = (dataCollection: IDataCollection, numberOfValues?: number): IResult[] => {
+    log.info("[prepareData] Preparing base data from collection:", dataCollection.id);
+
     let res: IResult[] = []
     let baseData: IDataPred = {}
     const hasInterval = dataCollection.interval.max !== undefined && dataCollection.interval.min !== undefined && dataCollection.interval.steps !== undefined
@@ -162,32 +190,8 @@ const prepareData = (dataCollection: IDataCollection, numberOfValues?: number): 
         })
     }
 
-    //console.log(res)
+    log.info("[prepareData] Prepared", res.length, "result sets");
     return res
-}
-
-export const applyScaler = function (scaler: IScaler, data_dict: IDataPred): IDataPred {
-    let scaled_data_dict: IDataPred = {}
-    Object.entries(data_dict).forEach(([key, l]: [string, number[]], idx: number) => {
-        scaled_data_dict[key] = (l !== undefined && l != null && l.length > 0) ? l.map((v: number) => (v - scaler.mean[idx]) / scaler.scale[idx]) : l
-        //scaled_data_dict[key] = (value - scaler.mean[idx]) / scaler.scale[idx]
-    })
-    return scaled_data_dict;
-}
-
-export const applyPreprocess = async (code: string, data: IDataPred) => {
-    if (code !== PreprocessCodeDefault) {
-        try {
-            //let preprocess = new Function(code) // https://stackoverflow.com/a/9702401/16131308
-            const sandbox = { data: data }
-            let context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
-            data = vm.runInContext(code, context)
-        } catch (error) {
-            console.log(error)
-            console.error("Preprocess failed")
-        }
-    }
-    return data
 }
 
 const objectWithFirstElement = (list: number[][]): number[] => {
@@ -195,64 +199,97 @@ const objectWithFirstElement = (list: number[][]): number[] => {
 }
 
 const addFormatInput = (data: IDataPred[], isListValues: boolean, isTransposeList: boolean, format?: IFormat): string => {
-    log.debug("Starting addFormatInput execution");
-    log.debug("Received data:", data);
-    log.debug("Flags -> isListValues:", isListValues, "isTransposeList:", isTransposeList);
-    
-    const aux = data.map((d: IDataPred) => {
+    log.debug("[addFormatInput] Starting addFormatInput execution");
+    log.debug("[addFormatInput] Received data:", data);
+    log.debug("[addFormatInput] Flags -> isListValues:", isListValues, "isTransposeList:", isTransposeList);
+
+    let auxWithKeys: IDataPred[] = []
+    let aux: any[] = []
+
+    data.forEach((d: IDataPred) => {
+        const keys = Object.keys(d);
         let dataPred: any = Object.values(d)
+
         if (!isListValues) {
-            log.debug("Applying objectWithFirstElement transformation");
+            log.debug("[addFormatInput] Applying objectWithFirstElement transformation");
             dataPred = objectWithFirstElement(dataPred)
         } else if (isTransposeList) {
-            log.debug("Applying transposeMatrix transformation");
+            log.debug("[addFormatInput] Applying transposeMatrix transformation");
             dataPred = transposeMatrix(dataPred)
         }
-        return dataPred
+        aux.push(dataPred);
+
+        const resultObjectWithKeys = keys.reduce((acc, currentKey, index) => {
+            acc[currentKey] = dataPred[index];
+            return acc;
+        }, {} as { [key: string]: any });
+        auxWithKeys.push(resultObjectWithKeys);
     })
-    log.debug("Intermediate data (aux) prepared:", aux);
+
+
+    log.debug("[addFormatInput] Intermediate data (aux) prepared:", aux)
+    log.debug("[addFormatInput] Intermediate data (auxWithKeys) prepared:", auxWithKeys)
 
     let body = ""
 
     if (format !== undefined) {
-        log.debug("Format detected:", format);
+        log.debug("[addFormatInput] Format detected:", format);
         let allFormat = format.input
 
-        const startIndex = format.input.indexOf(varEachInput)
-        const endIndex = format.input.indexOf(varEachInputEnd)
-        
-        if(startIndex !== -1 && endIndex !== -1){
-            log.debug("Detected loop format structure between indices:", startIndex, "and", endIndex);
-            
-            const eachFormat = format.input.slice(startIndex + varEachInput.length, endIndex).trim();
-            log.debug("Extracted 'each' format template:", eachFormat);
-            
-            let allInputs = aux.map((v: any) => { 
-                let str = JSON.stringify(v)
-                str = str.substring(1, str.length - 1)
+        const startIndex = allFormat.indexOf(varEachInput)
+        const endIndex = allFormat.indexOf(varEachInputEnd)
+
+        if (startIndex !== -1 && endIndex !== -1) {
+            let eachFormat = allFormat.slice(startIndex + varEachInput.length, endIndex).trim();
+            log.debug("[addFormatInput] Extracted 'each' format template:", eachFormat);
+
+            const startTagIndex = eachFormat.indexOf(varEachTag)
+            const endTagIndex = eachFormat.indexOf(varEachTagEnd)
+
+            let allData: string[] = []
+            if (startTagIndex !== -1 && endTagIndex !== -1) {
+                const eachTagFormat = eachFormat.slice(startTagIndex + varEachTag.length, endTagIndex).trim();
+                log.debug("[addFormatInput] Extracted 'each-tag' format template:", eachTagFormat);
+
+                allData = auxWithKeys.map((v: IDataPred) => {
+                    let allTagInputs = Object.entries(v).map(([key, values]) => {
+                        let str = JSON.stringify(values)
+                        str = str.substring(1, str.length - 1)
+                        return eachTagFormat.replace(varInput, str).replace(varTag, '"' + key + '"')
+                    }) 
+                    return allTagInputs.join(",")
+                })
+                eachFormat = eachFormat.slice(0, startTagIndex) + " $input " + eachFormat.slice(endTagIndex + varEachTagEnd.length)
+                log.trace("[addFormatInput] Reconstructed each format template:", eachFormat);
+            } else {
+                allData = auxWithKeys.map((v: IDataPred) => {
+                    let str = JSON.stringify(Object.values(v))
+                    return str.substring(1, str.length - 1)
+                })
+            }
+
+            let allInputs = allData.map((str: string) => {
                 return eachFormat.replace(varInput, str)
             })
 
             body = allInputs.join(",")
-            log.debug("Generated formatted body from 'each' block:", body);
+            log.trace("[addFormatInput] Generated formatted body from 'each' block:", body);
 
-            allFormat = format.input.slice(0, startIndex) + " $input " + format.input.slice(endIndex + varEachInputEnd.length)
-            log.debug("Reconstructed full format template:", allFormat);
+            allFormat = allFormat.slice(0, startIndex) + " $input " + allFormat.slice(endIndex + varEachInputEnd.length)
+            log.trace("[addFormatInput] Reconstructed full format template:", allFormat);
         } else {
-            log.warn("No 'each' block detected in format; using direct serialization");
+            log.warn("[addFormatInput] No 'each' block detected in format; using direct serialization");
             body = JSON.stringify(aux)
             body = body.substring(1, body.length - 1)
         }
         body = allFormat.replace(varInput, body)
-        log.info("Successfully generated formatted input body");
+        log.info("[addFormatInput] Successfully generated formatted input body");
     } else {
-        log.warn("No format provided; returning raw JSON body");
+        log.warn("[addFormatInput] No format provided; returning raw JSON body");
         body = JSON.stringify(aux)
     }
 
-    log.debug("Final body output:", body);
-    log.info("addFormatInput completed successfully");
-
+    log.debug("[addFormatInput] Final body output:", body);
     return body
 }
 
@@ -270,7 +307,43 @@ const removeFormatOutput = (result: string, format?: IFormat): number[] => {
     return [Number(result)]
 }
 
+/* -------------------------------------------------- */
+/* PREPROCESS / SCALER / REQUEST */
+/* -------------------------------------------------- */
+
+export const applyScaler = function (scaler: IScaler, data_dict: IDataPred): IDataPred {
+    log.debug("[applyScaler] Scaling data using provided scaler parameters");
+    let scaled_data_dict: IDataPred = {}
+    Object.entries(data_dict).forEach(([key, l]: [string, number[]], idx: number) => {
+        scaled_data_dict[key] = (l !== undefined && l != null && l.length > 0) ? l.map((v: number) => (v - scaler.mean[idx]) / scaler.scale[idx]) : l
+        //scaled_data_dict[key] = (value - scaler.mean[idx]) / scaler.scale[idx]
+    })
+    return scaled_data_dict;
+}
+
+export const applyPreprocess = async (code: string, data: IDataPred) => {
+    log.debug("[applyPreprocess] Applying preprocess code");
+    if (code !== PreprocessCodeDefault) {
+        try {
+            const sandbox = { data: data }
+            let context = vm.createContext(sandbox) // https://stackoverflow.com/a/55056012/16131308 <--- te quiero
+            data = vm.runInContext(code, context)
+            log.info("[applyPreprocess] Preprocess executed successfully");
+        } catch (error) {
+            log.error("[applyPreprocess] Preprocess failed:", error);
+        }
+    }
+    return data
+}
+
+
+/* -------------------------------------------------- */
+/* NETWORK REQUEST */
+/* -------------------------------------------------- */
+
 const sendRequest = async (model: IModel, data: IDataPred[]) => {
+    log.info("[sendRequest] Sending HTTP request to model:", model.url);
+
     let myHeaders = new Headers()
     myHeaders.append("Content-Type", "application/json")
 
@@ -284,14 +357,20 @@ const sendRequest = async (model: IModel, data: IDataPred[]) => {
         body: body
     }
 
-    let response = await fetch(model.url, requestOptions)
-    if (response.ok) {
-        let text: string = await response.text()
-        //console.log(text)
-        return removeFormatOutput(text, model.format)
-    } else {
-        console.error(await response.text())
-        return 'ERROR'
+    try {
+        const response = await fetch(model.url, requestOptions);
+        if (response.ok) {
+            log.info("[sendRequest] Response received successfully");
+            const text: string = await response.text();
+            return removeFormatOutput(text, model.format);
+        } else {
+            const errorText = await response.text();
+            log.error("[sendRequest] Request failed with status:", response.status, "->", errorText);
+            return "ERROR";
+        }
+    } catch (err) {
+        log.error("[sendRequest] Network error:", err);
+        return "ERROR";
     }
 
 }

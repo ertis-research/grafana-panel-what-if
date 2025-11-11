@@ -1,9 +1,11 @@
 import { SelectableValue } from '@grafana/data';
+import { locationService } from '@grafana/runtime';
 import { Select, useTheme2 } from '@grafana/ui';
 import React, { useState, useEffect, useContext } from 'react';
 import { Steps } from 'utils/constants';
+import { saveVariableValue } from 'utils/datasources/grafana';
 import { IModel, ISelect } from 'utils/types';
-import { Context, modelsToSelect } from 'utils/utils';
+import { Context, futureDate, modelsToSelect } from 'utils/utils';
 
 interface Props {
     models: IModel[],
@@ -21,7 +23,6 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     const [modelsOptions, setModelsOptions] = useState<ISelect[]>([])
 
     useEffect(() => {
-        console.log('SelectModel: useEffect[models] triggered. Processing new models list.');
         setModelsOptions(modelsToSelect(models))
     }, [models])
 
@@ -29,6 +30,7 @@ export const SelectModel: React.FC<Props> = ({ models, setModel }) => {
     useEffect(() => {
         setModel(value?.value)
         if (value != null && context.setActualStep) {
+            saveVariableValue(locationService, value.varTime, futureDate())
             context.setActualStep(Steps.step_2)
         } else {
             context.setActualStep(Steps.step_1)

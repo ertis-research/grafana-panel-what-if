@@ -12,9 +12,6 @@ interface Props extends StandardEditorProps<IModel[]> { }
 
 export const ModelEditor: React.FC<Props> = ({ value: elements, onChange, context }) => {
 
-
-    //console.log("context", context)
-
     if (!elements || !elements.length) {
         elements = [];
     }

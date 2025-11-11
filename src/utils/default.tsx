@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum, IDynamicField, TypeDynamicField } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum, IDynamicField, TypeDynamicField, LogLevelPanel } from "./types";
 
 export const PreprocessCodeDefault = "console.log('Preprocess')"
 
@@ -64,6 +64,7 @@ export const ContextDefault: IContext = {
     messages: messages_en,
     options: {
         language: Language.English,
+        logLevel: LogLevelPanel.INFO,
         activeQuery: "",
         models: [],
         formats: [],

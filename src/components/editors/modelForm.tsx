@@ -254,11 +254,12 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     <InlineField label="Extra calculation" labelWidth={15} disabled={disabled} grow>
                         <InputControl
                             render={({ field }) =>
-                                <Select
+                                <Select 
                                     value={selectedExtraCalc}
                                     options={extraCalcOptions}
                                     onChange={(v) => setSelectedExtraCalc(v)}
                                     disabled={disabled}
+                                    isClearable
                                     menuPosition='fixed'
                                 />
                             }
@@ -357,6 +358,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                                         options={queryOptions}
                                         onChange={(v) => setSelectedExtraInfo(v)}
                                         disabled={disabled}
+                                        isClearable
                                         menuPosition='fixed'
                                     />
                                 }

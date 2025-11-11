@@ -7,6 +7,15 @@ export enum Language {
   Spanish = 'es'
 }
 
+export enum LogLevelPanel {
+  TRACE = "trace",
+  DEBUG = "debug",
+  INFO = "info",
+  WARN = "warn",
+  ERROR = "error",
+  SILENT = "silent"
+}
+
 export enum Calc {
   sum = "+",
   sub = "-",
@@ -204,6 +213,7 @@ export interface ICSVScheme {
 
 export interface Options {
   language: Language,
+  logLevel: LogLevelPanel,
   activeQuery: string,
   models: IModel[],
   formats: IFormat[],

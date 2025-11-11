@@ -66,7 +66,6 @@ export const disabledByJS = (disabled: boolean, id: string, document: any) => {
       for (let i = 0; i < children.length; i++) {
         const child = children.item(i) as any
         if (child && (child.tagName.toLowerCase() === "input" || child.tagName.toLowerCase() === "button" || child.tagName.toLowerCase() === "textarea")) {
-          //console.log("CHILD", child)
           child.disabled = disabled
         }
       }

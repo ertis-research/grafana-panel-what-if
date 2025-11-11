@@ -34,7 +34,6 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
     const handleOnClickAddTag = () => {
         const updated = [...currentTags, Object.assign({}, TagDefault)]
         setCurrentTags(updated)
-        //console.log("OnClickAddTag")
     }
 
     useEffect(() => {
@@ -90,7 +89,6 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
         value={JSON.stringify(currentTags, undefined, 4)}
         height={200}
         onBlur={(c) => {
-            //console.log(c)
             setCurrentTags(JSON.parse(c))
         }}
         showLineNumbers={true}

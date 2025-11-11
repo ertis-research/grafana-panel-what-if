@@ -3,6 +3,7 @@ import { LocationService, TemplateSrv } from "@grafana/runtime"
 import { IData, ISelect } from "../types"
 import moment from "moment"
 import { getMean } from "utils/utils"
+import log from "utils/logger"
 
 export const checkIfVariableExists = (templateSrv: TemplateSrv, id?: string) => {
     const dashboard_variables: TypedVariableModel[] = templateSrv.getVariables().filter(item => item.type === 'constant' || item.type === 'textbox' || item.type === 'custom')
@@ -44,39 +45,90 @@ const applyType = (value: any) => {
 }
 
 export const getArrayOfData = (data: PanelData, idQuery: string, fieldTag: string, isListValues: boolean, hasSpecificNumberOfValues?: number) => {
+    log.info("[getArrayOfData] Starting to extract array of data");
+    log.debug("[getArrayOfData] idQuery:", idQuery, "fieldTag:", fieldTag, "isListValues:", isListValues, "hasSpecificNumberOfValues:", hasSpecificNumberOfValues);
+
     let res: IData[] = []
     const serieData: DataFrame | undefined = data.series.find((serie) => serie.refId === idQuery)
-    if (serieData) {
-        const fieldTagData = serieData.fields.find((field) => field.name === fieldTag)
-        if (fieldTagData && fieldTagData.values.length > 0) {
-            const allValues = serieData.fields.filter((field) => field.name !== fieldTag)
-            const arrValues = fieldTagData.values
-            if (arrValues !== null && arrValues !== undefined && arrValues.length > 0) {
-                for (let idx = 0; idx < arrValues.length; idx++) {
-                    let values: number[] = []
-                    allValues.forEach((field) => {
-                        values.push(field.values.get(idx))
-                    })
-                    let mean = getMean(values)
-                    if (isListValues && hasSpecificNumberOfValues !== undefined && hasSpecificNumberOfValues > 0) {
-                        values = values.map((v) => (v === null) ? mean : v)
-                        if (values.length < hasSpecificNumberOfValues) {
-                            values = values.concat(Array(hasSpecificNumberOfValues - values.length).fill(null))
-                        } else if (values.length > hasSpecificNumberOfValues) {
-                            values = values.slice(0, hasSpecificNumberOfValues)
-                        }
-                    }
-                    res.push({
-                        id: arrValues.get(idx),
-                        raw_values: values,
-                        default_value: mean
-                    })
-                }
-            }
-
-        }
+    if (!serieData) {
+        log.warn(`[getArrayOfData] No series found with refId=${idQuery}`);
+        return res;
     }
-    console.log("Datos cargados", res)
+    log.debug("[getArrayOfData] Series found:", serieData);
+
+    const fieldTagData = serieData.fields.find((field) => field.name === fieldTag)
+    if (!fieldTagData || fieldTagData.values.length === 0) {
+        log.warn(`[getArrayOfData] Field '${fieldTag}' not found or empty`);
+        return res;
+    }
+    log.debug("[getArrayOfData] Field tag data found with", fieldTagData.values.length, "values");
+
+    const allValues = serieData.fields.filter((field) => field.name !== fieldTag)
+    const arrValues = fieldTagData.values
+
+    log.debug("[getArrayOfData] allValues (fields excluding fieldTag):", allValues.map(f => f.name));
+    log.trace("[getArrayOfData] allValues detailed content:", allValues);
+    log.debug("[getArrayOfData] arrValues (fieldTag values):", arrValues);
+
+    const aggregatedData = new Map<any, number[]>();
+
+    if (arrValues !== null && arrValues !== undefined && arrValues.length > 0) {
+        log.debug("[getArrayOfData] Starting aggregation loop...");
+        for (let idx = 0; idx < arrValues.length; idx++) {
+            const currentId = arrValues.get(idx);
+
+            let values: number[] = []
+            allValues.forEach((field) => {
+                values.push(field.values.get(idx))
+            })
+
+            log.trace(`[getArrayOfData] Index ${idx}: tag='${currentId}', raw values:`, values);
+
+            if (aggregatedData.has(currentId)) {
+                const existingValues = aggregatedData.get(currentId)!;
+                aggregatedData.set(currentId, existingValues.concat(values));
+                log.trace(`[getArrayOfData] Appended values to existing tag='${currentId}'`);
+            } else {
+                aggregatedData.set(currentId, values);
+                log.trace(`[getArrayOfData] Created new entry for tag='${currentId}'`);
+            }
+        }
+        log.debug("[getArrayOfData] Aggregation loop finished.");
+        log.trace("[getArrayOfData] Aggregated data map:", aggregatedData);
+    } else {
+        log.warn("[getArrayOfData] arrValues (fieldTag values) is empty or null.");
+        return res;
+    }
+
+    log.debug("[getArrayOfData] Processing aggregated data to create final result...");
+    aggregatedData.forEach((allRawValues, id) => {
+        let mean = getMean(allRawValues);
+        log.trace(`[getArrayOfData] Processing tag='${id}': total raw values:`, allRawValues, "mean:", mean);
+
+        let finalValues: number[] = allRawValues;
+
+        if (isListValues && hasSpecificNumberOfValues !== undefined && hasSpecificNumberOfValues > 0) {
+            finalValues = finalValues.map((v) => (v === null) ? mean : v);
+            if (finalValues.length < hasSpecificNumberOfValues) {
+                const padding = Array(hasSpecificNumberOfValues - finalValues.length).fill(null);
+                finalValues = finalValues.concat(padding);
+                log.trace(`[getArrayOfData] Padded values for tag='${id}' to ${hasSpecificNumberOfValues}:`, finalValues);
+            } else if (finalValues.length > hasSpecificNumberOfValues) {
+                finalValues = finalValues.slice(0, hasSpecificNumberOfValues);
+                log.trace(`[getArrayOfData] Trimmed values for tag='${id}' to ${hasSpecificNumberOfValues}:`, finalValues);
+            }
+        }
+        res.push({
+            id: id,
+            raw_values: finalValues,
+            default_value: mean
+        });
+        log.trace(`[getArrayOfData] Final result added for tag='${id}':`, res[res.length - 1]);
+    });
+
+    log.info(`[getArrayOfData] Completed extraction of ${res.length} unique data items`);
+    log.debug("[getArrayOfData] Final data array:", res);
+
     return res
 }
 

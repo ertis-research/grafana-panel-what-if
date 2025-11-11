@@ -75,7 +75,6 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         } else {
             setCurrentCalc(ExtraCalcDefault)
         }
-        //console.log("SUBMIT ADD")
     }
 
     const handleOnClickEdit = () => {
@@ -85,7 +84,6 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
     const handleOnClickCancel = () => {
         updateCurrentState()
         setDisabled(true)
-        //console.log("cancel")
     }
 
     const handleOnConfirmDeleteFormat = () => {

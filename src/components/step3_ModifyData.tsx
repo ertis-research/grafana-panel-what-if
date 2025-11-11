@@ -1,5 +1,5 @@
 import { AppEvents, SelectableValue } from '@grafana/data';
-import { Checkbox, Field, HorizontalGroup, Icon, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, ConfirmButton, Button } from '@grafana/ui';
+import { Checkbox, Field, HorizontalGroup, Icon, Input, Select, CustomScrollbar, useTheme2, ToolbarButton, ButtonGroup, InlineField, InlineSwitch, Button } from '@grafana/ui';
 import React, { useContext, useState, useEffect, ChangeEvent } from 'react';
 import { Context, defaultIfUndefined, collectionsToSelect, groupBy, deepCopy, futureDate } from '../utils/utils'
 import { ICategory, IModel, ISelect, ITag, IInterval, IDataCollection, IData, Colors, IntervalColors, IntervalTypeEnum } from '../utils/types'
@@ -318,16 +318,7 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                         allowCustomValue={false}
                         placeholder=''
                     />
-                    <ConfirmButton
-                        closeOnConfirm={true}
-                        confirmText={msgs.delete}
-                        size='sm'
-                        disabled={disabled}
-                        confirmVariant='destructive'
-                        onConfirm={handleOnClickDeleteCollection}
-                    >
-                        <Button icon='trash-alt' variant='destructive' size='sm' style={{ marginLeft: '5px' }} disabled={disabled} title={msgs.tooltipDeleteCurrentCollection} />
-                    </ConfirmButton>
+                    <Button icon='trash-alt' variant='destructive' size='sm' style={{ marginLeft: '5px' }} disabled={disabled} title={msgs.tooltipDeleteCurrentCollection} onClick={handleOnClickDeleteCollection} />
                 </div>
             </div>
             <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', paddingBottom: '0px' }}>

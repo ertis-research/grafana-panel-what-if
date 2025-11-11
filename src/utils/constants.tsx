@@ -5,8 +5,11 @@ import { ILocalization } from "./localization/scheme"
 import { dateTimeLocalToString } from "./utils"
 
 export const varInput = '$input'
+export const varTag = '$tag'
 export const varEachInput = '$each'
 export const varEachInputEnd = '$end-each'
+export const varEachTag = '$tag-each'
+export const varEachTagEnd = '$tag-end-each'
 export const variableOutput = '$output'
 export const idDefault = 'basic_defaultData'
 export const idNew = 'basic_newValue'

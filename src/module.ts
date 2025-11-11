@@ -1,5 +1,5 @@
 import { FormatEditor } from './components/editors/formatEditor';
-import { ISelect, Language } from './utils/types';
+import { ISelect, Language, LogLevelPanel } from './utils/types';
 import { ModelEditor } from './components/editors/modelEditor';
 import { PanelPlugin } from '@grafana/data';
 import { Main } from './components/main';
@@ -10,8 +10,10 @@ import { Options } from 'utils/types';
 import { ExtraCalcEditor } from 'components/editors/extraCalcEditor';
 import { getOptionsVariable } from 'utils/datasources/grafana';
 import { getTemplateSrv } from '@grafana/runtime';
+import { enumToSelect } from 'utils/utils';
 
-const OptionsVariable: ISelect[] = getOptionsVariable(getTemplateSrv())
+const VariableOptions: ISelect[] = getOptionsVariable(getTemplateSrv())
+const LogLevelOptions: ISelect[] = enumToSelect(LogLevelPanel)
 
 export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) => {
   return builder
@@ -33,11 +35,19 @@ export const plugin = new PanelPlugin<Options>(Main).setPanelOptions((builder) =
         ],
       }
     }).addSelect({
+      path: 'logLevel',
+      defaultValue: LogLevelPanel.INFO,
+      name: 'Log level',
+      category: ['General'],
+      settings: {
+        options: LogLevelOptions,
+      }
+    }).addSelect({
       path: 'activeQuery',
       name: 'Active query variable',
       category: ['General'],
       settings: {
-        options: OptionsVariable
+        options: VariableOptions
       }
     }).addCustomEditor({
       path: 'formats',

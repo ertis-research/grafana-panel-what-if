@@ -26,7 +26,6 @@ export const ExportData: React.FC<Props> = ({ model, collections, currentCollect
 
     const handleOnClickDownloadData = () => {
         if (currentCollection) {
-            //console.log("CURRENTCOL", currentCollection)
             saveAs(dataToCSV(currentCollection), (currentCollection.id + ".csv").replace(/ /g, '_'))
         }
     }

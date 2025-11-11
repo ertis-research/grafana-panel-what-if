@@ -66,7 +66,6 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     const handleOnClickPredict = () => {
         if (validate()) {
-            //console.log("COLLECTIONS PREDICT", collections)
             if (model) {
                 setState(StatePredict.LOADING)
                 predictAllCollections(model, collections).then((res: IDataCollection[]) => {

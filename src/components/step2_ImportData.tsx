@@ -9,6 +9,7 @@ import { DefaultImportData, ImportDataEnum, ImportDataOptions, Steps, VariablesG
 import { IntervalDefault, ModelDefault } from 'utils/default'
 import { getAppEvents, locationService } from '@grafana/runtime'
 import { CSVtoData, getDateTimeCSV, getIntervalCSV } from 'utils/datasources/csv'
+import log from 'utils/logger'
 
 interface Props {
     model?: IModel,
@@ -205,35 +206,56 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [])*/
 
     useEffect(() => {
-        console.log("Data received")
+        log.info("[Import data] Data received, checking conditions to save new data");
+        log.debug("[Import data] Condition check values:", {
+            hasToSaveNewData: hasToSaveNewData,
+            dateTimeInput: dateTimeInput,
+            selectedGrafanaVariableValue: selectedGrafanaVariable?.value,
+            modelDefined: model !== undefined,
+            dataState: data.state
+        });
+
         if (hasToSaveNewData !== undefined
             && (hasToSaveNewData === dateTimeInput || (selectedGrafanaVariable && hasToSaveNewData === selectedGrafanaVariable.value))
             && model !== undefined
             && (data.state === LoadingState.Done || data.state === LoadingState.Error)) {
+
+            log.debug("[Import data] All conditions met. Proceeding with data state check.");
+
             if (data.state === LoadingState.Done) {
-                console.log("Done")
-                console.log("Data", data)
+                log.info("[Import data] Data state is 'Done'. Proceeding with data extraction.");
+                log.debug("[Import data] Full data object received:", data);
+                
                 let extraInfo = undefined
                 let arrayData: IData[] = []
-                let name = ((model.onlyDate && mode.value === ImportDataEnum.DATETIME_SET) 
+                let name = ((model.onlyDate && mode.value === ImportDataEnum.DATETIME_SET)
                     || (model.onlyDateRange && mode.value === ImportDataEnum.DATETIME_RANGE)) ? dateToString(hasToSaveNewData.toDate()) : dateTimeLocalToString(hasToSaveNewData)
                 let text = "DateTime"
                 let key = dateTimeToTimestamp(hasToSaveNewData).toString()
                 let dtStart: DateTime | undefined = undefined
-                if(mode.value === ImportDataEnum.DATETIME_RANGE && model.queryRangeId) {
+                
+                if (mode.value === ImportDataEnum.DATETIME_RANGE && model.queryRangeId) {
+                    log.debug("[Import data] Processing as DATETIME_RANGE.");
                     arrayData = getArrayOfData(data, model.queryRangeId, fieldTag, model.isListValues, model.numberOfValues)
                     name = ((model.onlyDateRange) ? dateToString(dateTimeInputStart.toDate()) : dateTimeLocalToString(dateTimeInputStart)) + " to " + name
                     text = text + " range"
                     dtStart = dateTimeInputStart
                     key = dateTimeToTimestamp(dateTimeInputStart).toString() + "+" + key
                 } else {
+                    log.debug("[Import data] Processing as single DATETIME_SET.");
                     arrayData = getArrayOfData(data, model.queryId, fieldTag, model.isListValues, model.numberOfValues)
                 }
 
-                if (model && model.extraInfo !== undefined) extraInfo = getExtraInfo(data, model.extraInfo, fieldNameInfo, fieldValueExtraInfo)
+                if (model && model.extraInfo !== undefined) {
+                    log.debug("[Import data] Extracting extra info.");
+                    extraInfo = getExtraInfo(data, model.extraInfo, fieldNameInfo, fieldValueExtraInfo)
+                }
+
                 if (arrayData.length > 0) {
+                    log.info(`[Import data] Successfully extracted ${arrayData.length} data points. Adding to collection with key: ${key}`);
                     addCollectionWithName(key, name, text, arrayData, hasToSaveNewData, IntervalDefault, extraInfo, dtStart)
                 } else {
+                    log.warn("[Import data] Data state was 'Done' but no data points were extracted. Publishing 'no data' alert.");
                     const appEvents = getAppEvents();
                     appEvents.publish({
                         type: AppEvents.alertError.name,
@@ -241,17 +263,24 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                     })
                 }
             } else {
-                console.log("ERROR")
-                console.log("Data", data)
+                log.error("[Import data] Data state is 'Error'. Publishing error alert.");
                 const appEvents = getAppEvents();
                 const msgsError = data.errors?.map((v: DataQueryError) => v.message)
+                
+                log.error("[Import data] Error messages from query:", msgsError);
+                log.debug("[Import data] Full error data object:", data); // Debug for full context
+                
                 appEvents.publish({
                     type: AppEvents.alertError.name,
                     payload: msgsError
                 })
             }
+
+            log.info("[Import data] Processing complete. Resetting 'hasToSaveNewData' flag.");
             saveVariableValue(locationService, model.varTime, futureDate())
             setHasToSaveNewData(undefined)
+        } else {
+            log.debug("[Import data] Conditions not met. Skipping data processing.");
         }
     }, [data])
 
@@ -259,7 +288,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [collections])
 
     useEffect(() => {
-        if(model !== undefined) {
+        if (model !== undefined) {
             saveVariableValue(locationService, model.varTime, futureDate())
         }
     }, [])
