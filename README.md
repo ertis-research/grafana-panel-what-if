@@ -1,15 +1,14 @@
-# What-If Analysis of ML models for Grafana
-
-![what-if-provisional](https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/852ab329-8012-4ad8-9c3d-1bf7bfbc8f46)
-
 <div align="center">
-  
-![Grafana 8.5.3](https://img.shields.io/badge/Grafana-8.0.0-orange)
-![Grafana 9.5.1](https://img.shields.io/badge/Grafana-9.0.0-orange)
-![GitHub watchers](https://img.shields.io/github/watchers/ertis-research/whatif-panel-for-Grafana)
-![GitHub Repo stars](https://img.shields.io/github/stars/ertis-research/whatif-panel-for-Grafana)
+  <h3>What-If Analysis of ML models</br>Grafana app plugin</h3>
+
+![GitHub Repo stars](https://img.shields.io/github/stars/ertis-research/grafana-panel-what-if)
+![GitHub watchers](https://img.shields.io/github/watchers/ertis-research/grafana-panel-what-if)
+
+</br>
+<img width="1900" height="923" alt="what-if" src="https://github.com/user-attachments/assets/619d3cc7-f2a2-41fd-b875-f6e4b5303a33" />
 
 </div>
+</br>
 
 This Grafana panel is a powerful tool for conducting **What-If predictive analysis with Artificial Intelligence models**, with a special focus on **Machine Learning**. Currently, the panel is compatible with **AI/ML models that receive a list of numeric fields through an HTTP request**.
 
@@ -45,7 +44,7 @@ Also we have made every effort to design the panel to be abstract and intuitive,
 
 ## Requirements
 
-- [Grafana](https://grafana.com/) - minimum is version 8, but version 9 is recommended (v8.5.3 and v9.5.1 has been used for development)
+- [Grafana](https://grafana.com/) - minimum is version 8, but last version is recommended (v8.5.3, v9.5.1 and v12.2.0 has been used for development)
 
 ## Installation
 
@@ -327,14 +326,36 @@ You must then configure the [list of tags](#list-of-tags) for the model.
 
 Optionally, you can preprocess the data before invoking the model, by applying scaling and/or executing JavaScript code. For more details, see the [corresponding section](#pre-processing-and-scaling-of-input-data).
 
-##### Delete and edit models
+##### Delete, edit, copy and show/hide models
+
+<p align="center">
+<img width="500" height="92" alt="image" src="https://github.com/user-attachments/assets/0867654f-2abb-4828-99ef-b44ae31de8a9" />
+</p>
+
 For an already configured model, the form will be displayed filled with the model data. The fields will be disabled to prevent unwanted editing.
 
-If you want to **delete the model**, click on the red button with the bin icon. When you press it, a confirmation will appear allowing you to cancel this action (_Cancel_ button, the model will not be deleted) or to confirm it (_Delete_ button, the model will be deleted). **If the panel is deleted and saved, this action cannot be undone**.
-
+###### Edit model
 If you want to **edit the model**, it will be necessary to click on the blue _Edit_ button. By doing so, the fields of the model form will be enabled, making it possible to modify their values. At this point, the information can be modified in the same way as in the creation form. The edit mode will be terminated by clicking on one of the two buttons at the bottom: 
 - _Cancel_ button: The changes made will be discarded, returning the model to its previous state. 
 - _Save model_ button: The changes made to the model will be saved. These changes can be used in the preview, but **to save them definitively you must also save the changes in the Grafana panel**.
+
+###### Copy model
+A button with a copy icon allows you to duplicate an existing model. When you click this button:
+- The selected model is automatically copied.
+- The new model is added to the list immediately.
+- The new model’s ID will be the original one with the suffix `_copy` added (e.g., `model_1` → `model_1_copy`).
+This feature is useful when you want to create similar models quickly without reconfiguring all parameters manually.
+
+###### Show / Hide model
+A button with an eye icon controls the visibility of the model in the user-facing panel:
+- When the eye is visible (open), the model is shown to users.
+- When the eye is crossed out (hidden), the model is hidden from users, although it remains available in the configuration list and can still be used internally.
+This allows administrators to manage which models are accessible in the panel without deleting them.
+
+###### Delete model
+If you want to **delete the model**, click on the red button with the bin icon. 
+When you press it, a confirmation will appear allowing you to cancel this action (_Cancel_ button, the model will not be deleted) or to confirm it (_Delete_ button, the model will be deleted). 
+**If the panel is deleted and saved, this action cannot be undone**.
 
 ##### List of tags
 To define the list of tags that enter the model, the section entitled _Model input tags_ must be expanded. Here you can add as many tags as the model requires (there is no limit). 
@@ -386,18 +407,16 @@ This formula obtains a new list of data by subtracting for each tag in the origi
 
 #### Formats
 
-The IA/ML models will receive the list of values to predict within one schema and send the prediction result within another. These formats may coincide for several models, as they mainly depend on the service where they are hosted.
+AI/ML models receive data in one schema and return predictions in another. The Formats feature allows you to define reusable templates to manage this data transformation. These templates can be shared across multiple models, especially those hosted on the same service (e.g., TensorFlow Serving, KServe).
 
 The _Formats_ tab shows the list of defined formats (if any) and a section with blue text to add a new one (_Add new format_). This will always appear last in the list, after all the formats configured. Clicking on any of these elements will display a form that will be filled in if it is a defined format or empty if a new format is to be added.
 
 In case of an already configured format, editing and deleting will be allowed following the [same logic as the model creation form](#delete-and-edit-models).
 
 This form consists of 3 fields:
-- **ID** (required): Identifier of the format. It will be shown in the format selector in the model configuration.
-- **Input** (required): Format in which the list of tag values must be mapped just before being sent to the model. This can correspond to any text, although typically it will be a JSON object. The variable $input is used to mark where the list of values should be added, which will be replaced by before sending:
-  - If **only one** dataset is predicted, by a numeric list with the tag values separated by commas and enclosed in square brackets (e.g.: [0.43, 0.23, 0.10]).
-  - If **multiple** datasets are predicted, by the above representation for each set enclosed in commas and without square brackets (e.g. [0.43, 0.23, 0.10], [0.35, 0.33, 0.21]).
-- **Output** (required): Format from which the prediction result of the model will be extracted. This can correspond to any text, although it will typically be a JSON object. The $output variable is used to mark which part of the response corresponds to the prediction. When processing the received response, the corresponding part of the message will be extracted and this text will be separated by commas in case more than one prediction has been requested. From these texts, the numerical value they contain will be extracted, which will be the results of the predictions requested.
+- **ID** (required): A unique, human-readable identifier for the format (e.g., "TensorFlow-v1-JSON"). This ID will appear in the model configuration's format selector.
+- **Input** (required): A template that defines the structure of the request sent to the model.
+- **Output** (required): A template that defines how to extract the prediction results from the model's response.
 
 An example of a configured format is as follows:
 
@@ -405,13 +424,103 @@ An example of a configured format is as follows:
   <img src="https://github.com/ertis-research/whatif-panel-for-Grafana/assets/48439828/4217c1ea-6921-4219-aebc-bdee8632b2bb" />
 </p>
 
+##### Input format
+The **Input** field can correspond to any text, although typically it will be a JSON object. You use special keywords (starting with `$`) as placeholders.
+
+| Keyword | What It Does |
+| :--- | :--- |
+| **`$input`** | The main placeholder for data. Its meaning changes based on where it's used. |
+| **`$each`** <br> **`$end-each`** | Defines a block that repeats for *every* collection (dataset) being predicted. |
+| **`$tag-each`** <br> **`$tag-end-each`** | A nested loop (must go inside `$each`). It repeats for *every tag* in that collection. |
+| **`$tag`** | Only works inside `$tag-each`. It is replaced with the *name of the tag* (e.g., `"TagA"`). |
+
+###### Simple example
+
+This is the most basic scenario, ideal for models that expect a simple, flat list of values. This template only uses the `$input` keyword.
+
+```
+[$input]
+```
+
+**How It Works:** When no `$each` loop is detected, the panel serializes the data and then removes the outermost brackets from the resulting string. This string is then inserted where the `$input` keyword is, inside the template's brackets.
+  - For one dataset (e.g., `[0.43, 0.23, 0.10]`):
+    - The data string becomes `[0.43, 0.23, 0.10]`.
+    - The template `[$input]` becomes `[[0.43, 0.23, 0.10]]`.
+  - For multiple datasets (e.g., `[0.43, 0.23, 0.10]` and `[0.35, 0.33, 0.21]`):
+    - The data string becomes `[0.43, 0.23, 0.10], [0.35, 0.33, 0.21]`.
+    - The template `[$input]` becomes `[[0.43, 0.23, 0.10], [0.35, 0.33, 0.21]]`.
+
+###### Advanced example
+
+Imagine your ML service uses a model that expects an object with two fields (`TagA` and `TagB`). Each field contains a list of two values representing the features for that tag.
+
+**Goal:** You want to send two collections to the model.
+* **Collection 1:** `{ "TagA": [1, 2], "TagB": [3, 4] }`
+* **Collection 2:** `{ "TagA": [5, 6], "TagB": [7, 8] }`
+
+```json
+{
+  "service": "my-model-v1",
+  "instances": [
+    {
+      "TagA": [1, 2],
+      "TagB": [3, 4]
+    },
+    {
+      "TagA": [5, 6],
+      "TagB": [7, 8]
+    }
+  ]
+}
+```
+To build this, you would use this Input template:
+```
+{
+  "service": "my-model-v1",
+  "instances": [
+    $each
+      {
+      $tag-each
+        $tag : [$input]
+      $tag-end-each
+      }
+    $end-each
+  ]
+}
+```
+**How It Works:** The panel runs the `$each` loop for every collection (e.g., Collection 1, then Collection 2). Inside each loop, the `$tag-each` loop runs for every series, replacing `$tag` with the tag name (like "TagA") and `$input` with its values (like 1, 2). The panel automatically adds the commas between tags and between collections, building the complete JSON object list required by the instances array.
+
+##### Output format
+
+The Output field can correspond to any text, although it will typically be a JSON object. When processing the received response, the corresponding part of the message will be extracted and this text will be separated by commas in case more than one prediction has been requested. From these texts, the numerical value they contain will be extracted, which will be the results of the predictions requested.
+
+| Keyword | What It Does |
+| :--- | :--- |
+| **`$output`** | Marks where the prediction value(s) are located in the response. |
+
+###### Example
+
+Imagine your model returns this JSON response:
+
+```json
+{ "model_id": "v2", "predictions": [0.75, 0.82] }
+```
+
+Your Output template must be a "stencil" that matches this structure. You only want to extract the numbers 0.75 and 0.82.
+
+```json
+{ "model_id": "v2", "predictions": [$output] }
+```
+
+**How It Works:** The panel removes the prefix `{ "model_id": "v2", "predictions": [` and the suffix `] }` from the response. The remaining string, `0.75, 0.82,` is then split by the comma and parsed into the numeric results `[0.75, 0.82]`.
+
 #### Data import queries
 
 The values of the tags of the model can be imported directly from one of the data sources configured in Grafana. To do this, a query must be constructed which, taking into account the list of tags in the model, performs the necessary calculations to obtain the input values at a specific time instant. This must return a table that relates each tag with to at least one value. For example, a possible result would be:
 
 This query must be defined within the corresponding section (_query_) after selecting the appropriate data source. Once configured, it can be assigned to the models that use it within their specific configuration.
 
-In order to use the configured tag list and consider the time instant given by the user in the _Set datetime_ section, the query must include [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/variable-syntax/). These variables must be created in the dashboard configuration (not the panel configuration) and assigned in the corresponding fields of the _Model queries_ section within the configuration of each model. Different models can have the same variables assigned without any problem, the important thing is that these variables correspond to the variables used by the selected query.
+In order to use the configured tag list and consider the time instant given by the user in the _Set datetime_ section, the query must include [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/variable-syntax/). These variables must be created in the dashboard configuration (not the panel configuration) and assigned in the corresponding fields of the _Model queries_ section within the configuration of each model. Different models can have the same variables assigned without any problem, the important thing is that these variables correspond to the variables used by the selected query. Variables can be of type _Constant_, _Custom_, or _Text box_, but **it is recommended to use the Text box type**.
 
 - **Variable tags** (required): Dashboard variable to be replaced by the list of tags of the model. Within the query, this variable must be added where the list of identifiers from which information will be extracted is indicated.
 - **Quotes for list** (required): Format to be used for the list of tags of the model when it is replaced in the query. This will correspond to the identifiers of the list separated by inverted commas, being able to choose that each one is contained between double, single or none.
