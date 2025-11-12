@@ -9,6 +9,7 @@ import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } f
 import { getAppEvents } from '@grafana/runtime'
 import { AppEvents, isDateTime, PanelData } from '@grafana/data'
 import { extraCalcCollection } from 'utils/datasources/extraCalc'
+import log from 'utils/logger'
 
 interface Props {
     model?: IModel,
@@ -41,7 +42,9 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const disabledModifyAgain = (context.actualStep) ? (context.actualStep < Steps.step_4 || state === StatePredict.LOADING) : false
 
     const validate = () => {
+        log.debug("[Predict result] Running validation before prediction...");
         let msg = ""
+        
         if (model) {
             collections.forEach((col: IDataCollection) => {
                 let error_tags: string[] = col.data.filter((d: IData) => d.default_value === undefined && (d.new_value === undefined || d.new_value.trim() === "")).map((d: IData) => d.id)
@@ -53,8 +56,10 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         }
 
         if (msg === "") {
+            log.info("[Predict result] Validation successful.");
             return true
         } else {
+            log.warn("[Predict result] Validation failed with missing data:", msg);
             const appEvents = getAppEvents();
             appEvents.publish({
                 type: AppEvents.alertError.name,
@@ -65,23 +70,31 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const handleOnClickPredict = () => {
+        log.info("[Predict result] Predict button clicked.");
         if (validate()) {
             if (model) {
+                log.info("[Predict result] Starting prediction for all collections...");
                 setState(StatePredict.LOADING)
                 predictAllCollections(model, collections).then((res: IDataCollection[]) => {
+                    log.info("[Predict result] Prediction completed successfully.");
+                    log.debug("[Predict result] Updated collections:", res);
                     updateCollections(res)
                     setCurrentPage(1)
-                })
+                }).catch((err) => {
+                    log.error("[Predict result] Prediction failed:", err);
+                });
             }
             if (context.setActualStep) {
                 context.setActualStep(Steps.step_5)
+                log.debug("[Predict result] Advanced to step 5.");
             }
         }
     }
 
     const handleOnClickExtraCalc = () => {
+        log.info("[Predict result] Extra calculation button clicked.");
+
         if (validate()) {
-            //console.log("COLLECTIONS PREDICT", collections) 
             if (model && currentCollIdx !== undefined && currentCollIdx < collections.length) {
                 setState(StatePredict.LOADING)
                 let col: IDataCollection = collections[currentCollIdx]
@@ -92,12 +105,17 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                     aux[currentCollIdx] = res
                     updateCollections(aux)
                     setCurrentPage(2)
-                })
+                }).catch((err) => {
+                    log.error("[Predict result] Extra calculation failed:", err);
+                });
+            } else {
+                log.warn("[Predict result] Skipped extra calculation — invalid collection index or missing model.");
             }
         }
     }
 
     const handleOnClickModifyAgain = () => {
+        log.info("[Predict result] Modify again button clicked. Resetting results...");
         let newCollections: IDataCollection[] = []
         collections.forEach((col: IDataCollection) => {
             let newCol = { ...col }
@@ -109,6 +127,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         updateCollections(newCollections)
         setState(StatePredict.EMPTY)
         context.setActualStep(Steps.step_3)
+        log.info("[Predict result] Returned to step 3 with clean results.");
     }
 
     const handleOnChangeDynField = (v: string | Date, idx: number) => {
@@ -124,6 +143,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     useEffect(() => {
         if (state === StatePredict.LOADING) {
+            log.info("[Predict result] Prediction processing complete. State → DONE");
             setState(StatePredict.DONE)
         }
     }, [collections])
@@ -131,6 +151,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     useEffect(() => {
         if(model && model.extraCalc && model.extraCalc.dynamicFieldList) {
             setDynamicFieldValues(Array(model.extraCalc.dynamicFieldList.length).fill(undefined))
+            log.debug("[Predict result] Initialized dynamic field values for extra calc.");
         }
     }, [model])
     

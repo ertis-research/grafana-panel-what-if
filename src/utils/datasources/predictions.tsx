@@ -342,8 +342,6 @@ export const applyPreprocess = async (code: string, data: IDataPred) => {
 /* -------------------------------------------------- */
 
 const sendRequest = async (model: IModel, data: IDataPred[]) => {
-    log.info("[sendRequest] Sending HTTP request to model:", model.url);
-
     let myHeaders = new Headers()
     myHeaders.append("Content-Type", "application/json")
 
@@ -356,7 +354,8 @@ const sendRequest = async (model: IModel, data: IDataPred[]) => {
         headers: myHeaders,
         body: body
     }
-
+    
+    log.info("[sendRequest] Sending HTTP request to model:", model.url);
     try {
         const response = await fetch(model.url, requestOptions);
         if (response.ok) {

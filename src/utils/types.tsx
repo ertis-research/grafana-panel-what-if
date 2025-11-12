@@ -129,6 +129,7 @@ export interface ICredentials {
 export interface IModel {
   id: string,
   description: string,
+  active: boolean,
   url: string,
   method: Method,
   credentials?: ICredentials

@@ -7,6 +7,7 @@ import { Steps } from 'utils/constants';
 import { CollectionDefault, IntervalDefault } from 'utils/default';
 import { getAppEvents, locationService } from '@grafana/runtime';
 import { saveVariableValue } from 'utils/datasources/grafana';
+import log from 'utils/logger';
 //import { Scrollbars } from 'react-custom-scrollbars-2'
 
 interface Props {
@@ -107,6 +108,9 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         const name = event.currentTarget.name
         let value: any = event.target.value
         value = (value === '') ? undefined : Number(value)
+
+        log.debug("[Modify data] Interval change:", { name, value });
+
         setInterval({
             ...interval,
             [name]: (value !== undefined && name === 'steps') ? Math.abs(value) : value
@@ -118,7 +122,6 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     }
 
     const handleOnChangeTagValue = (event: ChangeEvent<HTMLInputElement>) => {
-        //console.log(event.target.value)
         if (currentCollIdx !== undefined && collections && currentCollIdx < collections.length) {
             const dataIndex = collections[currentCollIdx].data.findIndex((d: IData) => d.id === event.currentTarget.name)
             const updatedCollectionData = [...collections[currentCollIdx].data]
@@ -138,6 +141,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 ...collections[currentCollIdx],
                 data: updatedCollectionData
             })
+        } else {
+            log.warn("[Modify data] Skipped tag value change — invalid collection index.");
         }
     }
 
@@ -158,11 +163,16 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 ...collections[currentCollIdx],
                 data: updatedCollectionData
             })
+        } else {
+            log.warn("[Modify data] Skipped percentage toggle — invalid collection index.");
         }
     }
 
     const handleOnClickDeleteCollection = () => {
+        log.info("[Modify data] Deleting current collection...");
+
         if (collections === undefined || collections.length - 1 <= 0) {
+            log.debug("[Modify data] No more collections left after deletion, resetting to step 2.");
             context.setActualStep(Steps.step_2)
             setSelectCollection(undefined)
             setcollectionsOptions([])
@@ -175,6 +185,8 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 type: AppEvents.alertSuccess.name,
                 payload: [context.messages._panel._step3.alertCollectionDeleted]
             })
+        } else {
+            log.warn("[Modify data] Skipped delete — invalid collection index or missing data.");
         }
     }
 
@@ -191,8 +203,10 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
     // -------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        //console.log("CAMBIO MODEL", model)
-        if (model && model.tags) setTags(deepCopy(model.tags))
+        if (model && model.tags) {
+            log.debug("[Modify data] Model changed. Updating tags...");
+            setTags(deepCopy(model.tags))
+        }
     }, [model])
 
     useEffect(() => {
@@ -201,33 +215,29 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
                 ...collections[currentCollIdx],
                 interval: interval
             })
-            if (interval.max !== undefined && interval.min !== undefined && interval.steps !== undefined && interval.min < interval.max) {
-                setHasInterval(true)
-            } else {
-                setHasInterval(false)
-            }
+            const valid = interval.max !== undefined && interval.min !== undefined && interval.steps !== undefined && interval.min < interval.max
+            setHasInterval(valid)
+            
+            log.debug("[Modify data] Interval updated:", { valid, interval });
         } else {
             setHasInterval(false)
         }
     }, [interval])
 
     useEffect(() => {
-        //setTagsSearch(tagsToSelect(tags))
         updateFilteredTags()
-    }, [tags])
-
-    useEffect(() => {
-        updateFilteredTags()
-    }, [searchInputValue])
+    }, [tags, searchInputValue])
 
     useEffect(() => {
         const options: ISelect[] = collectionsToSelect((collections !== undefined) ? collections : [])
         setcollectionsOptions(options)
+        log.trace("[Modify data] Collections list refreshed:", options.length);
     }, [collections])
 
     useEffect(() => {
         if (collectionsOptions.length > 0 && collections && currentCollIdx !== undefined && currentCollIdx < collections.length) {
             setSelectCollection(collectionsOptions[currentCollIdx])
+            log.trace("[Modify data] selectCollection synced with currentCollIdx:", currentCollIdx);
         }
     }, [collectionsOptions])
 
@@ -242,16 +252,17 @@ export const ModifyData: React.FC<Props> = ({ model, collections, deleteCollecti
         if (selectCollection && selectCollection.value !== undefined && collections) {
             const currentCol = collections[selectCollection.value]
             if (selectCollection.value !== currentCollIdx) {
-                //console.log("Establezco selectCollection")
                 setCurrentCollIdx(selectCollection.value)
+                log.info("[Modify data] Selected collection changed");
             }
             if (interval.max !== currentCol.interval.max || interval.min !== currentCol.interval.min || interval.steps !== currentCol.interval.steps) {
                 setInterval(collections[selectCollection.value].interval)
+                log.debug("[Modify data] Interval synced from selected collection.");
             }
         } else {
-            //console.log("Establezco undefined")
             setCurrentCollIdx(undefined)
             setInterval(IntervalDefault)
+            log.debug("[Modify data] No collection selected, reset interval.");
         }
     }, [selectCollection])
 

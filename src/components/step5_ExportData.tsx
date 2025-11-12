@@ -5,6 +5,7 @@ import { dataToCSV } from 'utils/datasources/csv'
 import { IDataCollection, IModel } from 'utils/types'
 import { Context } from 'utils/utils'
 import { saveAs } from 'file-saver'
+import log from 'utils/logger'
 
 interface Props {
     model?: IModel,
@@ -25,8 +26,23 @@ export const ExportData: React.FC<Props> = ({ model, collections, currentCollect
     const text_button = (currentCollection && currentCollection.results) ? msgs.downloadResults : msgs.downloadData
 
     const handleOnClickDownloadData = () => {
-        if (currentCollection) {
-            saveAs(dataToCSV(currentCollection), (currentCollection.id + ".csv").replace(/ /g, '_'))
+        log.info("[Export data] Download button clicked.");
+
+        if (!currentCollection) {
+            log.warn("[Export data] No current collection found. Download aborted.");
+            return;
+        }
+
+        try {
+            const fileName = (currentCollection.id + ".csv").replace(/ /g, "_");
+            log.debug("[Export data] Preparing data for export:", { id: currentCollection.id, fileName });
+
+            const csvBlob = dataToCSV(currentCollection);
+            saveAs(csvBlob, fileName);
+
+            log.info("[Export data] Export completed successfully.");
+        } catch (err) {
+            log.error("[Export data] Failed to export data:", err);
         }
     }
 

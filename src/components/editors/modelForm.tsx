@@ -131,6 +131,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setDisabled(!disabled)
     }
 
+    const handleOnClickVisibility = () => {
+        updateFunction({
+            ...currentModel,
+            active: (currentModel.active === undefined) ? false : !currentModel.active
+        })
+    }
+
     const handleOnClickCopy = () => {
         if(addElement !== undefined){
             let model = prepareFinalModel()
@@ -214,7 +221,8 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                         >
                             <Button variant='destructive' icon='trash-alt' disabled={!disabled} />
                         </ConfirmButton>
-                        <Button variant='secondary' icon='copy' disabled={!disabled} onClick={handleOnClickCopy}>Copy</Button>
+                        <Button variant='secondary' icon={currentModel.active || currentModel.active === undefined ? 'eye' : 'eye-slash'} disabled={!disabled} onClick={handleOnClickVisibility}></Button>
+                        <Button variant='secondary' icon='copy' disabled={!disabled} onClick={handleOnClickCopy}></Button>
                         <Button variant='primary' icon='edit' disabled={!disabled} onClick={handleOnClickEdit}>Edit</Button>
                     </HorizontalGroup>
                 </div>)

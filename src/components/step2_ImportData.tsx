@@ -43,11 +43,16 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     const hasRange = model !== undefined && model.varTimeStart !== undefined && model.queryRangeId !== undefined
 
     const addCollectionWithName = (key: string, name: string, from: string, data: IData[], dTime?: DateTime, int?: IInterval, extraInfo?: any, dTimeStart?: DateTime) => {
+        log.info(`[Import data] Adding new data collection from source: ${from}`);
+
         let rep = collections.filter((col: IDataCollection) => col.id.includes(key)).length
         let id = from + ":" + key + ((rep !== 0) ? "_" + rep : "")
+        log.debug(`[Import data] Initial ID generated: ${id} (duplicates found: ${rep})`);
+
         while (collections.some((col: IDataCollection) => col.id === id)) {
             rep = rep + + 1
             id = from + ":" + key + ((rep !== 0) ? "_" + rep : "")
+            log.warn(`[Import data] Duplicate ID detected, generating new one: ${id}`);
         }
         addCollection({
             id: id,
@@ -58,16 +63,25 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             data: data,
             extraInfo: extraInfo
         })
+
+        log.info(`[Import data] Collection added successfully: ${id}`);
+
         const appEvents = getAppEvents();
         appEvents.publish({
             type: AppEvents.alertSuccess.name,
             payload: [context.messages._panel._step2.alertCollectionAdded]
         })
-        if (context.actualStep !== undefined && context.actualStep < Steps.step_3) context.setActualStep(Steps.step_3)
+        if (context.actualStep !== undefined && context.actualStep < Steps.step_3) {
+            log.debug("[Import data] Advancing to step 3.");
+            context.setActualStep(Steps.step_3)
+        }
     }
 
     // Para imitar el bug: añadir varias veces data del mismo tiempo, eliminarlos todos y añadir otro
     const importDataFromDateTime = (dt?: DateTime) => {
+        log.info("[Import data] Importing data from a single DateTime value.");
+        log.debug("[Import data] Provided DateTime:", dt?.toISOString());
+
         if (dt !== undefined && model !== undefined) {
             setHasToSaveNewData(dt)
             let dateStr = (model.onlyDate) ? dateToString(dt.toDate()) : dateTimeToString(dt)
@@ -76,22 +90,33 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }
 
     const importDataFromDateTimeRange = (start: DateTime, stop: DateTime) => {
+        log.info("[Import data] Importing data from a DateTime range.");
+        log.debug("[Import data] Range start:", start?.toISOString(), "Range stop:", stop?.toISOString());
+
         if (model !== undefined && model.varTimeStart !== undefined) {
-            saveVariableValue(locationService, model.varTimeStart, ((model.onlyDateRange) ? dateToString(start.toDate()) : dateTimeToString(start)))
+            const startStr = (model.onlyDateRange) ? dateToString(start.toDate()) : dateTimeToString(start)
+            const stopStr = (model.onlyDateRange) ? dateToString(stop.toDate()) : dateTimeToString(stop)
+
+            saveVariableValue(locationService, model.varTimeStart, startStr)
             setHasToSaveNewData(stop)
-            saveVariableValue(locationService, model.varTime, ((model.onlyDateRange) ? dateToString(stop.toDate()) : dateTimeToString(stop)))
+            saveVariableValue(locationService, model.varTime, stopStr)
+            log.info(`[Import data] Variables updated for range: start='${startStr}', stop='${stopStr}'`);
+        } else {
+            log.warn("[Import data] Skipping range import — model or varTimeStart is undefined.");
         }
     }
 
     const importDataFromCSV = () => {
-        console.log("EXCEL")
+        log.info("[Import data] Importing data from CSV file.");
         if (fileCSV && model !== undefined) {
+            log.debug("[Import data] Parsing CSV:", { fileName: fileCSV.name, size: fileCSV.size });
             Papa.parse(fileCSV, {
                 header: false,
                 skipEmptyLines: 'greedy',
                 complete: function (results) {
                     const d = results.data as string[][]
                     results.errors.forEach((e: ParseError) => {
+                        log.error("[Import data] CSV parsing error:", e);
                         const appEvents = getAppEvents();
                         appEvents.publish({
                             type: AppEvents.alertError.name,
@@ -101,10 +126,13 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                     const dt = getDateTimeCSV(d)
                     const data = CSVtoData(d, model)
                     const name = fileCSV.name + ((dt !== undefined) ? " (" + dateTimeLocalToString(dt) + ")" : "")
+                    log.debug("[Import data] Data conversion complete:", { extractedRows: data.length, timestampDetected: dt?.toISOString() });
+
                     if (data.length > 0) {
                         addCollectionWithName(fileCSV.name, name, "CSV", data, dt, getIntervalCSV(d))
                         setFileCSV(fileCSV)
                     } else {
+                        log.warn("[Import data] No valid data rows found in CSV.");
                         const appEvents = getAppEvents();
                         appEvents.publish({
                             type: AppEvents.alertError.name,
@@ -114,22 +142,21 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
 
                 }
             })
+        } else {
+            log.warn("[Import data] No CSV file or model provided. Skipping import.");
         }
     }
-    /*
-        const handleOnChangeDateTime = (newDatetime: DateTime) => {
-            setDateTimeInput(newDatetime)
-            console.log(dateTimeInput?.toISOString())
-        }*/
 
     const handleOnChangeDate = (newDate: string | Date, current: DateTime, set: any) => {
         let newDateTime: Date = new Date(newDate)
-        console.log(newDateTime)
-        console.log(newDate)
+        //console.log(newDateTime)
+        //console.log(newDate)
         if (current.hour !== undefined) newDateTime.setHours(current.hour())
         if (current.minute !== undefined) newDateTime.setMinutes(current.minute())
         set(dateTime(newDateTime))
-        console.log(current?.toISOString())
+        log.info("[Import data] Date updated successfully.", {
+            current: current?.toISOString()
+        });
     }
 
     const handleOnChangeTime = (newTime: DateTime, current: DateTime, set: any) => {
@@ -138,7 +165,9 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
         newDateTime.setHours(date.getHours())
         newDateTime.setMinutes(date.getMinutes())
         set(dateTime(newDateTime))
-        console.log(current?.toISOString())
+        log.info("[Import data] Time updated successfully.", {
+            current: current?.toISOString()
+        });
     }
 
     const handleOnFileUploadCSV = (event: FormEvent<HTMLInputElement>) => {
@@ -197,7 +226,14 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
     }, [disabled, mode])
 
     useEffect(() => {
-        console.log('dateTimeFormat', dateTimeInput?.utc().format('YYYY-MM-DDTHH:mm:ss'))
+        if (dateTimeInput) {
+            log.debug("[Import data] dateTimeInput changed.", {
+                formatted: dateTimeInput.utc().format("YYYY-MM-DDTHH:mm:ss"),
+                raw: dateTimeInput?.toISOString(),
+            });
+        } else {
+            log.warn("[Import data] dateTimeInput is undefined or null.");
+        }
     }, [dateTimeInput])
 
     /*
@@ -225,7 +261,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
             if (data.state === LoadingState.Done) {
                 log.info("[Import data] Data state is 'Done'. Proceeding with data extraction.");
                 log.debug("[Import data] Full data object received:", data);
-                
+
                 let extraInfo = undefined
                 let arrayData: IData[] = []
                 let name = ((model.onlyDate && mode.value === ImportDataEnum.DATETIME_SET)
@@ -233,7 +269,7 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                 let text = "DateTime"
                 let key = dateTimeToTimestamp(hasToSaveNewData).toString()
                 let dtStart: DateTime | undefined = undefined
-                
+
                 if (mode.value === ImportDataEnum.DATETIME_RANGE && model.queryRangeId) {
                     log.debug("[Import data] Processing as DATETIME_RANGE.");
                     arrayData = getArrayOfData(data, model.queryRangeId, fieldTag, model.isListValues, model.numberOfValues)
@@ -266,10 +302,10 @@ export const ImportData: React.FC<Props> = ({ model, collections, addCollection,
                 log.error("[Import data] Data state is 'Error'. Publishing error alert.");
                 const appEvents = getAppEvents();
                 const msgsError = data.errors?.map((v: DataQueryError) => v.message)
-                
+
                 log.error("[Import data] Error messages from query:", msgsError);
                 log.debug("[Import data] Full error data object:", data); // Debug for full context
-                
+
                 appEvents.publish({
                     type: AppEvents.alertError.name,
                     payload: msgsError

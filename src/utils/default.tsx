@@ -32,6 +32,7 @@ export const ExtraCalcDefault: IExtraCalc = {
 export const ModelDefault: IModel = {
     id: "",
     url: "",
+    active: true,
     description: "",
     queryId: "",
     onlyDate: false,
