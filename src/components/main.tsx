@@ -74,27 +74,36 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
   useEffect(() => {
     if (selectedModel !== undefined) {
       saveVariableValue(locationService, selectedModel.varTags, tagsToString(selectedModel.tags, selectedModel.formatTags))
-      if(options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, selectedModel.queryId)
+      if (options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, selectedModel.queryId)
     } else {
       saveVariableValue(locationService, ModelDefault.varTags, "")
-      if(options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, "")
+      if (options.activeQuery !== "") saveVariableValue(locationService, options.activeQuery, "")
     }
   }, [selectedModel])
 
   useEffect(() => {
     options.models.forEach((model: IModel) => {
-      if(model.format) {
-          model.format = options.formats.find((v: IFormat) => v.id === model.format?.id)
+      if (model.format) {
+        model.format = options.formats.find((v: IFormat) => v.id === model.format?.id)
       }
-  })
+    })
   }, [options.formats])
-  
+
   useEffect(() => {
     options.models.forEach((model: IModel) => {
-      if(model.extraCalc) {
-          model.extraCalc = options.extraCalcs.find((v: IExtraCalc) => v.id === model.extraCalc?.id)
-      }
-  })
+      const calcs = model.extraCalc ? (Array.isArray(model.extraCalc) ? model.extraCalc : [model.extraCalc]) : [];
+      model.extraCalc = calcs
+        .map((o: IExtraCalc) => {
+          const match = options.extraCalcs.find((v: IExtraCalc) => v.id === o.id);
+          if (!match) {
+            console.warn(
+              `[Main] Reference mismatch detected: ExtraCalc ID "${o.id}" in model "${model.id || 'unknown'}" could not be resolved against current options. The orphaned reference has been removed to maintain data integrity.`
+            );
+          }
+          return match;
+        })
+        .filter((item): item is IExtraCalc => !!item);
+    })
   }, [options.extraCalcs])
 
   useEffect(() => {
@@ -106,10 +115,10 @@ export const Main: React.FC<Props> = ({ options, data, width, height, replaceVar
       <div className="main-grid" style={{ height: '100%', paddingBottom: '0px' }}>
         <div className="item-0">
           <div style={{ marginBottom: '10px' }}>
-            <SelectModel models={options.models} setModel={setSelectedModel}/>
+            <SelectModel models={options.models} setModel={setSelectedModel} />
           </div>
           <div style={{ marginBottom: '0px' }}>
-            <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data} eventBus={eventBus}/>
+            <ImportData model={selectedModel} collections={collections} addCollection={addCollection} data={data} eventBus={eventBus} />
           </div>
           <div className="export-1" style={{ marginBottom: '10px', marginTop: '10px' }}>
             <ExportData model={selectedModel} collections={collections} currentCollection={(currentCollIdx !== undefined && currentCollIdx < collections.length) ? collections[currentCollIdx] : undefined} />

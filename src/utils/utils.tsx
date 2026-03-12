@@ -194,3 +194,9 @@ export const stringToDate = (str: string) => {
   const [year, month, day] = str.split("-").map(Number); // Descomponemos y convertimos a números
   return new Date(year, month - 1, day); // Mes en JavaScript empieza en 0
 }
+
+export const checkAbort = (signal?: AbortSignal) => {
+  if (signal?.aborted) {
+    throw new DOMException("Calculation aborted by the user", "AbortError");
+  }
+};

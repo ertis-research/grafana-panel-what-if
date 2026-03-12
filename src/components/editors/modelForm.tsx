@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { AppEvents, SelectableValue, StandardEditorContext } from "@grafana/data";
 import { FormatTags, ICredentials, IExtraCalc, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, MultiSelect, Select, useTheme2 } from '@grafana/ui';
 import { ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, extraCalcToOptions, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
@@ -33,7 +33,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const [selectedQueryRange, setSelectedQueryRange] = useState<SelectableValue<string>>()
     const [selectedExtraInfo, setSelectedExtraInfo] = useState<SelectableValue<string>>()
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<IFormat>>()
-    const [selectedExtraCalc, setSelectedExtraCalc] = useState<SelectableValue<IExtraCalc>>()
+    const [selectedExtraCalcs, setSelectedExtraCalcs] = useState<Array<SelectableValue<IExtraCalc>>>()
     const [selectedVarTime, setSelectedVarTime] = useState<SelectableValue<string>>()
     const [selectedVarTimeStart, setSelectedVarTimeStart] = useState<SelectableValue<string>>()
     const [selectedVarTags, setSelectedVarTags] = useState<SelectableValue<string>>()
@@ -53,7 +53,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         if (model.queryRangeId !== undefined) setSelectedQueryRange({ label: model.queryRangeId, value: model.queryRangeId })
         if (model.extraInfo !== undefined) setSelectedExtraInfo({ label: model.extraInfo, value: model.extraInfo })
         if (model.format !== undefined) setSelectedFormat({ label: model.format.id, value: model.format })
-        if (model.extraCalc !== undefined) setSelectedExtraCalc({ label: model.extraCalc.id, value: model.extraCalc })
+        if (model.extraCalc !== undefined) {
+            if (!Array.isArray(model.extraCalc)) {
+                setSelectedExtraCalcs([{ label: model.extraCalc.id, value: model.extraCalc }])
+            } else {
+                setSelectedExtraCalcs(model.extraCalc)
+            }
+        } 
         setSelectedVarTags({ label: model.varTags, value: model.varTags })
         setSelectedVarTime({ label: model.varTime, value: model.varTime })
         if (model.varTimeStart !== undefined) setSelectedVarTimeStart({ label: model.varTimeStart, value: model.varTimeStart })
@@ -92,6 +98,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const prepareFinalModel = () => {
         const cred = currentModel.credentials
         const credentials = (cred && cred.password.trim() !== '' && cred.username.trim() !== '') ? cred : undefined
+        const extraCalcsData = selectedExtraCalcs?.map(option => option.value).filter(Boolean) as IExtraCalc[];
         const newModel = {
             ...currentModel,
             tags: currentTags,
@@ -104,7 +111,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             varTags: selectedVarTags?.value,
             formatTags: selectedQuotesListItems?.value,
             format: selectedFormat?.value,
-            extraCalc: selectedExtraCalc?.value,
+            extraCalc: extraCalcsData,
             preprocess: code,
             credentials: credentials
         }
@@ -262,17 +269,17 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     <InlineField label="Extra calculation" labelWidth={15} disabled={disabled} grow>
                         <InputControl
                             render={({ field }) =>
-                                <Select 
-                                    value={selectedExtraCalc}
+                                <MultiSelect  
+                                    value={selectedExtraCalcs}
                                     options={extraCalcOptions}
-                                    onChange={(v) => setSelectedExtraCalc(v)}
+                                    onChange={(v) => setSelectedExtraCalcs(v)}
                                     disabled={disabled}
                                     isClearable
                                     menuPosition='fixed'
                                 />
                             }
                             control={control}
-                            name="extraCalc"
+                            name="extraCalcs"
                         />
                     </InlineField>
                     <Collapse label="Model queries" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>

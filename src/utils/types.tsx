@@ -141,7 +141,7 @@ export interface IModel {
   preprocess?: string,
   scaler?: IScaler,
   format?: IFormat,
-  extraCalc?: IExtraCalc,
+  extraCalc?: IExtraCalc | IExtraCalc[], //eliminar en un futuro
   extraInfo?: string,
   varTags: string,
   formatTags: FormatTags,

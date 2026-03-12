@@ -1,9 +1,9 @@
-import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, Spinner, useTheme2, VerticalGroup } from '@grafana/ui'
-import React, { Fragment, useContext, useEffect, useState } from 'react'
+import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, useTheme2, VerticalGroup } from '@grafana/ui'
+import React, { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { Context, dateTimeLocalToString, getMean, round, groupBy, dateToString, stringToDate } from 'utils/utils'
-import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField } from 'utils/types'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField, IExtraCalc } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
-import { predictAllCollections } from 'utils/datasources/predictions'
+import { predictCollection } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
 import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
 import { getAppEvents } from '@grafana/runtime'
@@ -35,8 +35,10 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const [sizePlot, setSizePlot] = useState<{ width: number, height: number }>({ width: 0, height: 0 })
     const [isOpenModal, setIsOpenModal] = useState(false)
     const [isCollapseExtraInfo, setIsCollapseExtraInfo] = useState(false)
-    const [dynamicFieldValues, setDynamicFieldValues] = useState<string[]>([])
+    const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string[]>>({})
     const [currentPage, setCurrentPage] = useState(1)
+
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     const disabled = (context.actualStep) ? (context.actualStep < Steps.step_3 || state === StatePredict.LOADING) : false
     const disabledModifyAgain = (context.actualStep) ? (context.actualStep < Steps.step_4 || state === StatePredict.LOADING) : false
@@ -44,15 +46,16 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const validate = () => {
         log.debug("[Predict result] Running validation before prediction...");
         let msg = ""
-        
-        if (model) {
-            collections.forEach((col: IDataCollection) => {
-                let error_tags: string[] = col.data.filter((d: IData) => d.default_value === undefined && (d.new_value === undefined || d.new_value.trim() === "")).map((d: IData) => d.id)
-                error_tags = error_tags.concat(model.tags.filter((t: ITag) => !col.data.some((d: IData) => d.id === t.id)).map((t: ITag) => t.id))
-                if (error_tags.length > 0) {
-                    msg = msg + "Data missing in " + col.name + ": " + error_tags.join(", ") + "\n"
-                }
-            })
+
+        if (model && currentCollIdx !== undefined) {
+            const col = collections[currentCollIdx]
+            //collections.forEach((col: IDataCollection) => {
+            let error_tags: string[] = col.data.filter((d: IData) => d.default_value === undefined && (d.new_value === undefined || d.new_value.trim() === "")).map((d: IData) => d.id)
+            error_tags = error_tags.concat(model.tags.filter((t: ITag) => !col.data.some((d: IData) => d.id === t.id)).map((t: ITag) => t.id))
+            if (error_tags.length > 0) {
+                msg = msg + "Data missing in " + col.name + ": " + error_tags.join(", ") + "\n"
+            }
+            //})
         }
 
         if (msg === "") {
@@ -72,41 +75,84 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const handleOnClickPredict = () => {
         log.info("[Predict result] Predict button clicked.");
         if (validate()) {
-            if (model) {
-                log.info("[Predict result] Starting prediction for all collections...");
+            if (model && currentCollIdx !== undefined) {
+                if (abortControllerRef.current) abortControllerRef.current.abort();
+                abortControllerRef.current = new AbortController();
+                const signal = abortControllerRef.current.signal;
+
+                log.info("[Predict result] Starting prediction for collections...");
                 setState(StatePredict.LOADING)
-                predictAllCollections(model, collections).then((res: IDataCollection[]) => {
+                predictCollection(model, collections[currentCollIdx], signal).then((res: IDataCollection) => {
+                    if (signal.aborted) {
+                        setState(StatePredict.DONE)
+                        return
+                    }
+
                     log.info("[Predict result] Prediction completed successfully.");
-                    log.debug("[Predict result] Updated collections:", res);
-                    updateCollections(res)
+                    log.debug("[Predict result] Updated collection:", res);
+                    let aux = [...collections]
+                    aux[currentCollIdx] = res
+                    updateCollections(aux)
                     setCurrentPage(1)
+
+                    if (context.setActualStep) {
+                        context.setActualStep(Steps.step_5)
+                        log.debug("[Predict result] Advanced to step 5.");
+                    }
                 }).catch((err) => {
-                    log.error("[Predict result] Prediction failed:", err);
+                    if (err.name === 'AbortError') {
+                        log.warn("[Predict result] Prediction process aborted by user.");
+                    } else {
+                        log.error("[Predict result] Prediction failed:", err);
+                    }
+                    setState(StatePredict.DONE)
+                }).finally(() => {
+                    if (abortControllerRef.current?.signal === signal) {
+                        abortControllerRef.current = null;
+                    }
                 });
             }
-            if (context.setActualStep) {
-                context.setActualStep(Steps.step_5)
-                log.debug("[Predict result] Advanced to step 5.");
-            }
+
         }
     }
 
-    const handleOnClickExtraCalc = () => {
+    const handleOnClickExtraCalc = (extraCalc: IExtraCalc) => {
         log.info("[Predict result] Extra calculation button clicked.");
 
         if (validate()) {
+            console.log("A")
             if (model && currentCollIdx !== undefined && currentCollIdx < collections.length) {
+                console.log("A2")
+                if (abortControllerRef.current) abortControllerRef.current.abort();
+                abortControllerRef.current = new AbortController();
+                const signal = abortControllerRef.current.signal;
+                console.log("A3")
                 setState(StatePredict.LOADING)
-                let col: IDataCollection = collections[currentCollIdx]
+                let col: IDataCollection = { ...collections[currentCollIdx] }
                 delete col.resultsExtraCalc
                 delete col.conclusionExtraCalc
-                extraCalcCollection(model, col, dynamicFieldValues).then((res: IDataCollection) => {
+                extraCalcCollection(model, extraCalc, col, dynamicFieldValues[extraCalc.id], signal).then((res: IDataCollection) => {
+                    if (signal.aborted) {
+                        setState(StatePredict.DONE)
+                        return
+                    }
+                    console.log("A4")
                     let aux = [...collections]
                     aux[currentCollIdx] = res
                     updateCollections(aux)
                     setCurrentPage(2)
                 }).catch((err) => {
-                    log.error("[Predict result] Extra calculation failed:", err);
+                    if (err.name === 'AbortError') {
+                        log.info("[Predict result] Calculation was successfully aborted.");
+                    } else {
+                        log.error("[Predict result] Extra calculation failed:", err);
+                    }
+                    setState(StatePredict.DONE)
+                }).finally(() => {
+                    // Limpiamos la referencia al terminar (con éxito o error)
+                    if (abortControllerRef.current?.signal === signal) {
+                        abortControllerRef.current = null;
+                    }
                 });
             } else {
                 log.warn("[Predict result] Skipped extra calculation — invalid collection index or missing model.");
@@ -130,10 +176,25 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         log.info("[Predict result] Returned to step 3 with clean results.");
     }
 
-    const handleOnChangeDynField = (v: string | Date, idx: number) => {
-        let aux = [...dynamicFieldValues]
+    const handleOnCancelCalculation = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort(); // ← primero abortar
+            abortControllerRef.current = null;
+            log.warn("[Predict result] User cancelled the calculation.");
+            // setState al final, no bloquea el abort
+            setState(StatePredict.DONE);
+        }
+    };
+
+    const handleOnChangeDynField = (v: string | Date, idx: number, extraCalcId: string) => {
+        const currentValues = dynamicFieldValues[extraCalcId] || [];
+        let aux = [...currentValues]
+        console.log(aux)
         aux[idx] = (v instanceof Date) ? dateToString(v) : v
-        setDynamicFieldValues(aux)
+        setDynamicFieldValues(prev => ({
+            ...prev,
+            [extraCalcId]: aux
+        }))
     }
 
     const setDecimals = (value: any) => {
@@ -149,12 +210,18 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }, [collections])
 
     useEffect(() => {
-        if(model && model.extraCalc && model.extraCalc.dynamicFieldList) {
-            setDynamicFieldValues(Array(model.extraCalc.dynamicFieldList.length).fill(undefined))
-            log.debug("[Predict result] Initialized dynamic field values for extra calc.");
+        if (model) {
+            const calcs = model.extraCalc ? (Array.isArray(model.extraCalc) ? model.extraCalc : [model.extraCalc]) : [];
+            console.log("calcs", calcs)
+            calcs.forEach((c: IExtraCalc) => {
+                if (c.dynamicFieldList !== undefined) {
+                    setDynamicFieldValues(prev => ({ ...prev, [c.id]: Array(c.dynamicFieldList?.length).fill(undefined) }))
+                    log.debug("[Predict result] Initialized dynamic field values for extra calc " + c.name);
+                }
+            })
         }
     }, [model])
-    
+
 
     useEffect(() => {
     }, [currentCollIdx])
@@ -360,26 +427,26 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return <div></div>
     }
 
-    const getInputByType = (fieldType: TypeDynamicField, idx: number) => {
-        let val = dynamicFieldValues[idx]
-        switch(fieldType) {
+    const getInputByType = (extraCalcId: string, fieldType: TypeDynamicField, idx: number) => {
+        let val = (dynamicFieldValues[extraCalcId] !== undefined) ? dynamicFieldValues[extraCalcId][idx] : undefined
+        switch (fieldType) {
             case TypeDynamicField.num:
-                return <Input style={{ width: 'calc(100% - 15px)' }} disabled={disabled} value={(!val) ? '' : Number(val)} type='number' step="any" onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx)} />
+                return <Input style={{ width: 'calc(100% - 15px)' }} disabled={disabled} value={(!val) ? '' : Number(val)} type='number' step="any" onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx, extraCalcId)} />
             case TypeDynamicField.date:
-                return <div style={{ width: '100%'}}>
-                    <DatePickerWithInput placeholder='' onChange={(d) => handleOnChangeDynField(d, idx)} value={(val === undefined) ? val : stringToDate(val)} disabled={disabled} closeOnSelect />
+                return <div style={{ width: '100%' }}>
+                    <DatePickerWithInput placeholder='' onChange={(d) => handleOnChangeDynField(d, idx, extraCalcId)} value={(val === undefined) ? val : stringToDate(val)} disabled={disabled} closeOnSelect />
                 </div>
             default: // string
-                return <Input style={{ width: 'calc(100% - 15px)' }} value={dynamicFieldValues[idx]} onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx)} />
+                return <Input style={{ width: 'calc(100% - 15px)' }} value={val} onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx, extraCalcId)} />
         }
     }
 
-    const dynamicFields = (fields: IDynamicField[]) => {
+    const dynamicFields = (extraCalcId: string, fields: IDynamicField[]) => {
         return <div style={{ width: '50%', display: 'block', marginRight: '10px' }}>
             {fields.map((field: IDynamicField, idx: number) => {
-                return <div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px'}}>
+                return <div style={{ display: 'flex', marginTop: '5px', marginBottom: '5px' }}>
                     <InlineLabel width={15} transparent>{field.name}</InlineLabel>
-                    {getInputByType(field.type, idx)}
+                    {getInputByType(extraCalcId, field.type, idx)}
                 </div>
             }
             )}
@@ -387,16 +454,24 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     }
 
-    const divExtraCalc = () => {
-        if (model !== undefined && model.extraCalc !== undefined) {
-            return <div style={{ marginTop: '10px', width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
-                {(model.extraCalc.dynamicFieldList !== undefined) ? dynamicFields(model.extraCalc.dynamicFieldList) : <div></div>}
-                <div style={{ width: (model.extraCalc.dynamicFieldList !== undefined) ? 'calc(50% - 10px)' : '100%', display: 'flex', justifyItems: 'center' }}>
-                    <Button fullWidth disabled={disabled || dynamicFieldValues.some((v) => v === undefined || v.trim() === '')} onClick={handleOnClickExtraCalc}>{model.extraCalc.name}</Button>
-                </div>
-            </div>
+    const divExtraCalcs = () => {
+        if (model) {
+            const calcs = model.extraCalc ? (Array.isArray(model.extraCalc) ? model.extraCalc : [model.extraCalc]) : [];
+            return calcs.map((c: IExtraCalc) => divExtraCalc(c))
         }
         return <div></div>
+    }
+
+    const divExtraCalc = (extraCalc: IExtraCalc) => {
+        //console.log("dyn", dynamicFieldValues)
+        return <div style={{ marginTop: '10px', width: '100%', height: '100%', display: 'flex', alignItems: 'center' }}>
+            {(extraCalc.dynamicFieldList !== undefined) ? dynamicFields(extraCalc.id, extraCalc.dynamicFieldList) : <div></div>}
+            <div style={{ width: (extraCalc.dynamicFieldList !== undefined) ? 'calc(50% - 10px)' : '100%', display: 'flex', justifyItems: 'center' }}>
+                <Button fullWidth disabled={disabled || (dynamicFieldValues[extraCalc.id] !== undefined
+                    && dynamicFieldValues[extraCalc.id].some((v) => v === undefined || v.trim() === ''))}
+                    onClick={() => handleOnClickExtraCalc(extraCalc)}>{extraCalc.name}</Button>
+            </div>
+        </div>
     }
 
     const getButton = (currentCollIdx !== undefined && currentCollIdx < collections.length && collections[currentCollIdx].results) ?
@@ -457,7 +532,22 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const viewResults = () => {
         switch (state) {
             case StatePredict.LOADING:
-                return <VerticalGroup align='center'><Spinner size={30} /></VerticalGroup>
+                return (
+                    <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            variant='destructive'
+                            fill='outline'
+                            icon='fa fa-spinner'
+                            onPointerDown={(e) => {  // ← onPointerDown en vez de onClick
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleOnCancelCalculation();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                )
             case StatePredict.DONE:
                 return showResults()
             case StatePredict.EMPTY:
@@ -473,7 +563,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 <VerticalGroup justify='center'>
                     {getButton}
                 </VerticalGroup>
-                {divExtraCalc()}
+                {divExtraCalcs()}
             </div>
             {divExtraInfo()}
         </div>

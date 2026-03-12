@@ -41,7 +41,7 @@ export const messages_es: ILocalization = {
             alertCollectionDeleted: "Datos eliminados correctamente"
         },
         _step4: {
-            predict: "Predicir todo",
+            predict: "Predicir",
             predictResult: "Predecir resultado",
             originalValue: "Valor original",
             newValue: "Valor nuevo",

@@ -41,6 +41,7 @@ export const ModelDefault: IModel = {
     tags: [],
     format: FormatDefault,
     preprocess: PreprocessCodeDefault,
+    extraCalc: [],
     varTags: '',
     varTime: '',
     formatTags: FormatTags.None,
