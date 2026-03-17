@@ -353,6 +353,12 @@ A button with an eye icon controls the visibility of the model in the user-facin
 - When the eye is crossed out (hidden), the model is hidden from users, although it remains available in the configuration list and can still be used internally.
 This allows administrators to manage which models are accessible in the panel without deleting them.
 
+###### Reorder model
+Models are displayed in the panel's selector based on their position in the configuration list. You can reorder them to prioritize the most frequently used models.
+Two arrow icons (up and down) located to the left of the model name allow you to adjust the model's position in the list:
+- Clicking the **up** arrow moves the model one position higher.
+- Clicking the **down** arrow moves the model one position lower.
+
 ###### Delete model
 If you want to **delete the model**, click on the red button with the bin icon. 
 When you press it, a confirmation will appear allowing you to cancel this action (_Cancel_ button, the model will not be deleted) or to confirm it (_Delete_ button, the model will be deleted). 
