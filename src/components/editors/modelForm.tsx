@@ -59,7 +59,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             } else {
                 setSelectedExtraCalcs(model.extraCalc)
             }
-        } 
+        }
         setSelectedVarTags({ label: model.varTags, value: model.varTags })
         setSelectedVarTime({ label: model.varTime, value: model.varTime })
         if (model.varTimeStart !== undefined) setSelectedVarTimeStart({ label: model.varTimeStart, value: model.varTimeStart })
@@ -76,7 +76,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         })
     }
 
-    const handleOnChangeModelCheckBox = (key: string, ) => {
+    const handleOnChangeModelCheckBox = (key: string) => {
         let k = key as keyof IModel
         setCurrentModel({
             ...currentModel,
@@ -146,16 +146,16 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     }
 
     const handleOnClickCopy = () => {
-        if(addElement !== undefined){
+        if (addElement !== undefined) {
             let model = prepareFinalModel()
             model.id = model.id + "_copy"
-            addElement({...model})
+            addElement({ ...model })
             const appEvents = getAppEvents();
             appEvents.publish({
                 type: AppEvents.alertSuccess.name,
                 payload: ["Model has been successfully copied."]
             })
-        } 
+        }
     }
 
     const handleOnClickCancel = () => {
@@ -245,6 +245,9 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     <InlineField label="ID" labelWidth={10} required disabled={disabled} grow>
                         <Input {...register("id")} value={currentModel.id} disabled={disabled} onChange={handleOnChangeModel} required />
                     </InlineField>
+                    <InlineField label="Name" labelWidth={10} disabled={disabled} grow>
+                        <Input {...register("name", { required: false })} disabled={disabled} value={currentModel.name} onChange={handleOnChangeModel} />
+                    </InlineField>
                     <InlineField label="Description" labelWidth={10} disabled={disabled} grow>
                         <Input {...register("description", { required: false })} disabled={disabled} value={currentModel.description} onChange={handleOnChangeModel} />
                     </InlineField>
@@ -269,7 +272,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                     <InlineField label="Extra calculation" labelWidth={15} disabled={disabled} grow>
                         <InputControl
                             render={({ field }) =>
-                                <MultiSelect  
+                                <MultiSelect
                                     value={selectedExtraCalcs}
                                     options={extraCalcOptions}
                                     onChange={(v) => setSelectedExtraCalcs(v)}
@@ -283,7 +286,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                         />
                     </InlineField>
                     <Collapse label="Model queries" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
-                    <p style={{ marginBottom: '5px', marginTop: '5px' }}>Variables</p>
+                        <p style={{ marginBottom: '5px', marginTop: '5px' }}>Variables</p>
                         <InlineField label="Time variable" labelWidth={20} required disabled={disabled} grow invalid={checkVariableIsInvalid(selectedVarTime, selectedVarTags)} error={"Variables have to be different"}>
                             <InputControl
                                 render={({ field }) =>
@@ -329,7 +332,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                                 name="formatTags"
                             />
                         </InlineField>
-                        
+
                         <p style={{ marginBottom: '5px', marginTop: '15px' }}>Import data query</p>
                         <InlineField label="Query" labelWidth={20} required disabled={disabled} grow>
                             <InputControl
@@ -469,7 +472,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         </ControlledCollapse>
         <ControlledCollapse label="Pre-process of input data (optional)" collapsible isOpen={false} className={css({ color: useTheme2().colors.text.primary })}>
             <InlineField label='Scaler' labelWidth={12} disabled={disabled} grow>
-                <div style={{ width: '100%' }}>
+                <div style={{ width: '100%', opacity: disabled ? 0.5 : 1 }}>
                     <CodeEditor
                         language='JSON'
                         value={scaler}
@@ -485,7 +488,7 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                 </div>
             </InlineField>
             <InlineField label={"Pre-process"} disabled={disabled} labelWidth={12} grow  >
-                <div style={{ width: '100%' }}>
+                <div style={{ width: '100%', opacity: disabled ? 0.5 : 1 }}>
                     <CodeEditor
                         language='JavaScript'
                         value={code}

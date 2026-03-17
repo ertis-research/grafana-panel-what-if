@@ -1,11 +1,11 @@
 import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useRef, useState } from 'react'
-import { Context, dateTimeLocalToString, getMean, round, groupBy, dateToString, stringToDate } from 'utils/utils'
+import { Context, dateTimeLocalToString, getMean, round, dateToString } from 'utils/utils'
 import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField, IExtraCalc } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictCollection } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
-import { Config, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
+import { Config, Data, Icons, Layout, ModeBarButtonAny, PlotlyHTMLElement, toImage } from 'plotly.js'
 import { getAppEvents } from '@grafana/runtime'
 import { AppEvents, isDateTime, PanelData } from '@grafana/data'
 import { extraCalcCollection } from 'utils/datasources/extraCalc'
@@ -29,6 +29,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     const theme = useTheme2()
     const context = useContext(Context)
+    const appEvents = getAppEvents();
     const msgs = context.messages._panel._step4
 
     const [state, setState] = useState<StatePredict>(StatePredict.EMPTY)
@@ -63,7 +64,6 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             return true
         } else {
             log.warn("[Predict result] Validation failed with missing data:", msg);
-            const appEvents = getAppEvents();
             appEvents.publish({
                 type: AppEvents.alertError.name,
                 payload: [msg]
@@ -99,11 +99,17 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                         context.setActualStep(Steps.step_5)
                         log.debug("[Predict result] Advanced to step 5.");
                     }
-                }).catch((err) => {
-                    if (err.name === 'AbortError') {
+                }).catch((err: unknown) => {
+                    const isAbortError = err instanceof Error && err.name === 'AbortError';
+                    if (isAbortError) {
                         log.warn("[Predict result] Prediction process aborted by user.");
                     } else {
+                        const errorMessage = err instanceof Error ? err.message : String(err);
                         log.error("[Predict result] Prediction failed:", err);
+                        appEvents.publish({
+                            type: AppEvents.alertError.name,
+                            payload: [errorMessage]
+                        });
                     }
                     setState(StatePredict.DONE)
                 }).finally(() => {
@@ -120,32 +126,37 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         log.info("[Predict result] Extra calculation button clicked.");
 
         if (validate()) {
-            console.log("A")
             if (model && currentCollIdx !== undefined && currentCollIdx < collections.length) {
-                console.log("A2")
                 if (abortControllerRef.current) abortControllerRef.current.abort();
                 abortControllerRef.current = new AbortController();
                 const signal = abortControllerRef.current.signal;
-                console.log("A3")
                 setState(StatePredict.LOADING)
                 let col: IDataCollection = { ...collections[currentCollIdx] }
                 delete col.resultsExtraCalc
                 delete col.conclusionExtraCalc
+                console.log("A")
                 extraCalcCollection(model, extraCalc, col, dynamicFieldValues[extraCalc.id], signal).then((res: IDataCollection) => {
                     if (signal.aborted) {
                         setState(StatePredict.DONE)
                         return
                     }
-                    console.log("A4")
+                    console.log("B")
                     let aux = [...collections]
                     aux[currentCollIdx] = res
                     updateCollections(aux)
+                    console.log("C")
+                    console.log("res", res)
                     setCurrentPage(2)
                 }).catch((err) => {
                     if (err.name === 'AbortError') {
                         log.info("[Predict result] Calculation was successfully aborted.");
                     } else {
                         log.error("[Predict result] Extra calculation failed:", err);
+                        console.log(err.message)
+                        appEvents.publish({
+                            type: AppEvents.alertError.name,
+                            payload: [err.message || "An unexpected error occurred during calculation."]
+                        });
                     }
                     setState(StatePredict.DONE)
                 }).finally(() => {
@@ -253,31 +264,29 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         const filterResults = results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== 'ERROR' && r.result !== undefined)
         if (filterResults.length < 1) return <div></div>
 
-        const tagsGroup: { [tag: string]: IResult[] } = groupBy(filterResults, "tag")
-        //console.log("tagGroup", tagsGroup)
+        const tagData: Record<string, { values_x: number[], values_y: number[], text: string[] }> = {}
 
-        const dataArray: any[] = Object.entries(tagsGroup).map(([tag, resultsOfTag]) => {
-            // No pongo la x global por si alguna falla que no se rompa toda la grafica
-            let values_x: number[] = [], values_y: number[] = [], text: number[] = []
-            resultsOfTag.forEach((r: IResult) => {
-                if (r.result !== undefined && r.result !== 'ERROR'
-                    && r.correspondsWith !== undefined && r.data[r.correspondsWith.tag] !== undefined && typeof r.result === 'number') {
-                    values_x.push(r.correspondsWith.intervalValue)
-                    values_y.push(r.result)
-                    text.push(setDecimals(getMean(r.data[r.correspondsWith.tag])))
-                }
+        filterResults.forEach((r: IResult) => {
+            if (r.result === undefined || r.result === 'ERROR' || typeof r.result !== 'number' || !r.correspondsWith) return
+
+            Object.entries(r.correspondsWith).forEach(([tag, intervalValue]: [string, number]) => {
+                if (r.data[tag] === undefined) return
+
+                if (!tagData[tag]) tagData[tag] = { values_x: [], values_y: [], text: [] }
+
+                tagData[tag].values_x.push(intervalValue)
+                tagData[tag].values_y.push(setDecimals(r.result as number))
+                tagData[tag].text.push(setDecimals(getMean(r.data[tag])))
             })
-
-            values_y = values_y.map((v: number) => setDecimals(v))
-            //console.log("text", text)
-            return {
-                x: values_x,
-                y: values_y,
-                text: text,
-                type: 'scatter',
-                name: tag
-            }
         })
+
+        const dataArray: Data[] = Object.entries(tagData).map(([tag, { values_x, values_y, text }]) => ({
+            x: values_x,
+            y: values_y,
+            text: text,
+            type: 'scatter',
+            name: tag
+        }))
 
         //console.log('dataArrayPLOT', dataArray)
 
@@ -434,7 +443,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                 return <Input style={{ width: 'calc(100% - 15px)' }} disabled={disabled} value={(!val) ? '' : Number(val)} type='number' step="any" onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx, extraCalcId)} />
             case TypeDynamicField.date:
                 return <div style={{ width: '100%' }}>
-                    <DatePickerWithInput placeholder='' onChange={(d) => handleOnChangeDynField(d, idx, extraCalcId)} value={(val === undefined) ? val : stringToDate(val)} disabled={disabled} closeOnSelect />
+                    <DatePickerWithInput placeholder='' onChange={(d) => handleOnChangeDynField(d, idx, extraCalcId)} value={val} disabled={disabled} closeOnSelect />
                 </div>
             default: // string
                 return <Input style={{ width: 'calc(100% - 15px)' }} value={val} onChange={(e) => handleOnChangeDynField(e.currentTarget.value, idx, extraCalcId)} />

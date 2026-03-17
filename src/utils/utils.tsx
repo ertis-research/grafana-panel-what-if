@@ -21,7 +21,7 @@ export const tagsToSelect = (tags: ITag[]): ISelect[] => {
 export const modelsToSelect = (models: IModel[]): ISelect[] => {
   return models.filter((m) => m.active || m.active === undefined).map((model: IModel) => {
     return {
-      label: model.id,
+      label: model.name ? model.name : model.id,
       value: model,
       description: model.description
     }

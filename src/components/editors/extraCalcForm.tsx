@@ -1,41 +1,62 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import { SelectableValue, StandardEditorContext } from "@grafana/data";
-import { Calc, ExtraCalcFormat, IDynamicField, IExtraCalc, ISelect, TypeDynamicField, WhenApplyEnum } from 'utils/types';
-import { Alert, Button, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
-import { DynamicFieldDefault, ExtraCalcDefault } from 'utils/default';
+import { AppEvents, SelectableValue, StandardEditorContext } from "@grafana/data";
+import { Calc, ExtraCalcFormat, IDynamicField, IECTagIter, IExtraCalc, ISelect, TypeDynamicField, WhenApplyEnum } from 'utils/types';
+import { Alert, Button, Checkbox, Collapse, ConfirmButton, DeleteButton, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, Select, useTheme2 } from '@grafana/ui';
+import { DynamicFieldDefault, ExtraCalcDefault, ECTagIterDefault } from 'utils/default';
 import { Mode } from 'utils/constants';
 import { deepCopy, enumToSelect } from 'utils/utils';
 import { css } from '@emotion/css';
+import { getAppEvents } from '@grafana/runtime';
 
 interface Props {
     extraCalc: IExtraCalc,
     updateFunction: any,
     deleteFunction?: any,
     mode: Mode,
-    context: StandardEditorContext<any, any>
+    context: StandardEditorContext<any, any>,
+    addElement?: (newExtraCalc: IExtraCalc) => void
 }
-/*
-interface IDynField {
-    name: string
-}*/
 
-export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, deleteFunction, mode, context }) => {
+interface IECTagIterSelect {
+    tag: string,
+    calc: SelectableValue<string>,
+    calcValue: string,
+    showPlot?: boolean
+}
+
+export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, deleteFunction, mode, context, addElement }) => {
 
     const calcOptions: ISelect[] = enumToSelect(Calc)
     const formatOptions: ISelect[] = enumToSelect(ExtraCalcFormat)
     const whenApplyOptions: ISelect[] = enumToSelect(WhenApplyEnum)
     const dynFieldTypeOptions: ISelect[] = enumToSelect(TypeDynamicField)
 
+    const ECTagIterSelectDefault: IECTagIterSelect = {
+        tag: ECTagIterDefault.tag,
+        calc: calcOptions[0],
+        calcValue: ECTagIterDefault.calcValue,
+        showPlot: ECTagIterDefault.showPlot
+    }
+
     const [currentCalc, setCurrentCalc] = useState<IExtraCalc>(ExtraCalcDefault)
-    const [selectedCalc, setSelectedCalc] = useState<SelectableValue<string>>(calcOptions[0])
+    //const [selectedCalc, setSelectedCalc] = useState<SelectableValue<string>>(calcOptions[0])
     const [selectedFormat, setSelectedFormat] = useState<SelectableValue<string>>(formatOptions[0])
     const [selectedWhen, setSelectedWhen] = useState<SelectableValue<string>>(whenApplyOptions[0])
     const [currentDynamicFields, setCurrentDynamicFields] = useState<IDynamicField[]>([])
+    const [currentTagsIter, setCurrentTagsIter] = useState<IECTagIterSelect[]>([ECTagIterSelectDefault])
     const [disabled, setDisabled] = useState(false)
 
     const updateCurrentState = () => {
         setCurrentCalc(extraCalc)
-        setSelectedCalc({ value: extraCalc.calc, label: extraCalc.calc as string })
+        setCurrentTagsIter(
+            (extraCalc.tagsIter ?? []).map((tagIter: IECTagIter) => ({
+                tag: tagIter.tag,
+                calc: calcOptions.find(opt => opt.value === tagIter.calc) ?? calcOptions[0],
+                calcValue: tagIter.calcValue,
+                showPlot: tagIter.showPlot
+            }))
+        ) 
+        //setSelectedCalc({ value: extraCalc.calc, label: extraCalc.calc as string })
         setSelectedFormat({ value: extraCalc.resFormat, label: extraCalc.resFormat as string })
         setSelectedWhen({ value: extraCalc.whenApply, label: extraCalc.whenApply as string })
         if (extraCalc.dynamicFieldList) setCurrentDynamicFields(extraCalc.dynamicFieldList)
@@ -46,6 +67,12 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
             ...currentCalc,
             [event.currentTarget.name]: event.target.value
         })
+    }
+
+    const handleOnChangeTagIter = (idx: number, field: keyof IECTagIterSelect, value: string | SelectableValue<string> | boolean) => {
+        const aux = [...currentTagsIter]
+        aux[idx] = { ...aux[idx], [field]: value }
+        setCurrentTagsIter(aux)
     }
 
     const handleOnChangeDynFieldName = (event: FormEvent<HTMLInputElement>, idx: number) => {
@@ -62,14 +89,24 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         }
     }
 
-    const handleOnSubmitAddFormat = () => {
-        updateFunction({
+    const prepareFinalExtraCalc = (): IExtraCalc => {
+        return {
             ...currentCalc,
-            calc: selectedCalc.value,
-            resFormat: selectedFormat.value,
-            whenApply: selectedWhen.value,
+            tagsIter: currentTagsIter.map((tagIter: IECTagIterSelect) => ({
+                tag: tagIter.tag,
+                calc: tagIter.calc.value as Calc,
+                calcValue: tagIter.calcValue,
+                showPlot: tagIter.showPlot
+            })),
+            resFormat: (selectedFormat.value ?? formatOptions[0].value) as ExtraCalcFormat,
+            whenApply: (selectedWhen.value ?? whenApplyOptions[0].value) as WhenApplyEnum,
             dynamicFieldList: currentDynamicFields
-        })
+        }
+    }
+
+    const handleOnSubmitAddFormat = () => {
+        if (currentTagsIter.length === 0) return
+        updateFunction(prepareFinalExtraCalc())
         if (mode === Mode.EDIT) {
             setDisabled(true)
         } else {
@@ -79,6 +116,19 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
 
     const handleOnClickEdit = () => {
         setDisabled(!disabled)
+    }
+
+    const handleOnClickCopy = () => {
+        if (addElement !== undefined) {
+            let newExtraCalc = prepareFinalExtraCalc()
+            newExtraCalc.id = newExtraCalc.id + "_copy"
+            addElement({ ...newExtraCalc })
+            const appEvents = getAppEvents();
+            appEvents.publish({
+                type: AppEvents.alertSuccess.name,
+                payload: ["Extra calculation has been successfully copied."]
+            })
+        }
     }
 
     const handleOnClickCancel = () => {
@@ -96,8 +146,18 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
         setCurrentDynamicFields(updatedDynList)
     }
 
+    const handleOnConfirmDeleteTag = (idx: number) => {
+        const updatedTags = [...currentTagsIter]
+        updatedTags.splice(idx, 1)
+        setCurrentTagsIter(updatedTags)
+    }
+
     const handleOnAddDynField = () => {
         setCurrentDynamicFields([...currentDynamicFields, deepCopy(DynamicFieldDefault)])
+    }
+
+    const handleOnAddTagIter = () => {
+        setCurrentTagsIter([...currentTagsIter, deepCopy(ECTagIterDefault)])
     }
 
     useEffect(() => {
@@ -127,6 +187,7 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                         >
                             <Button variant='destructive' icon='trash-alt' disabled={!disabled} />
                         </ConfirmButton>
+                        <Button variant='secondary' icon='copy' disabled={!disabled} onClick={handleOnClickCopy}></Button>
                         <Button variant='primary' icon='edit' disabled={!disabled} onClick={handleOnClickEdit}>Edit</Button>
                     </HorizontalGroup>
                 </div>)
@@ -163,6 +224,122 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
             </div>
         })}
         <Button fullWidth type="button" onClick={handleOnAddDynField} variant='secondary' disabled={disabled}>Add field</Button>
+    </div>
+
+    const tagsIterList = (control: any, errors: any) => <div>
+        {currentTagsIter.map((tagIter: IECTagIterSelect, idx: number) => {
+            return <div key={idx} style={{ width: '100%', display: 'flex' }}>
+                <b style={{ width: '20px', height: '30px', display: 'flex', alignItems: 'center' }}>{idx + 1}</b>
+                <div className='verticalDiv' style={{ width: '100%' }}>
+                    <InlineField
+                        label="Initial tag"
+                        labelWidth={17}
+                        grow
+                        required
+                        disabled={disabled}
+                    >
+                        <InputControl
+                            render={({ field }) =>
+                                <Input
+                                    {...field}
+                                    value={tagIter.tag}
+                                    disabled={disabled}
+                                    required
+                                    onChange={(e) => {
+                                        handleOnChangeTagIter(idx, 'tag', e.currentTarget.value)
+                                        field.onChange(e.currentTarget.value)
+                                    }}
+                                />
+                            }
+                            control={control}
+                            name={`tagsIter[${idx}].tag`}
+                            defaultValue={tagIter.tag}
+                        />
+                    </InlineField>
+                    <InlineField
+                        label="Calculation"
+                        labelWidth={17}
+                        required
+                        disabled={disabled}
+                    >
+                        <InputControl
+                            render={({ field }) =>
+                                <Select
+                                    {...field}
+                                    value={tagIter.calc}
+                                    options={calcOptions}
+                                    disabled={disabled}
+                                    defaultValue={calcOptions[0]}
+                                    onChange={(v) => {
+                                        handleOnChangeTagIter(idx, 'calc', v)
+                                        field.onChange(v)
+                                    }}
+                                />
+                            }
+                            control={control}
+                            name={`tagsIter[${idx}].calc`}
+                            defaultValue={tagIter.calc}
+                        />
+                    </InlineField>
+                    <InlineField
+                        label="Value to consider"
+                        labelWidth={17}
+                        grow
+                        required
+                        disabled={disabled}
+                    >
+                        <InputControl
+                            render={({ field }) =>
+                                <Input
+                                    {...field}
+                                    value={tagIter.calcValue}
+                                    disabled={disabled}
+                                    required
+                                    onChange={(e) => {
+                                        handleOnChangeTagIter(idx, 'calcValue', e.currentTarget.value)
+                                        field.onChange(e.currentTarget.value)
+                                    }}
+                                />
+                            }
+                            control={control}
+                            name={`tagsIter[${idx}].calcValue`}
+                            defaultValue={tagIter.calcValue}
+                        />
+                    </InlineField>
+                    <InlineField
+                        label="Show on the plot"
+                        labelWidth={17}
+                        disabled={disabled}
+                    >
+                        <InputControl
+                            render={({ field }) =>
+                                <Checkbox
+                                    {...field}
+                                    value={tagIter.showPlot ?? true}
+                                    disabled={disabled}
+                                    onChange={() => handleOnChangeTagIter(idx, "showPlot", (tagIter.showPlot === undefined ? false : !tagIter.showPlot) )}
+                                />
+                            }
+                            control={control}
+                            name={`tagsIter[${idx}].showPlot`}
+                            defaultValue={true}
+                        />
+                    </InlineField>
+                </div>
+                <div style={{ height: '30px', display: 'flex', alignItems: 'center', zIndex: 2000 }}>
+                    <DeleteButton
+                        disabled={disabled || currentTagsIter.length === 1}
+                        onConfirm={() => handleOnConfirmDeleteTag(idx)}
+                    />
+                </div>
+            </div>
+        })}
+        {currentTagsIter.length === 0 && (
+            <Alert title="At least one tag iteration is required" severity='error' />
+        )}
+        <HorizontalGroup align='flex-end'>
+            <Button style={{ marginBottom: '10px' }} type="button" onClick={handleOnAddTagIter} variant='secondary' disabled={disabled}>Add tag</Button>
+        </HorizontalGroup>
     </div>
 
 
@@ -214,34 +391,14 @@ export const ExtraCalcForm: React.FC<Props> = ({ extraCalc, updateFunction, dele
                             <br />&nbsp;&nbsp; · Date: string in single quotes formatted as YYYY-MM-DD
                         </Alert>
                         <Collapse label="Iterations" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
-                            <InlineField label="Initial tag" labelWidth={17} grow required disabled={disabled}>
-                                <Input {...register("tag")} value={currentCalc.tag} disabled={disabled} onChange={handleOnChangeCalc} required />
-                            </InlineField>
-                            <InlineField label="Calculation" labelWidth={17} required disabled={disabled}>
-                                <InputControl
-                                    render={({ field }) =>
-                                        <Select
-                                            value={selectedCalc}
-                                            options={calcOptions}
-                                            onChange={(v) => setSelectedCalc(v)}
-                                            disabled={disabled}
-                                            defaultValue={calcOptions[0]}
-                                        />
-                                    }
-                                    control={control}
-                                    name="calc"
-                                />
-                            </InlineField>
-                            <InlineField label="Value to consider" labelWidth={17} grow required disabled={disabled}>
-                                <Input {...register("calcValue")} value={currentCalc.calcValue} disabled={disabled} onChange={handleOnChangeCalc} required />
-                            </InlineField>
+                            {tagsIterList(control, errors)}
                             <InlineField label="Execute until" labelWidth={17} grow required disabled={disabled}>
                                 <Input {...register("until")} value={currentCalc.until} disabled={disabled} onChange={handleOnChangeCalc} required />
                             </InlineField>
                         </Collapse>
                         <Collapse label="Final result" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
                             <InlineField label="Value" labelWidth={17} grow required disabled={disabled}>
-                                <Input {...register("resValue")} value={currentCalc.resValue} disabled={disabled} onChange={handleOnChangeCalc} required/>
+                                <Input {...register("resValue")} value={currentCalc.resValue} disabled={disabled} onChange={handleOnChangeCalc} required />
                             </InlineField>
                             <InlineField label="Format" labelWidth={17} grow required disabled={disabled}>
                                 <InputControl

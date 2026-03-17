@@ -41,7 +41,8 @@ export const ExtraCalcEditor: React.FC<Props> = ({ value: elements, onChange, co
                     mode={Mode.EDIT}
                     updateFunction={(m: IExtraCalc) => updateElement(idx, m)}
                     deleteFunction={() => deleteElement(idx)}
-                    context={context} />
+                    context={context}
+                    addElement={addElement} />
             </ControlledCollapse>
         </div>
     })

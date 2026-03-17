@@ -51,7 +51,7 @@ export const predictResults = async (model: IModel, data: IDataPred[], results: 
     checkAbort(signal)
     log.info("[predictResults] Predictions received successfully");
     let res: IResult[] = []
-    for(let idx = 0; idx < results.length; idx++) {
+    for (let idx = 0; idx < results.length; idx++) {
         res.push({ ...results[idx], result: predictions[idx] })
     }
     return res
@@ -140,8 +140,7 @@ const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number
             id: id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
             data: newData,
             correspondsWith: {
-                tag: id,
-                intervalValue: p
+                [id]: p
             }
         })
     }
@@ -397,7 +396,7 @@ const removeFormatOutput = (result: string, format?: IFormat): number[] => {
             .replace(format.output.slice(0, indx), "")
             .replace(format.output.slice(indx + variableOutput.length + 1, format.output.length), "")
             .split(',')
-        let resNum: number[] = []; 
+        let resNum: number[] = [];
         for (let i = 0; i < res.length; i++) {
             resNum.push(Number(res[i].replace(/[^\d.-]/g, '')))
         }
@@ -478,6 +477,7 @@ const sendRequest = async (model: IModel, data: IDataPred[], signal?: AbortSigna
         body: body,
         signal: signal
     }
+    console.log(body)
 
     log.info("[sendRequest] Sending HTTP request to model:", model.url);
     try {
@@ -489,11 +489,21 @@ const sendRequest = async (model: IModel, data: IDataPred[], signal?: AbortSigna
         } else {
             const errorText = await response.text();
             log.error("[sendRequest] Request failed with status:", response.status, "->", errorText);
-            return "ERROR";
+            throw new Error(`Request failed (${response.status})${(errorText) ? ": " + errorText : ''}`)
         }
     } catch (err) {
-        log.error("[sendRequest] Network error:", err);
-        return "ERROR";
+        if (err instanceof Error) {
+            // Si es un AbortError, lo relanzamos para que el catch superior lo gestione
+            if (err.name === 'AbortError') {
+                throw err;
+            }
+            log.error("[sendRequest] Known error:", err.message);
+            throw err;
+        }
+
+        // 2. Si err no es un objeto Error (poco probable en fetch, pero posible en JS)
+        log.error("[sendRequest] An unknown error occurred:", err);
+        throw new Error(String(err));
     }
 
 }

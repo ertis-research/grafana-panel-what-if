@@ -111,10 +111,7 @@ export interface IResult {
   data: IDataPred,
   processedData?: IDataPred,
   result?: number | string,
-  correspondsWith?: {
-    tag: string,
-    intervalValue: number
-  }
+  correspondsWith?: Record<string, number>
 }
 
 export interface ICategory {
@@ -128,6 +125,7 @@ export interface ICredentials {
 
 export interface IModel {
   id: string,
+  name?: string,
   description: string,
   active: boolean,
   url: string,
@@ -168,20 +166,29 @@ export interface IDynamicField {
   type: TypeDynamicField
 }
 
+export interface IECTagIter {
+  tag: string,
+  calc: Calc,
+  calcValue: string,
+  showPlot?: boolean
+}
+
 export interface IExtraCalc {
   id: string,
   name: string,
   dynamicFieldList?: IDynamicField[],
-  tag: string,
-  calc: Calc,
-  calcValue: string,
-  until: string,
+  tagsIter: IECTagIter[],
   resValue: string,
   maxIterations: number,
   resFormat: ExtraCalcFormat,
   numRequests: number,
   whenApply: WhenApplyEnum,
-  resSubtitle?: string
+  resSubtitle?: string,
+  until: string,
+  //tag?: string, // DEPRECATED
+  //calc?: Calc, // DEPRECATED
+  //calcValue?: string, // DEPRECATED
+  
 }
 
 export interface PostChangeIDataPred {

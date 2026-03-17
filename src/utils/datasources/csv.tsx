@@ -58,23 +58,25 @@ export const dataToCSV = (collection: IDataCollection) => {
         }
 
         //console.log("AAA", "collection.results")
-        collection.results.filter((r: IResult) => r.correspondsWith !== undefined).forEach((r: IResult, idx: number) => {
-            if (r.correspondsWith && r.correspondsWith.intervalValue !== 0) {
-                const id: string = r.correspondsWith.tag + " " + ((r.correspondsWith.intervalValue < 0) ? "-" : "+") + " " + Math.abs(r.correspondsWith.intervalValue) + ((collection.interval.type === IntervalTypeEnum.percentage) ? "%" : "")
-                let row: any = {
-                    ID: id,
-                    _RESULT: r.result
-                }
-
-                Object.entries(r.data).forEach(([key, value]: [key: string, value: number | number[]]) => {
-                    row = {
-                        ...row,
-                        [key]: ((r.correspondsWith && r.correspondsWith.tag === key) || value !== _def[key]) ? value : ""
+        collection.results.filter((r: IResult) => r.correspondsWith !== undefined).forEach((r: IResult) => {
+            Object.entries(r.correspondsWith!).forEach(([tag, intervalValue]: [string, number]) => {
+                if (intervalValue !== 0) {
+                    const id = `${tag} ${intervalValue < 0 ? "-" : "+"} ${Math.abs(intervalValue)}${collection.interval.type === IntervalTypeEnum.percentage ? "%" : ""}`
+                    let row: any = {
+                        ID: id,
+                        _RESULT: r.result
                     }
-                })
 
-                others.push(row)
-            }
+                    Object.entries(r.data).forEach(([key, value]: [key: string, value: number | number[]]) => {
+                        row = {
+                            ...row,
+                            [key]: (tag === key || value !== _def[key]) ? value : ""
+                        }
+                    })
+
+                    others.push(row)
+                }
+            })
         })
     }
 

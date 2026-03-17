@@ -1,5 +1,5 @@
 import { messages_en } from "./localization/en";
-import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum, IDynamicField, TypeDynamicField, LogLevelPanel } from "./types";
+import { FormatTags, IContext, IDataCollection, IFormat, IModel, IInterval, ITag, Language, Method, IntervalTypeEnum, IExtraCalc, Calc, ExtraCalcFormat, WhenApplyEnum, IDynamicField, TypeDynamicField, LogLevelPanel, IECTagIter } from "./types";
 
 export const PreprocessCodeDefault = "console.log('Preprocess')"
 
@@ -13,20 +13,25 @@ export const DynamicFieldDefault: IDynamicField = {
     name: "",
     type: TypeDynamicField.num
 }
- 
-export const ExtraCalcDefault: IExtraCalc = {
-    id: "",
-    name: "",
+
+export const ECTagIterDefault: IECTagIter = {
     tag: "",
     calc: Calc.sum,
     calcValue: "",
-    until: "",
+    showPlot: true
+}
+
+export const ExtraCalcDefault: IExtraCalc = {
+    id: "",
+    name: "",
+    tagsIter: [ECTagIterDefault],
     resValue: "$res",
     maxIterations: 1000,
     resFormat: ExtraCalcFormat.raw,
     numRequests: 10,
     whenApply: WhenApplyEnum.afterPreprocess,
-    resSubtitle: ''
+    resSubtitle: '',
+    until: ""
 }
 
 export const ModelDefault: IModel = {
