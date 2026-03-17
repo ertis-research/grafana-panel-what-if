@@ -148,7 +148,7 @@ In addition, a series of [filters](#tag-filtering-and-sorting) have been enabled
 
 In case you have configured extra information for the selected model, this will be displayed in a section within this step after the data import, as long as you have obtained some information from the assigned query.
 
-Once you have modified the data you want to analyse, click on the *predict all* button. This will **run the predictions for all data collections simultaneously** and display the results just below.
+Once you have modified the data you want to analyze, click on the *predict* button. This will run the predictions exclusively for the active data collection and display the results just below. During the execution of a prediction or an extraCalc process, a cancel button is available to immediately terminate the task if needed.
 
 Results may include:
 
@@ -308,7 +308,8 @@ In the Models tab, the list of models already configured (if any) and a section 
 Clicking on the _Add new model_ section will display a blank form that allows you to define a new model. 
 
 The basic configuration of the model has the following fields:
-- **ID** (required): Identifier of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
+- **ID** (required): Identifier of the model.
+- **Name** (optional): Display name of the model (it will be shown as main text in the selector of [step 1](#step-1-select-model)).
 - **Description** (optional): Description of the model to facilitate its identification by the users (it will be shown under the identifier in the selector of [step 1](#step-1-select-model)).
 - **Format** (required): Formats used by the model to process its input and output data. The available options will be those configured in the [corresponding section](#formats).
 - **Decimals:** Defines the number of decimals to which the prediction results will be rounded. This rounding will not be applied for the prediction or export, but will only be visual when displaying the results both individually and in the graph.
@@ -569,6 +570,8 @@ With this configuration, the tool will be able to extract the information return
 
 This feature allows for adding complementary calculations to the models within the tool, providing additional information to facilitate analysis. All calculations will be configured in the designated section (_Extra Calculations_), which is independent of models and formats. You can assign these calculations to any desired models within their configuration. Currently, only the option for recursive calculations has been implemented, though it may be expanded in the future to include other types of calculations.
 
+The tool now supports adding more than one extraCalc to a single model, enabling more complex calculation layers. Furthermore, each extraCalc iteration is now permitted to modify more than one tag simultaneously, providing greater flexibility for multidimensional simulations.
+
 ##### Recursive calculation
 This type of calculation enables iterations in which a value, derived from a formula or a static value, is applied to a specific tag. The model runs with updated data in each iteration, applying the value to the tag in a loop that continues until a defined condition is met. Both the value to be applied and the final condition are expressed through formulas that may include variables influencing the calculation, such as the selected date or defined dynamic fields, where the user manually enters values before starting the calculation. For example, it is possible to define a dynamic field to set a limit on the model's result and configure the calculation to add half the value of another tag in each iteration until this limit is reached. Once the calculation is complete, the results can be displayed using the previously configured variables and may include, for instance, the number of iterations performed, the maximum value reached before meeting the condition, the tag’s final value, or a combination of these data. Additionally, a graph is generated that illustrates the model's behavior throughout the iterations, similar to the tool's standard visualization. To optimize calculation efficiency, all model executions are grouped into configurable-sized blocks, so that API requests are processed in batches rather than individually.
 
@@ -613,9 +616,11 @@ The currently available variables that can be included in the formulas are as fo
 Now you have the ability to write the formulas that will define the calculation. This configuration is divided into two parts: one corresponding to the iterations performed during the calculation’s execution, and the other to the representation of the final result within the tool.
 
 _Iterations_
-- **Initial tag**: The name of the tag to which the calculated value will be added recursively until the stopping condition is met. It must correspond to the name of a tag in the associated model. Since this is not verified, if the tag does not exist, its value will be undefined, and the calculation will fail.
-- **Calculation**: Defines how the calculated value will be added to the tag's last value. This can be by adding (+), subtracting (-), multiplying (*), or dividing (/).
-- **Value to consider**: Formula (JavaScript code) that must return a number. This is the formula used to obtain the calculated value that will be added recursively to the tag's initial value. This formula runs on the initial data (preprocessed or unprocessed, as specified) and retains its value throughout the rest of the execution.
+- **Target Tags:** You can now define a list of tags to be modified during the calculation. Each entry in this list includes:
+  - **Initial tag**: The name of the tag to which the calculated value will be added recursively until the stopping condition is met. It must correspond to the name of a tag in the associated model. Since this is not verified, if the tag does not exist, its value will be undefined, and the calculation will fail.
+  - **Calculation**: Defines how the calculated value will be added to the tag's last value. This can be by adding (+), subtracting (-), multiplying (*), or dividing (/).
+  - **Value to consider**: Formula (JavaScript code) that must return a number. This is the formula used to obtain the calculated value that will be added recursively to the tag's initial value. This formula runs on the initial data (preprocessed or unprocessed, as specified) and retains its value throughout the rest of the execution.
+  - **Show on the plot:** A boolean toggle to determine if the changes to this specific tag should be represented in the comparative graph.
 - **Execute until**: Formula (JavaScript code) that must return a boolean. This is the formula used to determine the stopping condition of the calculation. This formula is executed in each iteration after receiving the model's result with the modified data.
 
 _Final result_
