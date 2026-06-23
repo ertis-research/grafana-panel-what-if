@@ -572,7 +572,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         const defaultData = col.results.find((r: IResult) => r.id === idDefault);
         const newData = col.results.find((r: IResult) => r.id === idNew);
         
-        const isMultiModel = defaultData && defaultData.result && defaultData.result.length > 1;
+        const isMultiModel = model?.connections && model.connections.length > 1;
         const hasPlot = col.results.some((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== undefined);
         
         return <div style={{ marginTop: '10px', width: '100%' }}>
@@ -591,7 +591,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                                 </tr>
                             </thead>
                             <tbody>
-                                {defaultData.result.map((defItem: IResultByModel, idx: number) => {
+                                {defaultData?.result.map((defItem: IResultByModel, idx: number) => {
                                     const newItem = newData?.result.find(n => n.modelId === defItem.modelId) || newData?.result[idx];
                                     const modelName = defItem.modelId || `Model ${idx + 1}`;
                                     const isChecked = activeModels.includes(modelName);
@@ -630,9 +630,8 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
             </div>
             <div id='id-results' style={{ width: '100%', backgroundColor: theme.colors.background.secondary, marginTop: '10px', padding: '0px' }}>
-                {/* CHANGED: Conditionally render the plot or a warning message if no models are selected */}
                 {(col.results && hasPlot) ? (
-                    activeModels.length === 0 ? (
+                    (isMultiModel && activeModels.length === 0) ? (
                         <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.text.secondary, fontStyle: 'italic' }}>
                             Please select at least one model to view the comparative plot.
                         </div>
