@@ -1,14 +1,15 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { AppEvents, SelectableValue, StandardEditorContext } from "@grafana/data";
-import { FormatTags, ICredentials, IExtraCalc, IFormat, IModel, ISelect, ITag, Method } from 'utils/types';
-import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, InlineFieldRow, Input, InputControl, MultiSelect, Select, useTheme2 } from '@grafana/ui';
-import { ModelDefault } from 'utils/default';
+import { FormatTags, IExtraCalc, IFormat, IModel, IModelConnection, ISelect, ITag } from 'utils/types';
+import { Alert, Button, Checkbox, CodeEditor, Collapse, ConfirmButton, ControlledCollapse, Form, FormAPI, HorizontalGroup, InlineField, Input, InputControl, MultiSelect, Select, useTheme2 } from '@grafana/ui';
+import { ModelConnectionDefault, ModelDefault } from 'utils/default';
 import { dataFrameToOptions, enumToSelect, extraCalcToOptions, formatsToOptions } from 'utils/utils'
 import { TagsForm } from './tagsForm';
 import { Mode } from 'utils/constants';
 import { css } from '@emotion/css';
 import { getOptionsVariable } from 'utils/datasources/grafana';
 import { getAppEvents, getTemplateSrv } from '@grafana/runtime';
+import { ConnectionsForm } from './connectionsForm';
 
 interface Props {
     model: IModel,
@@ -21,14 +22,13 @@ interface Props {
 
 export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFunction, mode, context, addElement }) => {
 
-    const methodList: ISelect[] = enumToSelect(Method)
     const OptionsVariable: ISelect[] = getOptionsVariable(getTemplateSrv())
     const OptionsFormatTags: ISelect[] = enumToSelect(FormatTags)
 
     const [rnd, setRnd] = useState<number>()
     const [currentModel, setCurrentModel] = useState<IModel>(ModelDefault)
+    const [connections, setConnections] = useState<IModelConnection[]>([])
     const [currentTags, setCurrentTags] = useState<ITag[]>([])
-    const [selectedMethod, setSelectedMethod] = useState<SelectableValue<string>>()
     const [selectedQuery, setSelectedQuery] = useState<SelectableValue<string>>()
     const [selectedQueryRange, setSelectedQueryRange] = useState<SelectableValue<string>>()
     const [selectedExtraInfo, setSelectedExtraInfo] = useState<SelectableValue<string>>()
@@ -48,7 +48,6 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
     const updateCurrentState = () => {
         setCurrentModel(model)
         setCurrentTags(model.tags)
-        setSelectedMethod({ label: model.method, value: model.method })
         setSelectedQuery({ label: model.queryId, value: model.queryId })
         if (model.queryRangeId !== undefined) setSelectedQueryRange({ label: model.queryRangeId, value: model.queryRangeId })
         if (model.extraInfo !== undefined) setSelectedExtraInfo({ label: model.extraInfo, value: model.extraInfo })
@@ -66,6 +65,17 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         setSelectedQuotesListItems({ label: model.formatTags, value: model.formatTags })
         setCode((model.preprocess) ? model.preprocess : "")
         setScaler((model.scaler) ? JSON.stringify(model.scaler, undefined, 4) : "")
+        if (model.connections !== undefined) {
+            setConnections(model.connections);
+        } else if (model.url && model.method) {
+            setConnections([{
+                url: model.url,
+                method: model.method,
+                credentials: model.credentials
+            }]);
+        } else {
+            setConnections([ModelConnectionDefault]);
+        }
     }
 
 
@@ -84,25 +94,17 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
         })
     }
 
-    const handleOnChangeCredentials = (event: ChangeEvent<HTMLInputElement>) => {
-        const oldCredentials: ICredentials = (currentModel.credentials) ? { ...currentModel.credentials } : { username: "", password: "" }
-        setCurrentModel({
-            ...currentModel,
-            credentials: {
-                ...oldCredentials,
-                [event.currentTarget.name]: event.target.value
-            }
-        })
-    }
-
     const prepareFinalModel = () => {
-        const cred = currentModel.credentials
-        const credentials = (cred && cred.password.trim() !== '' && cred.username.trim() !== '') ? cred : undefined
+        const cleanConnections = connections.map(conn => {
+            const cred = conn.credentials;
+            const finalCreds = (cred && cred.password.trim() !== '' && cred.username.trim() !== '') ? cred : undefined;
+            return { ...conn, credentials: finalCreds };
+        });
         const extraCalcsData = selectedExtraCalcs?.map(option => option.value).filter(Boolean) as IExtraCalc[];
         const newModel = {
             ...currentModel,
             tags: currentTags,
-            method: selectedMethod?.value ?? Method.GET,
+            connections: cleanConnections,
             queryId: selectedQuery?.value,
             queryRangeId: selectedQueryRange?.value,
             extraInfo: selectedExtraInfo?.value,
@@ -113,7 +115,9 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
             format: selectedFormat?.value,
             extraCalc: extraCalcsData,
             preprocess: code,
-            credentials: credentials
+            method: undefined,
+            url: undefined,
+            credentials: undefined
         }
         newModel.scaler = (scaler.trim() !== "") ? JSON.parse(scaler) : undefined
         return newModel
@@ -166,11 +170,6 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
 
     const handleOnConfirmDeleteModel = () => {
         if (deleteFunction) deleteFunction()
-    }
-
-    const checkValueField = (value?: string) => {
-        //console.log("valueField", value != undefined && value.trim() != "")
-        return value !== undefined && value.trim() !== ""
     }
 
     useEffect(() => {
@@ -429,40 +428,13 @@ export const ModelForm: React.FC<Props> = ({ model, updateFunction, deleteFuncti
                             <Checkbox {...register("onlyDateRange")} disabled={disabled} value={currentModel.onlyDateRange} onChange={() => handleOnChangeModelCheckBox('onlyDateRange')} />
                         </InlineField>
                     </Collapse>
-                    <Collapse label="Connection with model" collapsible={false} isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
-                        <InlineFieldRow>
-                            <InlineField label="Method" labelWidth={10} required disabled={disabled}>
-                                <InputControl
-                                    render={({ field }) =>
-                                        <Select
-                                            value={selectedMethod}
-                                            width={12}
-                                            options={methodList}
-                                            onChange={(v) => setSelectedMethod(v)}
-                                            defaultValue={{ label: Method.POST, value: Method.POST }}
-                                            disabled={disabled}
-                                            menuPosition='fixed'
-                                        />
-                                    }
-                                    control={control}
-                                    name="method"
-                                />
-                            </InlineField>
-                            <InlineField label="URL" labelWidth={10} grow required disabled={disabled}>
-                                <Input {...register("url")} disabled={disabled} value={currentModel.url} onChange={handleOnChangeModel} required />
-                            </InlineField>
-                        </InlineFieldRow>
-                        <InlineFieldRow>
-                            <InlineField label="Username" labelWidth={10} grow disabled={disabled}>
-                                <Input {...register("username")} disabled={disabled} required={checkValueField(currentModel.credentials?.password)}
-                                    value={currentModel.credentials?.username} onChange={handleOnChangeCredentials} />
-                            </InlineField>
-                            <InlineField label="Password" labelWidth={10} grow disabled={disabled}>
-                                <Input {...register("password")} type='password' disabled={disabled} required={checkValueField(currentModel.credentials?.username)}
-                                    value={currentModel.credentials?.password} onChange={handleOnChangeCredentials} />
-                            </InlineField>
-                        </InlineFieldRow>
-                    </Collapse>
+                    <ControlledCollapse label="Connections with model" collapsible isOpen={true} className={css({ color: useTheme2().colors.text.primary })}>
+                        <ConnectionsForm
+                            connections={connections}
+                            setConnections={setConnections}
+                            disabled={disabled}
+                        />
+                    </ControlledCollapse>
                 </div>
             )
         }}

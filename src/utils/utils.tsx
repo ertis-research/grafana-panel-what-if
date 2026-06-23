@@ -200,3 +200,24 @@ export const checkAbort = (signal?: AbortSignal) => {
     throw new DOMException("Calculation aborted by the user", "AbortError");
   }
 };
+
+export const getConnections = (model: IModel): IModel => {
+  if (model.connections && model.connections.length > 0) {
+    return model;
+  }
+  const normalizedModel = { ...model };
+  
+  if (normalizedModel.url && normalizedModel.method) {
+    normalizedModel.connections = [
+      {
+        url: normalizedModel.url,
+        method: normalizedModel.method,
+        credentials: normalizedModel.credentials,
+      }
+    ];
+  } else {
+    normalizedModel.connections = [];
+  }
+
+  return normalizedModel;
+};

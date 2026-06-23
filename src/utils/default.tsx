@@ -34,6 +34,11 @@ export const ExtraCalcDefault: IExtraCalc = {
     until: ""
 }
 
+export const ModelConnectionDefault = {
+    url: "",
+    method: Method.POST
+}
+
 export const ModelDefault: IModel = {
     id: "",
     url: "",
@@ -41,6 +46,7 @@ export const ModelDefault: IModel = {
     description: "",
     queryId: "",
     onlyDate: false,
+    connections: [ModelConnectionDefault],
     method: Method.POST,
     onlyDateRange: false,
     tags: [],

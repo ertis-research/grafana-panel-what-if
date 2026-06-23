@@ -68,7 +68,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
                                 </InlineField>
                             </InlineFieldRow>
                         </div>
-                        <div style={{ height: '30px', display: 'flex', alignItems: 'center' }}>
+                        <div style={{ height: '30px', display: 'flex', alignItems: 'center', zIndex: 1 }}>
                             <DeleteButton
                                 disabled={disabled}
                                 onConfirm={() => {
@@ -81,7 +81,7 @@ export const TagsForm = ({ currentTags, setCurrentTags, disabled = false }: Prop
             </div>)
         }}
         </Form>
-        <Button type="submit" form="tagsForm" variant='secondary' disabled={disabled}>Add tag</Button>
+        <Button type="submit" icon='plus' form="tagsForm" variant='secondary' disabled={disabled}>Add tag</Button>
     </div>
 
     const tagsJson = <CodeEditor

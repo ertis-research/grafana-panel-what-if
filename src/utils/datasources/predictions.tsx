@@ -1,5 +1,5 @@
 import { PreprocessCodeDefault } from "../default";
-import { IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IResult, IScaler, IntervalTypeEnum, PostChangeIDataPred } from "../types"
+import { ConnectionType, IData, IDataCollection, IDataPred, IFormat, IInterval, IModel, IModelConnection, IResult, IScaler, IntervalTypeEnum, PostChangeIDataPred } from "../types"
 //import * as dfd from "danfojs"
 import { idDefault, idNew, varEachInput, varEachInputEnd, varEachTag, varEachTagEnd, varInput, varTag, variableOutput } from "../constants"
 import vm from 'vm'
@@ -47,13 +47,15 @@ export const prepareAndPredictResults = async (model: IModel, results: IResult[]
 export const predictResults = async (model: IModel, data: IDataPred[], results: IResult[], signal?: AbortSignal) => {
     log.info("[predictResults] Sending prediction request to model endpoint");
     checkAbort(signal)
-    const predictions: any = await sendRequest(model, data, signal)
+    const predictions: number[][] = await sendRequest(model, data, signal)
+    console.log("predictions:", predictions);
     checkAbort(signal)
     log.info("[predictResults] Predictions received successfully");
     let res: IResult[] = []
     for (let idx = 0; idx < results.length; idx++) {
-        res.push({ ...results[idx], result: predictions[idx] })
+        res.push({ ...results[idx], result: predictions.map((p: number[], i: number) => ({ modelId: model.connections?.[i]?.name || `model_${i + 1}`, result: p[idx] })) })
     }
+    console.log("final results:", res);
     return res
 }
 
@@ -139,6 +141,7 @@ const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number
         res.push({
             id: id + "_" + ((p < 0) ? 'l' : 'p') + Math.abs(p),
             data: newData,
+            result: [],
             correspondsWith: {
                 [id]: p
             }
@@ -192,7 +195,8 @@ const prepareData = (dataCollection: IDataCollection, numberOfValues?: number): 
         const defaultData: IDataPred = defaultDataToObject(dataCollection.data)
         res.push({
             id: idDefault, // ESTOY METIENDO LOS DATOS DEFAULT 
-            data: defaultData
+            data: defaultData,
+            result: []
         })
         baseData = defaultData
     }
@@ -202,7 +206,8 @@ const prepareData = (dataCollection: IDataCollection, numberOfValues?: number): 
         const onlyNewData: IDataPred = newDataToObject(dataCollection.data, hasInterval, numberOfValues)
         res.push({
             id: idNew,
-            data: onlyNewData
+            data: onlyNewData,
+            result: []
         })
         baseData = onlyNewData
     }
@@ -463,6 +468,88 @@ export const applyPreprocess = async (code: string, data: IDataPred, signal?: Ab
 /* NETWORK REQUEST */
 /* -------------------------------------------------- */
 
+const executeConnectionRequest = async (
+    conn: IModelConnection, 
+    body: string, 
+    format: IFormat | undefined, 
+    index: number, 
+    signal?: AbortSignal
+) => {
+    let myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    let targetUrl = conn.url;
+
+    if (conn.type === ConnectionType.Infinity && conn.datasourceUid) {
+        const path = conn.url.startsWith('/') ? conn.url : `/${conn.url}`;
+        targetUrl = `/api/datasources/proxy/uid/${conn.datasourceUid}${path}`;
+    } else {
+        if (conn.credentials && conn.credentials.username && conn.credentials.password) {
+            myHeaders.append(
+                'Authorization', 
+                'Basic ' + Buffer.from(conn.credentials.username + ":" + conn.credentials.password).toString('base64')
+            );
+        }
+    }
+
+    const requestOptions: RequestInit = {
+        method: conn.method,
+        headers: myHeaders,
+        body: body,
+        signal: signal
+    };
+
+    log.info(`[sendRequest][Conn ${index}] Sending HTTP request to model:`, targetUrl);
+    
+    try {
+        const response = await fetch(targetUrl, requestOptions);
+        
+        if (response.ok) {
+            log.info(`[sendRequest][Conn ${index}] Response received successfully`);
+            const text: string = await response.text();
+            return removeFormatOutput(text, format);
+        } else {
+            const errorText = await response.text();
+            log.error(`[sendRequest][Conn ${index}] Request failed with status:`, response.status, "->", errorText);
+            throw new Error(`Request failed on connection ${index + 1} (${response.status})${(errorText) ? ": " + errorText : ''}`);
+        }
+    } catch (err) {
+        if (err instanceof Error) {
+            if (err.name === 'AbortError') {
+                throw err;
+            }
+            log.error(`[sendRequest][Conn ${index}] Known error:`, err.message);
+            throw err;
+        }
+
+        log.error(`[sendRequest][Conn ${index}] An unknown error occurred:`, err);
+        throw new Error(String(err));
+    }
+}
+
+export const sendRequest = async (model: IModel, data: IDataPred[], signal?: AbortSignal): Promise<number[][]> => {
+    const body = await addFormatInput(data, model.isListValues, model.isTransposeList, model.format);
+    console.log(body);
+
+    const connections = model.connections && model.connections.length > 0 
+        ? model.connections 
+        : [{ 
+            url: model.url, 
+            method: model.method, 
+            credentials: model.credentials, 
+            type: ConnectionType.Insecure
+          }];
+
+    // 3. Mapeamos las conexiones delegando el trabajo sucio al otro método
+    const requestPromises = connections.map((conn, index) => 
+        executeConnectionRequest(conn, body, model.format, index, signal)
+    );
+
+    // 4. Esperamos a que todas las promesas se resuelvan
+    return await Promise.all(requestPromises);
+}
+
+/*
 const sendRequest = async (model: IModel, data: IDataPred[], signal?: AbortSignal) => {
     let myHeaders = new Headers()
     myHeaders.append("Content-Type", "application/json")
@@ -506,4 +593,4 @@ const sendRequest = async (model: IModel, data: IDataPred[], signal?: AbortSigna
         throw new Error(String(err));
     }
 
-}
+}*/

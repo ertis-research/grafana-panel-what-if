@@ -156,9 +156,9 @@ const check = async (r: IResult, extraCalc: IExtraCalc, col: IDataCollection, is
     if (r.result) {
         let condition = ""
         if (isAfter && r.processedData) {
-            condition = replaceVariables(extraCalc, col, extraCalc.until, r.processedData, dyn, r.result, iter)
+            condition = replaceVariables(extraCalc, col, extraCalc.until, r.processedData, dyn, r.result[0]?.result, iter)
         } else {
-            condition = replaceVariables(extraCalc, col, extraCalc.until, r.data, dyn, r.result, iter)
+            condition = replaceVariables(extraCalc, col, extraCalc.until, r.data, dyn, r.result[0]?.result, iter)
         }
         return await executeString(condition, signal)
     }
@@ -201,6 +201,7 @@ export const extraCalcCollection = async (model: IModel, extraCalc: IExtraCalc, 
         const iniResult: IResult = {
             id: "extraCalc",
             data: { ...data },
+            result:[],
             correspondsWith: Object.fromEntries(
                 tagsIter.filter((t: IECTagIter) => t.showPlot === undefined || t.showPlot).map((t: IECTagIter) => [t.tag, getMean(data[t.tag])])
             )
@@ -296,9 +297,9 @@ export const extraCalcCollection = async (model: IModel, extraCalc: IExtraCalc, 
         const finalResult = res[res.length - 1]
         console.log("finalResult", finalResult)
         const finalDataPred = (isAfter && finalResult.processedData && finalResult.result) ? finalResult.processedData : finalResult.data
-        let processedRes = await executeString(replaceVariables(extraCalc, col, extraCalc.resValue, finalDataPred, dyn, finalResult.result, res.length - 1))
+        let processedRes = await executeString(replaceVariables(extraCalc, col, extraCalc.resValue, finalDataPred, dyn, finalResult.result[0].result, res.length - 1))
         processedRes = applyFormatToRes(processedRes, extraCalc.resFormat, col.dateTime)
-        let subtitleRes = (extraCalc.resSubtitle) ? await executeString(replaceVariables(extraCalc, col, extraCalc.resSubtitle, finalDataPred, dyn, finalResult.result, res.length - 1)) : ''
+        let subtitleRes = (extraCalc.resSubtitle) ? await executeString(replaceVariables(extraCalc, col, extraCalc.resSubtitle, finalDataPred, dyn, finalResult.result[0]?.result, res.length - 1)) : ''
         col.conclusionExtraCalc = new ConclusionRes(processedRes, subtitleRes)
     }
     console.log("Result col extra calc", col)

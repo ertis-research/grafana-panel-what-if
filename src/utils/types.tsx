@@ -106,11 +106,16 @@ export interface IData {
   set_percentage?: boolean
 }
 
+export interface IResultByModel {
+  modelId: string,
+  result?: number | string,
+}
+
 export interface IResult {
   id: string,
   data: IDataPred,
   processedData?: IDataPred,
-  result?: number | string,
+  result: IResultByModel[],   // ESTO LO TENGO QUE CAMBIAR
   correspondsWith?: Record<string, number>
 }
 
@@ -123,14 +128,32 @@ export interface ICredentials {
   password: string
 }
 
+export const enum ConnectionType {
+    Infinity = 'infinity',
+    Insecure = 'insecure'
+}
+
+export interface IModelConnection {
+  type?: ConnectionType;
+  datasourceUid?: string;
+  name?: string,
+  url: string,
+  method: Method,
+  credentials?: ICredentials
+}
+
 export interface IModel {
   id: string,
   name?: string,
   description: string,
   active: boolean,
+  /** @deprecated Migrate to the “connections” property */
   url: string,
-  method: Method,
+  /** @deprecated Migrate to the “connections” property */
+  method: Method, 
+  /** @deprecated Migrate to the “connections” property */
   credentials?: ICredentials
+  connections?: IModelConnection[];
   queryId: string,
   onlyDate?: boolean,
   queryRangeId?: string,

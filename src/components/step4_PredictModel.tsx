@@ -1,7 +1,7 @@
 import { Button, DatePickerWithInput, HorizontalGroup, IconButton, InlineLabel, Input, Modal, Pagination, useTheme2, VerticalGroup } from '@grafana/ui'
 import React, { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { Context, dateTimeLocalToString, getMean, round, dateToString } from 'utils/utils'
-import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField, IExtraCalc } from 'utils/types'
+import { IData, IDataCollection, IModel, IntervalTypeEnum, IResult, ITag, IDynamicField, TypeDynamicField, IExtraCalc, IResultByModel } from 'utils/types'
 import { idDefault, idNew, Steps } from 'utils/constants'
 import { predictCollection } from 'utils/datasources/predictions'
 import Plot from 'react-plotly.js'
@@ -38,6 +38,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     const [isCollapseExtraInfo, setIsCollapseExtraInfo] = useState(false)
     const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, string[]>>({})
     const [currentPage, setCurrentPage] = useState(1)
+
+    const [activeModels, setActiveModels] = useState<string[]>([])
+    const toggleModel = (modelId: string) => {
+        setActiveModels(prev => 
+            prev.includes(modelId) ? prev.filter(id => id !== modelId) : [...prev, modelId]
+        );
+    }
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -94,6 +101,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
                     aux[currentCollIdx] = res
                     updateCollections(aux)
                     setCurrentPage(1)
+
+                    const defaultRes = res.results?.find(r => r.id === idDefault);
+                    if (defaultRes && defaultRes.result.length > 1) {
+                        setActiveModels(defaultRes.result.map(m => m.modelId || ''));
+                    } else {
+                        setActiveModels([]);
+                    }
 
                     if (context.setActualStep) {
                         context.setActualStep(Steps.step_5)
@@ -261,22 +275,36 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     // -------------------------------------------------------------------------------------------------------------
 
     const showPlot = (results: IResult[], intervalType: IntervalTypeEnum) => {
-        const filterResults = results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== 'ERROR' && r.result !== undefined)
+        // CHANGED: Removed the hardcoded r.result[0] constraint so we accept multi-model arrays
+        const filterResults = results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== undefined && r.result.length > 0)
         if (filterResults.length < 1) return <div></div>
 
         const tagData: Record<string, { values_x: number[], values_y: number[], text: string[] }> = {}
 
         filterResults.forEach((r: IResult) => {
-            if (r.result === undefined || r.result === 'ERROR' || typeof r.result !== 'number' || !r.correspondsWith) return
+            if (r.result === undefined || !r.correspondsWith) return
 
-            Object.entries(r.correspondsWith).forEach(([tag, intervalValue]: [string, number]) => {
-                if (r.data[tag] === undefined) return
+            // CHANGED: Iterate over all models in the result array instead of just index 0
+            r.result.forEach((resItem: IResultByModel) => {
+                if (resItem.result === 'ERROR' || typeof resItem.result !== 'number') return;
+                
+                const modelName = resItem.modelId || 'Default';
 
-                if (!tagData[tag]) tagData[tag] = { values_x: [], values_y: [], text: [] }
+                // CHANGED: Skip this model if it has been deselected in the table
+                if (activeModels.length > 0 && !activeModels.includes(modelName)) return;
+                if(r.correspondsWith === undefined) return;
+                Object.entries(r.correspondsWith).forEach(([tag, intervalValue]: [string, number]) => {
+                    if (r.data[tag] === undefined) return
 
-                tagData[tag].values_x.push(intervalValue)
-                tagData[tag].values_y.push(setDecimals(r.result as number))
-                tagData[tag].text.push(setDecimals(getMean(r.data[tag])))
+                    // CHANGED: Create a distinct trace name containing the model name if multiple exist
+                    const traceName = activeModels.length > 0 ? `${tag} (${modelName})` : tag;
+
+                    if (!tagData[traceName]) tagData[traceName] = { values_x: [], values_y: [], text: [] }
+
+                    tagData[traceName].values_x.push(intervalValue)
+                    tagData[traceName].values_y.push(setDecimals(resItem.result as number))
+                    tagData[traceName].text.push(setDecimals(getMean(r.data[tag])))
+                })
             })
         })
 
@@ -353,29 +381,64 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         return <Plot style={{ margin: '0px', padding: '0px' }} layout={layoutObj} data={dataArray} config={config} />
     }
 
-    const defaultValue = (col: IDataCollection) => {
-        let res = <div></div>
-        if (col.results) {
-            const def = col.results.find((r: IResult) => r.id === idDefault)
-            if (def) res = <div className='horizontal-item-1' style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%', marginRight: '10px' }}>
-                <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.originalValue}</p>
-                <h1 style={{ textAlign: 'center' }}>{(typeof def.result === 'number') ? setDecimals(def.result) : 'ERROR'}</h1>
-            </div>
-        }
-        return res
-    }
+    const buildResultCard = (col: IDataCollection, targetId: string, title: string, extraStyles?: React.CSSProperties, className = '') => {
+        if (!col.results) return <div></div>;
 
-    const newValue = (col: IDataCollection) => {
-        let res = <div></div>
-        if (col.results) {
-            const nw = col.results.find((r: IResult) => r.id === idNew)
-            if (nw) res = <div style={{ backgroundColor: theme.colors.background.secondary, padding: '10px', width: '50%' }}>
-                <p style={{ color: theme.colors.text.secondary, paddingBottom: '0px', marginBottom: '2px' }}>{msgs.newValue}</p>
-                <h1 style={{ textAlign: 'center' }}>{(typeof nw.result === 'number') ? setDecimals(nw.result) : 'ERROR'}</h1>
-            </div>
+        const data = col.results.find((r: IResult) => r.id === targetId);
+        if (!data || !data.result || data.result.length === 0) return <div></div>;
+
+        if (data.result.length === 1) {
+            const singleItem = data.result[0];
+            const displayValue = typeof singleItem.result === 'number'
+                ? setDecimals(singleItem.result)
+                : (singleItem.result !== undefined ? singleItem.result : 'ERROR');
+
+            return (
+                <div
+                    className={`result-card result-card-single ${className}`}
+                    style={{ backgroundColor: theme.colors.background.secondary, ...extraStyles }}
+                >
+                    <p className="result-title-single" style={{ color: theme.colors.text.secondary }}>
+                        {title}
+                    </p>
+                    <h1 className="result-value-single">
+                        {displayValue}
+                    </h1>
+                </div>
+            );
         }
-        return res
-    }
+
+        return (
+            <div className={`result-card result-card-multiple ${className}`} style={{ backgroundColor: theme.colors.background.secondary, ...extraStyles }}>
+                <p className="result-title-multiple" style={{ color: theme.colors.text.secondary }}>{title}</p>
+                <div className="result-list-container">
+                    {data.result.map((item: IResultByModel, index: number) => {
+                        const displayValue = typeof item.result === 'number' ? setDecimals(item.result) : (item.result !== undefined ? item.result : 'ERROR');
+                        return (
+                            <div key={item.modelId || index}>
+                                {index > 0 && (
+                                    <div className="result-list-separator" style={{ backgroundColor: theme.colors.text.secondary }} />
+                                )}
+
+                                <div className="result-list-row">
+                                    <span className="result-list-model-name" style={{ color: theme.colors.text.primary }}>
+                                        {item.modelId}
+                                    </span>
+
+                                    <span className="result-list-model-value" style={{ color: theme.colors.text.primary }}>
+                                        {displayValue}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
+    const defaultValue = (col: IDataCollection) => buildResultCard(col, idDefault, msgs.originalValue, { marginRight: '10px' }, 'horizontal-item-1');
+    const newValue = (col: IDataCollection) => buildResultCard(col, idNew, msgs.newValue);
 
     const processExtraInfo = (extraInfo: { [key: string]: any }) => {
         let res: JSX.Element[] = []
@@ -504,19 +567,81 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
     }
 
     const predictResult = (col: IDataCollection) => {
-        if (col.results) {
-            return <div style={{ marginTop: '10px', width: '100%' }}>
-                <div id="id-results-base" style={{ display: 'flex' }}>
-                    {defaultValue(col)}
-                    {newValue(col)}
-                </div>
-                <div id='id-results' style={{ width: '100%', backgroundColor: theme.colors.background.secondary, marginTop: '10px', padding: '0px' }}>
-                    {(col.results) ? showPlot(col.results, col.interval.type) : <div></div>}
-                </div>
+        if (!col.results) return <div></div>
+
+        const defaultData = col.results.find((r: IResult) => r.id === idDefault);
+        const newData = col.results.find((r: IResult) => r.id === idNew);
+        
+        const isMultiModel = defaultData && defaultData.result && defaultData.result.length > 1;
+        const hasPlot = col.results.some((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== undefined);
+        
+        return <div style={{ marginTop: '10px', width: '100%' }}>
+            <div id="id-results-base" style={{ display: 'flex', flexDirection: isMultiModel ? 'column' : 'row' }}>
+                
+                {isMultiModel ? (
+                    // CHANGED: Using multi-model-container class for scroll and reduced padding
+                    <div className="multi-model-container" style={{ backgroundColor: theme.colors.background.secondary }}>
+                        <table className="multi-model-table">
+                            <thead>
+                                <tr>
+                                    {/* CHANGED: Passing background color to TH so scrolled text doesn't bleed through sticky headers */}
+                                    <th style={{ backgroundColor: theme.colors.background.secondary, borderBottom: `1px solid ${theme.colors.border.weak}`, color: theme.colors.text.secondary }}>Model</th>
+                                    <th style={{ backgroundColor: theme.colors.background.secondary, borderBottom: `1px solid ${theme.colors.border.weak}`, color: theme.colors.text.secondary }}>{msgs.originalValue}</th>
+                                    <th style={{ backgroundColor: theme.colors.background.secondary, borderBottom: `1px solid ${theme.colors.border.weak}`, color: theme.colors.text.secondary }}>{msgs.newValue}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {defaultData.result.map((defItem: IResultByModel, idx: number) => {
+                                    const newItem = newData?.result.find(n => n.modelId === defItem.modelId) || newData?.result[idx];
+                                    const modelName = defItem.modelId || `Model ${idx + 1}`;
+                                    const isChecked = activeModels.includes(modelName);
+
+                                    return (
+                                        <tr key={modelName}>
+                                            {/* CHANGED: Extracted CSS for truncation and compactness */}
+                                            <td className="multi-model-name-cell" style={{ borderBottom: `1px solid ${theme.colors.border.weak}` }}>
+                                                <label className="multi-model-label">
+                                                    {hasPlot && (
+                                                        <input type="checkbox" checked={isChecked} onChange={() => toggleModel(modelName)} />
+                                                    )}
+                                                    <span className="multi-model-text" title={modelName} style={{ color: theme.colors.text.primary, cursor: hasPlot ? 'pointer' : 'default' }}>
+                                                        {modelName}
+                                                    </span>
+                                                </label>
+                                            </td>
+                                            <td style={{ color: theme.colors.text.primary, borderBottom: `1px solid ${theme.colors.border.weak}` }}>
+                                                {typeof defItem.result === 'number' ? setDecimals(defItem.result) : (defItem.result ?? 'ERROR')}
+                                            </td>
+                                            <td style={{ color: theme.colors.text.primary, borderBottom: `1px solid ${theme.colors.border.weak}` }}>
+                                                {newItem ? (typeof newItem.result === 'number' ? setDecimals(newItem.result) : (newItem.result ?? 'ERROR')) : '-'}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <Fragment>
+                        {defaultValue(col)}
+                        {newValue(col)}
+                    </Fragment>
+                )}
+
             </div>
-        } else {
-            return <div></div>
-        }
+            <div id='id-results' style={{ width: '100%', backgroundColor: theme.colors.background.secondary, marginTop: '10px', padding: '0px' }}>
+                {/* CHANGED: Conditionally render the plot or a warning message if no models are selected */}
+                {(col.results && hasPlot) ? (
+                    activeModels.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center', color: theme.colors.text.secondary, fontStyle: 'italic' }}>
+                            Please select at least one model to view the comparative plot.
+                        </div>
+                    ) : (
+                        showPlot(col.results, col.interval.type)
+                    )
+                ) : <div></div>}
+            </div>
+        </div>
     }
 
     const showResults = () => {

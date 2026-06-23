@@ -138,3 +138,130 @@
     margin: 0 !important;
     background-color: blue;
 }
+
+/* Contenedor principal */
+.result-card {
+    width: 50%;
+}
+
+.result-card-single {
+    padding: 10px;
+}
+
+.result-card-multiple {
+    padding: 10px 12px;
+}
+
+/* Títulos */
+.result-title-single {
+    padding-bottom: 0px;
+    margin-bottom: 2px;
+}
+
+.result-title-multiple {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0px;
+    margin-bottom: 6px;
+}
+
+/* Valores y Lista */
+.result-value-single {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.result-list-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 150px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+/* Scrollbar moderno */
+.result-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+.result-list-container::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.3);
+    border-radius: 4px;
+}
+
+.result-list-separator {
+    height: 1px;
+    opacity: 0.1;
+    margin: 4px 0;
+}
+
+.result-list-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 2px;
+}
+
+.result-list-model-name {
+    opacity: 0.8;
+    padding-right: 12px;
+    flex: 1;
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+.result-list-model-value {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Container specifically adjusted to show ~4 rows before scrolling */
+.multi-model-container {
+    width: 100%;
+    max-height: 180px; /* Adjust this value if your rows are slightly taller/shorter */
+    overflow-y: auto;
+    padding: 10px; /* Reduced overall padding for compactness */
+    border-radius: 4px;
+}
+
+.multi-model-table {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+}
+
+/* Make headers sticky so they don't disappear on scroll */
+.multi-model-table th {
+    padding: 4px 8px; /* Compact padding */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.multi-model-table td {
+    padding: 4px 8px; /* Compact padding */
+}
+
+/* Limit the width of the Model column */
+.multi-model-name-cell {
+    max-width: 250px; 
+    width: 250px;
+}
+
+.multi-model-label {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Tighter gap */
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Truncate text with ellipsis (...) */
+.multi-model-text {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
