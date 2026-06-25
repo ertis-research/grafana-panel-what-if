@@ -41,7 +41,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
     const [activeModels, setActiveModels] = useState<string[]>([])
     const toggleModel = (modelId: string) => {
-        setActiveModels(prev => 
+        setActiveModels(prev =>
             prev.includes(modelId) ? prev.filter(id => id !== modelId) : [...prev, modelId]
         );
     }
@@ -278,8 +278,7 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
         // CHANGED: Removed the hardcoded r.result[0] constraint so we accept multi-model arrays
         const filterResults = results.filter((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== undefined && r.result.length > 0)
         if (filterResults.length < 1) return <div></div>
-
-        const tagData: Record<string, { values_x: number[], values_y: number[], text: string[] }> = {}
+        const tagData: Record<string, { values_x: number[], values_y: number[], text: string[], modelName: string, tagName: string }> = {}
 
         filterResults.forEach((r: IResult) => {
             if (r.result === undefined || !r.correspondsWith) return
@@ -287,19 +286,27 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             // CHANGED: Iterate over all models in the result array instead of just index 0
             r.result.forEach((resItem: IResultByModel) => {
                 if (resItem.result === 'ERROR' || typeof resItem.result !== 'number') return;
-                
+
                 const modelName = resItem.modelId || 'Default';
 
                 // CHANGED: Skip this model if it has been deselected in the table
                 if (activeModels.length > 0 && !activeModels.includes(modelName)) return;
-                if(r.correspondsWith === undefined) return;
+                if (r.correspondsWith === undefined) return;
                 Object.entries(r.correspondsWith).forEach(([tag, intervalValue]: [string, number]) => {
                     if (r.data[tag] === undefined) return
 
                     // CHANGED: Create a distinct trace name containing the model name if multiple exist
-                    const traceName = activeModels.length > 0 ? `${tag} (${modelName})` : tag;
+                    const traceName = activeModels.length > 0 ? `${modelName} - ${tag}` : tag;
 
-                    if (!tagData[traceName]) tagData[traceName] = { values_x: [], values_y: [], text: [] }
+                    if (!tagData[traceName]) {
+                        tagData[traceName] = {
+                            values_x: [],
+                            values_y: [],
+                            text: [],
+                            modelName: modelName,
+                            tagName: tag
+                        }
+                    }
 
                     tagData[traceName].values_x.push(intervalValue)
                     tagData[traceName].values_y.push(setDecimals(resItem.result as number))
@@ -308,12 +315,19 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
             })
         })
 
-        const dataArray: Data[] = Object.entries(tagData).map(([tag, { values_x, values_y, text }]) => ({
+        const dataArray: Data[] = Object.entries(tagData).map(([tag, { values_x, values_y, text, modelName, tagName }]) => ({
             x: values_x,
             y: values_y,
             text: text,
             type: 'scatter',
-            name: tag
+            name: tag,
+            hovertemplate:
+                `<b>Modelo:</b> ${modelName}<br>` +
+                `<b>Tag:</b> ${tagName}<br>` +
+                `<b>Eje X:</b> %{x}<br>` +
+                `<b>Eje Y:</b> %{y}<br>` +
+                `<b>Media:</b> %{text}` +
+                `<extra></extra>`
         }))
 
         //console.log('dataArrayPLOT', dataArray)
@@ -571,13 +585,13 @@ export const PredictModel: React.FC<Props> = ({ model, collections, updateCollec
 
         const defaultData = col.results.find((r: IResult) => r.id === idDefault);
         const newData = col.results.find((r: IResult) => r.id === idNew);
-        
+
         const isMultiModel = model?.connections && model.connections.length > 1;
         const hasPlot = col.results.some((r: IResult) => r.id !== idDefault && r.id !== idNew && r.correspondsWith !== undefined && r.result !== undefined);
-        
+
         return <div style={{ marginTop: '10px', width: '100%' }}>
             <div id="id-results-base" style={{ display: 'flex', flexDirection: isMultiModel ? 'column' : 'row' }}>
-                
+
                 {isMultiModel ? (
                     // CHANGED: Using multi-model-container class for scroll and reduced padding
                     <div className="multi-model-container" style={{ backgroundColor: theme.colors.background.secondary }}>

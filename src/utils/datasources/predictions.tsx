@@ -111,6 +111,14 @@ const calculatePercentage = (percent: number, total: number) => {
 }
 
 export const getListValuesFromNew = (newValue: number, mean: number, rawValues: number[]): number[] => {
+    if (rawValues.length === 0) return [];
+    
+    if (mean === 0) {
+        // Opción A: Repartir el nuevo valor equitativamente entre todos los elementos
+        const equalWeightValue = newValue / rawValues.length;
+        return rawValues.map(() => equalWeightValue);
+    }
+
     const result: number[] = [];
     for (let i = 0; i < rawValues.length; i++) {
         const weight = Math.abs(rawValues[i]) / Math.abs(mean);  // Obtener PESO
@@ -147,6 +155,7 @@ const addResultsFromValues = (res: IResult[], rawData: IDataPred, values: number
             }
         })
     }
+    console.log("addResultsFromValues", res);
     log.debug("[addResultsFromValues] Generated", res.length, "results for variable:", id);
     return res
 }
