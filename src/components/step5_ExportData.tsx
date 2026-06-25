@@ -37,7 +37,7 @@ export const ExportData: React.FC<Props> = ({ model, collections, currentCollect
             const fileName = (currentCollection.id + ".csv").replace(/ /g, "_");
             log.debug("[Export data] Preparing data for export:", { id: currentCollection.id, fileName });
 
-            const csvBlob = dataToCSV(currentCollection);
+            const csvBlob = dataToCSV(currentCollection, model && model.connections ? model.connections.length > 1 : false);
             saveAs(csvBlob, fileName);
 
             log.info("[Export data] Export completed successfully.");

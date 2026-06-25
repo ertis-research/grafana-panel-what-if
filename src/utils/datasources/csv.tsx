@@ -16,102 +16,104 @@ const compare = (a: IData, b: IData) => {
     }
 }
 
-export const dataToCSV = (collection: IDataCollection) => {
-    let res: any[] = [], others: any[] = []
-    let _int: any = {}, _def: any = {}, _new: any = {}
-    const has_interval = collection.interval.max && collection.interval.min && collection.interval.steps
+export const dataToCSV = (collection: IDataCollection, isMultiModel: boolean) => {
+    const has_interval = Boolean(collection.interval?.max && collection.interval?.min && collection.interval?.steps);
+    
+    // 1. Construcción eficiente de diccionarios (mutación directa = O(N))
+    const _int: Record<string, string> = {};
+    const _def: Record<string, any> = {};
+    const _new: Record<string, any> = {};
 
     collection.data.sort(compare).forEach((d: IData) => {
-        if (has_interval) {
-            _int = {
-                ..._int,
-                [d.id]: (d.set_percentage) ? "YES" : "NO"
-            }
-        }
+        if (has_interval) _int[d.id] = d.set_percentage ? "YES" : "NO";
+        _def[d.id] = d.raw_values;
+        _new[d.id] = (has_interval && d.set_percentage) ? "" : d.new_value;
+    });
 
-        _def = {
-            ..._def,
-            [d.id]: d.raw_values
-        }
+    // 2. Helper para generar filas, manteniendo el orden estricto de columnas
+    // La columna MODEL_ID se omite por completo si isMultiModel es false
+    const createRow = (id: string, modelId: string, resultVal: any, dataRow: any) => ({
+        ID: id,
+        ...(isMultiModel ? { MODEL_ID: modelId } : {}),
+        _RESULT: resultVal !== undefined ? resultVal : "",
+        ...dataRow
+    });
 
-        _new = {
-            ..._new,
-            [d.id]: (has_interval && d.set_percentage) ? "" : d.new_value
-        }
-    })
+    let res: any[] = [];
 
-
-    //console.log("COLECCION?", collection)
-
-    if (collection.results !== undefined) {
-        const def = collection.results.find((r: IResult) => r.id === idDefault)
-        const ne = collection.results.find((r: IResult) => r.id === idNew)
-
-        _int = { _RESULT: "", ..._int }
-        _def = {
-            _RESULT: (def !== undefined && def.result !== undefined) ? def.result : "",
-            ..._def
-        }
-        _new = {
-            _RESULT: (ne !== undefined && ne.result !== undefined) ? ne.result : "",
-            ..._new
-        }
-
-        //console.log("AAA", "collection.results")
-        collection.results.filter((r: IResult) => r.correspondsWith !== undefined).forEach((r: IResult) => {
-            Object.entries(r.correspondsWith!).forEach(([tag, intervalValue]: [string, number]) => {
-                if (intervalValue !== 0) {
-                    const id = `${tag} ${intervalValue < 0 ? "-" : "+"} ${Math.abs(intervalValue)}${collection.interval.type === IntervalTypeEnum.percentage ? "%" : ""}`
-                    let row: any = {
-                        ID: id,
-                        _RESULT: r.result
-                    }
-
-                    Object.entries(r.data).forEach(([key, value]: [key: string, value: number | number[]]) => {
-                        row = {
-                            ...row,
-                            [key]: (tag === key || value !== _def[key]) ? value : ""
-                        }
-                    })
-
-                    others.push(row)
-                }
-            })
-        })
-    }
-
+    // Fila de intervalos (siempre la primera para definir cabeceras si existe)
     if (has_interval) {
-        res = [
-            {
-                ID: "_INTERVAL",
-                ..._int
-            }
-        ]
+        res.push(createRow("_INTERVAL", "", "", _int));
     }
 
-    // Lo junto todo
-    res = [
-        ...res,
-        {
-            ID: "DEFAULT_VALUE",
-            ..._def
-        },
-        {
-            ID: "NEW_VALUE",
-            ..._new
-        },
-        ...others
-    ]
+    // 3. Procesar resultados
+    if (collection.results !== undefined && collection.results.length > 0) {
+        const def = collection.results.find((r: IResult) => r.id === idDefault);
+        const ne = collection.results.find((r: IResult) => r.id === idNew);
 
-    // Metadata
-    const dateTime = (collection.dateTime) ? "# DateTime: " + collection.dateTime.toISOString() + "\n" : ""
-    const interval = (collection.interval.max && collection.interval.min && collection.interval.steps) ?
-        "# Interval: " + collection.interval.min + " " + collection.interval.max + " " + collection.interval.steps + " " + intervalModeToString(collection.interval.type) + "\n" : ""
+        // Función auxiliar para procesar DEFAULT_VALUE y NEW_VALUE
+        const processBaseResult = (resultObj: IResult | undefined, idLabel: string, baseData: any) => {
+            if (resultObj?.result && resultObj.result.length > 0) {
+                return resultObj.result.map(m => createRow(idLabel, m.modelId, m.result, baseData));
+            }
+            return [createRow(idLabel, "", "", baseData)]; // Fallback
+        };
 
-    // Convertir a CSV
-    const blob = new Blob([dateTime + interval + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' })
-    return URL.createObjectURL(blob)
-}
+        // Añadir defaults y news al resultado global
+        res = res.concat(
+            processBaseResult(def, "DEFAULT_VALUE", _def),
+            processBaseResult(ne, "NEW_VALUE", _new)
+        );
+
+        // Procesar las filas dinámicas generadas por los intervalos
+        const others: any[] = [];
+        const intervalTypeStr = collection.interval?.type === IntervalTypeEnum.percentage ? "%" : "";
+
+        collection.results.forEach((r: IResult) => {
+            if (!r.correspondsWith) return;
+
+            Object.entries(r.correspondsWith).forEach(([tag, intervalValue]) => {
+                if (intervalValue === 0) return;
+
+                const id = `${tag} ${intervalValue < 0 ? "-" : "+"} ${Math.abs(intervalValue)}${intervalTypeStr}`;
+                
+                // OPTIMIZACIÓN: Pre-calcular rowData una sola vez por intervalo, no por modelo
+                const rowData: any = {};
+                Object.entries(r.data).forEach(([key, value]) => {
+                    rowData[key] = (tag === key || value !== _def[key]) ? value : "";
+                });
+
+                if (r.result && r.result.length > 0) {
+                    r.result.forEach(m => {
+                        others.push(createRow(id, m.modelId, m.result, rowData));
+                    });
+                } else {
+                    others.push(createRow(id, "", "", rowData));
+                }
+            });
+        });
+
+        res = res.concat(others);
+    } else {
+        // Fallback global por si collection.results está vacío
+        res = res.concat([
+            createRow("DEFAULT_VALUE", "", "", _def),
+            createRow("NEW_VALUE", "", "", _new)
+        ]);
+    }
+
+    // 4. Metadata y conversión final
+    let meta = "";
+    if (collection.dateTime) {
+        meta += `# DateTime: ${collection.dateTime.toISOString()}\n`;
+    }
+    if (has_interval) {
+        meta += `# Interval: ${collection.interval.min} ${collection.interval.max} ${collection.interval.steps} ${intervalModeToString(collection.interval.type)}\n`;
+    }
+
+    const blob = new Blob([meta + Papa.unparse(res)], { type: 'text/csv;charset=utf-8,' });
+    return URL.createObjectURL(blob);
+};
 
 export const stringToIntervalMode = (str: string) => {
     return str.toLowerCase().trim() === "units" ? IntervalTypeEnum.units : IntervalTypeEnum.percentage

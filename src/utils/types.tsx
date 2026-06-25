@@ -115,7 +115,7 @@ export interface IResult {
   id: string,
   data: IDataPred,
   processedData?: IDataPred,
-  result: IResultByModel[],   // ESTO LO TENGO QUE CAMBIAR
+  result: IResultByModel[],
   correspondsWith?: Record<string, number>
 }
 
