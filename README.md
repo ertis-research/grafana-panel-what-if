@@ -317,11 +317,7 @@ The basic configuration of the model has the following fields:
 
 Next, you will be able to configure the model queries, which will allow you to add data directly from Grafana. Check their configuration in the [corresponding section](#data-import-queries).
 
-Regarding the connection to the model, this shall be done through HTTP and it shall be possible to add basic authentication. The fields to be filled in are the following:
-- **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT and PATCH.
-- **URL** (required): URL address where the model expects to receive the input data.
-- **Username** (optional): Username for basic authentication.
-- **Password** (optional): Password for basic authentication.
+Regarding the connection to the models, this configuration will be seen in the [connections](#connections) section. It is now possible to define multiple connections to support more than one model. Additionally, there are two different ways to connect them: using the Grafana Infinity plugin or through a direct, insecure connection using basic authentication.
 
 You must then configure the [list of tags](#list-of-tags) for the model. 
 
@@ -363,6 +359,29 @@ Two arrow icons (up and down) located to the left of the model name allow you to
 If you want to **delete the model**, click on the red button with the bin icon. 
 When you press it, a confirmation will appear allowing you to cancel this action (_Cancel_ button, the model will not be deleted) or to confirm it (_Delete_ button, the model will be deleted). 
 **If the panel is deleted and saved, this action cannot be undone**.
+
+##### Connections
+You can add model connections by clicking the _Add connection_ button. For each connection, the following general fields are available:
+
+- **Name** (optional): A custom name to identify the model connection.
+- **Connection Type** (required): The method used to establish the connection. The available options are **Infinity Data Source** and **Direct URL**.
+
+Depending on the chosen connection type, the configuration fields will vary:
+
+###### Infinity Data Source
+This is the recommended approach, as it relies on a previously configured [Grafana Infinity data source](https://grafana.com/grafana/plugins/yesoreyeram-infinity-datasource/) which securely handles its own authentication. To use this method, you must first create an Infinity data source, configure the **Base URL** within the **URL, Headers & Params** tab, and set up the authentication details in its dedicated tab.
+
+- **Data Source** (required): The specific Infinity data source to be used for the connection.
+- **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT, and PATCH.
+- **Path** (required): The relative path where the model expects to receive the input data (e.g., /api/v1/status).
+
+###### Direct URL (Insecure)
+This method connects directly to the model's endpoint and allows you to manually provide basic authentication credentials.
+
+- **Method** (required): Method to be used for the HTTP request. The available values are POST, GET, PUT, and PATCH.
+- **Full URL** (required): The complete URL address where the model expects to receive the input data.
+- **Username** (optional): Username for basic authentication. (Note: Required if a password is provided).
+- **Password** (optional): Password for basic authentication. (Note: Required if a username is provided).
 
 ##### List of tags
 To define the list of tags that enter the model, the section entitled _Model input tags_ must be expanded. Here you can add as many tags as the model requires (there is no limit). 
